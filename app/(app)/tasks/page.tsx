@@ -66,7 +66,7 @@ export default function TasksPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-condensed font-bold text-zinc-100 tracking-tight">Tasks</h1>
+          <h1 className="text-3xl font-condensed font-bold text-zinc-900 tracking-tight">Tasks</h1>
           <p className="text-sm text-zinc-500 mt-1">
             {filtered.length} {filtered.length === 1 ? 'task' : 'tasks'}
           </p>
@@ -80,64 +80,64 @@ export default function TasksPage() {
       </div>
 
       {/* Filter bar */}
-      <div className="sticky top-14 z-20 bg-zinc-950 pb-3 pt-1">
+      <div className="sticky top-14 z-20 bg-[#f7f6f4] pb-3 pt-1">
         <div className="flex items-center gap-3 flex-wrap">
           {/* Search */}
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search tasks…"
-            className="h-8 w-48 bg-zinc-900 border-zinc-800 text-zinc-200 placeholder:text-zinc-600 text-xs focus-visible:ring-byred-red"
+            className="h-8 w-48 bg-white border-zinc-300 text-zinc-700 placeholder:text-zinc-400 text-xs focus-visible:ring-byred-red"
           />
 
           {/* Tenant */}
           <Select value={tenantFilter} onValueChange={setTenantFilter}>
-            <SelectTrigger className="h-8 w-44 bg-zinc-900 border-zinc-800 text-xs text-zinc-300">
+            <SelectTrigger className="h-8 w-44 bg-white border-zinc-300 text-xs text-zinc-600">
               <SelectValue placeholder="Tenant" />
             </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-zinc-800">
-              <SelectItem value="all" className="text-xs text-zinc-300">All tenants</SelectItem>
+            <SelectContent className="bg-white border-zinc-200 shadow-md">
+              <SelectItem value="all" className="text-xs text-zinc-600">All tenants</SelectItem>
               {TENANT_OPTIONS.map((t) => (
-                <SelectItem key={t.id} value={t.id} className="text-xs text-zinc-300">{t.name}</SelectItem>
+                <SelectItem key={t.id} value={t.id} className="text-xs text-zinc-600">{t.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
 
           {/* Status */}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-8 w-36 bg-zinc-900 border-zinc-800 text-xs text-zinc-300">
+            <SelectTrigger className="h-8 w-36 bg-white border-zinc-300 text-xs text-zinc-600">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-zinc-800">
-              <SelectItem value="all" className="text-xs text-zinc-300">All statuses</SelectItem>
+            <SelectContent className="bg-white border-zinc-200 shadow-md">
+              <SelectItem value="all" className="text-xs text-zinc-600">All statuses</SelectItem>
               {STATUS_OPTIONS.map((s) => (
-                <SelectItem key={s} value={s} className="text-xs text-zinc-300 capitalize">{s.replace('_', ' ')}</SelectItem>
+                <SelectItem key={s} value={s} className="text-xs text-zinc-600 capitalize">{s.replace('_', ' ')}</SelectItem>
               ))}
             </SelectContent>
           </Select>
 
           {/* AI Mode */}
           <Select value={aiModeFilter} onValueChange={setAiModeFilter}>
-            <SelectTrigger className="h-8 w-36 bg-zinc-900 border-zinc-800 text-xs text-zinc-300">
+            <SelectTrigger className="h-8 w-36 bg-white border-zinc-300 text-xs text-zinc-600">
               <SelectValue placeholder="AI Mode" />
             </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-zinc-800">
-              <SelectItem value="all" className="text-xs text-zinc-300">All modes</SelectItem>
+            <SelectContent className="bg-white border-zinc-200 shadow-md">
+              <SelectItem value="all" className="text-xs text-zinc-600">All modes</SelectItem>
               {AI_MODE_OPTIONS.map((m) => (
-                <SelectItem key={m} value={m} className="text-xs text-zinc-300">{m}</SelectItem>
+                <SelectItem key={m} value={m} className="text-xs text-zinc-600">{m}</SelectItem>
               ))}
             </SelectContent>
           </Select>
 
           {/* Priority */}
           <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="h-8 w-32 bg-zinc-900 border-zinc-800 text-xs text-zinc-300">
+            <SelectTrigger className="h-8 w-32 bg-white border-zinc-300 text-xs text-zinc-600">
               <SelectValue placeholder="Priority" />
             </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-zinc-800">
-              <SelectItem value="all" className="text-xs text-zinc-300">All priorities</SelectItem>
+            <SelectContent className="bg-white border-zinc-200 shadow-md">
+              <SelectItem value="all" className="text-xs text-zinc-600">All priorities</SelectItem>
               {PRIORITY_OPTIONS.map((p) => (
-                <SelectItem key={p} value={p} className="text-xs text-zinc-300">{p}</SelectItem>
+                <SelectItem key={p} value={p} className="text-xs text-zinc-600">{p}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -150,7 +150,7 @@ export default function TasksPage() {
               onCheckedChange={setShowOverdue}
               className="data-[state=checked]:bg-byred-red"
             />
-            <Label htmlFor="overdue" className="text-xs text-zinc-400 cursor-pointer">Overdue only</Label>
+            <Label htmlFor="overdue" className="text-xs text-zinc-500 cursor-pointer">Overdue only</Label>
           </div>
 
           <div className="flex items-center gap-2">
@@ -160,7 +160,7 @@ export default function TasksPage() {
               onCheckedChange={setShowBlockers}
               className="data-[state=checked]:bg-byred-red"
             />
-            <Label htmlFor="blockers" className="text-xs text-zinc-400 cursor-pointer">Blockers only</Label>
+            <Label htmlFor="blockers" className="text-xs text-zinc-500 cursor-pointer">Blockers only</Label>
           </div>
 
           {hasFilters && (
@@ -168,7 +168,7 @@ export default function TasksPage() {
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="h-8 text-xs text-zinc-500 hover:text-zinc-300 gap-1.5"
+              className="h-8 text-xs text-zinc-400 hover:text-zinc-700 gap-1.5"
             >
               <X className="w-3 h-3" strokeWidth={1.75} />
               Clear filters
@@ -181,7 +181,7 @@ export default function TasksPage() {
       <TaskTable tasks={filtered} />
 
       {/* Footer */}
-      <p className="text-xs text-zinc-600 text-right font-mono">
+      <p className="text-xs text-zinc-400 text-right font-mono">
         Showing {filtered.length} of {SEED_TASKS.length} tasks
       </p>
     </div>

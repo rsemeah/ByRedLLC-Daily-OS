@@ -38,26 +38,26 @@ export function TaskTable({ tasks }: TaskTableProps) {
   if (tasks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <p className="text-sm font-medium text-zinc-400">No tasks.</p>
-        <p className="text-xs text-zinc-600 mt-1">Create one to start.</p>
+        <p className="text-sm font-medium text-zinc-500">No tasks.</p>
+        <p className="text-xs text-zinc-400 mt-1">Create one to start.</p>
       </div>
     )
   }
 
   return (
-    <div className="rounded-md border border-zinc-800 overflow-hidden">
+    <div className="rounded-md border border-zinc-200 overflow-hidden bg-white">
       <table className="w-full text-sm" role="grid">
         <thead>
-          <tr className="border-b border-zinc-800 bg-zinc-900/50">
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-500 w-8" />
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-500">Title</th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-500 hidden md:table-cell">Tenant</th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-500">Due</th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-500 hidden lg:table-cell">Pri</th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-500 hidden lg:table-cell">Est</th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-500 hidden xl:table-cell">Owner</th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-500 hidden xl:table-cell">AI</th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-500">Status</th>
+          <tr className="border-b border-zinc-200 bg-zinc-50">
+            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400 w-8" />
+            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400">Title</th>
+            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400 hidden md:table-cell">Tenant</th>
+            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400">Due</th>
+            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400 hidden lg:table-cell">Pri</th>
+            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400 hidden lg:table-cell">Est</th>
+            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400 hidden xl:table-cell">Owner</th>
+            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400 hidden xl:table-cell">AI</th>
+            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400">Status</th>
             <th className="px-2 py-2.5 w-10" />
           </tr>
         </thead>
@@ -66,7 +66,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
             <tr
               key={task.id}
               className={cn(
-                'border-b border-zinc-800/50 hover:bg-zinc-900/50 transition-colors h-12 relative',
+                'border-b border-zinc-100 hover:bg-zinc-50 transition-colors h-12 relative',
                 task.blocker_flag && 'border-l-2 border-byred-red'
               )}
               style={{ height: '48px' }}
@@ -80,7 +80,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
               <td className="px-4 py-2 max-w-xs">
                 <Link
                   href={`/tasks/${task.id}`}
-                  className="text-zinc-200 hover:text-zinc-100 font-medium truncate block focus-visible:ring-2 focus-visible:ring-byred-red focus-visible:outline-none rounded"
+                  className="text-zinc-700 hover:text-zinc-900 font-medium truncate block focus-visible:ring-2 focus-visible:ring-byred-red focus-visible:outline-none rounded"
                 >
                   {task.title}
                 </Link>
@@ -103,7 +103,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
 
               {/* Estimated minutes */}
               <td className="px-4 py-2 hidden lg:table-cell">
-                <span className="text-xs text-zinc-500 font-mono">
+                <span className="text-xs text-zinc-400 font-mono">
                   {formatMinutes(task.estimated_minutes)}
                 </span>
               </td>
@@ -112,15 +112,15 @@ export function TaskTable({ tasks }: TaskTableProps) {
               <td className="px-4 py-2 hidden xl:table-cell">
                 {task.owner_user_id ? (
                   <div className="flex items-center gap-1.5">
-                    <div className="w-5 h-5 rounded-full bg-byred-red/20 border border-byred-red/30 flex items-center justify-center shrink-0">
+                    <div className="w-5 h-5 rounded-full bg-byred-red/10 border border-byred-red/20 flex items-center justify-center shrink-0">
                       <span className="text-[9px] font-semibold text-byred-red font-condensed">{initials}</span>
                     </div>
-                    <span className="text-xs text-zinc-400">
+                    <span className="text-xs text-zinc-500">
                       {user.full_name?.split(' ')[0] ?? 'Ro'}
                     </span>
                   </div>
                 ) : (
-                  <span className="text-xs text-zinc-600">—</span>
+                  <span className="text-xs text-zinc-400">—</span>
                 )}
               </td>
 
@@ -141,33 +141,33 @@ export function TaskTable({ tasks }: TaskTableProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="w-7 h-7 text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800"
+                      className="w-7 h-7 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
                       aria-label="Task actions"
                     >
                       <MoreHorizontal className="w-3.5 h-3.5" strokeWidth={1.75} />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800">
-                    <DropdownMenuItem asChild className="text-zinc-300 focus:text-zinc-100 focus:bg-zinc-800 gap-2 text-xs cursor-pointer">
+                  <DropdownMenuContent align="end" className="bg-white border-zinc-200 shadow-md">
+                    <DropdownMenuItem asChild className="text-zinc-600 focus:text-zinc-900 focus:bg-zinc-100 gap-2 text-xs cursor-pointer">
                       <Link href={`/tasks/${task.id}`}>
                         <Edit className="w-3.5 h-3.5" strokeWidth={1.75} />
                         Edit
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="text-zinc-300 focus:text-zinc-100 focus:bg-zinc-800 gap-2 text-xs cursor-pointer">
+                    <DropdownMenuItem asChild className="text-zinc-600 focus:text-zinc-900 focus:bg-zinc-100 gap-2 text-xs cursor-pointer">
                       <Link href={`/tasks/${task.id}`}>
                         <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.75} />
                         Open
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      className="text-zinc-300 focus:text-zinc-100 focus:bg-zinc-800 gap-2 text-xs cursor-pointer"
+                      className="text-zinc-600 focus:text-zinc-900 focus:bg-zinc-100 gap-2 text-xs cursor-pointer"
                       onClick={() => navigator.clipboard.writeText(`${window.location.origin}/tasks/${task.id}`)}
                     >
                       <Copy className="w-3.5 h-3.5" strokeWidth={1.75} />
                       Copy link
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="text-zinc-500 focus:text-zinc-400 focus:bg-zinc-800 gap-2 text-xs cursor-pointer">
+                    <DropdownMenuItem className="text-zinc-400 focus:text-zinc-600 focus:bg-zinc-100 gap-2 text-xs cursor-pointer">
                       <Archive className="w-3.5 h-3.5" strokeWidth={1.75} />
                       Archive
                     </DropdownMenuItem>

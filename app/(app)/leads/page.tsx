@@ -35,12 +35,12 @@ function LeadCard({ lead }: { lead: Lead }) {
   const overdue = isOverdue(lead.next_follow_up_at)
   return (
     <Link href={`/leads/${lead.id}`}>
-      <div className="p-3 rounded-md bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-colors cursor-pointer">
-        <h3 className="text-xs font-semibold text-zinc-200 leading-snug mb-2">{lead.name}</h3>
+      <div className="p-3 rounded-md bg-white border border-zinc-200 hover:border-zinc-300 hover:shadow-sm transition-all cursor-pointer">
+        <h3 className="text-xs font-semibold text-zinc-700 leading-snug mb-2">{lead.name}</h3>
         <div className="flex items-center gap-1.5 mb-2 flex-wrap">
           <TenantPill tenantId={lead.tenant_id} />
           {lead.source && (
-            <span className="text-[10px] text-zinc-500 bg-zinc-800 px-1.5 py-0.5 rounded-sm">
+            <span className="text-[10px] text-zinc-400 bg-zinc-100 px-1.5 py-0.5 rounded-sm">
               {lead.source}
             </span>
           )}
@@ -82,7 +82,7 @@ export default function LeadsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-condensed font-bold text-zinc-100 tracking-tight">Leads</h1>
+          <h1 className="text-3xl font-condensed font-bold text-zinc-900 tracking-tight">Leads</h1>
         </div>
         <Button
           className="bg-byred-red hover:bg-byred-red-hot text-white gap-2"
@@ -95,17 +95,17 @@ export default function LeadsPage() {
 
       {/* Metrics */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="p-4 rounded-md bg-zinc-900 border border-zinc-800">
-          <p className="text-2xl font-condensed font-bold text-emerald-400">
+        <div className="p-4 rounded-md bg-white border border-zinc-200 shadow-sm">
+          <p className="text-2xl font-condensed font-bold text-emerald-600">
             {formatCurrency(totalPipeline)}
           </p>
           <p className="text-xs text-zinc-500 mt-1">Total pipeline</p>
         </div>
-        <div className="p-4 rounded-md bg-zinc-900 border border-zinc-800">
-          <p className="text-2xl font-condensed font-bold text-zinc-100">{conversionRate}%</p>
+        <div className="p-4 rounded-md bg-white border border-zinc-200 shadow-sm">
+          <p className="text-2xl font-condensed font-bold text-zinc-800">{conversionRate}%</p>
           <p className="text-xs text-zinc-500 mt-1">Conversion rate</p>
         </div>
-        <div className="p-4 rounded-md bg-zinc-900 border border-zinc-800">
+        <div className="p-4 rounded-md bg-white border border-zinc-200 shadow-sm">
           <p className={cn('text-2xl font-condensed font-bold', overdueFollowUps > 0 ? 'text-byred-red' : 'text-zinc-100')}>
             {overdueFollowUps}
           </p>
@@ -123,17 +123,17 @@ export default function LeadsPage() {
                 {/* Column header */}
                 <div className="flex items-center justify-between mb-3 px-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-xs font-condensed font-semibold uppercase tracking-wide text-zinc-300">
-                      {label}
-                    </h3>
-                    <span className="text-xs text-zinc-600 font-mono bg-zinc-800 px-1.5 py-0.5 rounded-sm">
-                      {stageLeads.length}
-                    </span>
+                <h3 className="text-xs font-condensed font-semibold uppercase tracking-wide text-zinc-600">
+                    {label}
+                  </h3>
+                  <span className="text-xs text-zinc-400 font-mono bg-zinc-100 px-1.5 py-0.5 rounded-sm">
+                    {stageLeads.length}
+                  </span>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="w-6 h-6 text-zinc-600 hover:text-zinc-300"
+                    className="w-6 h-6 text-zinc-400 hover:text-zinc-700"
                     onClick={() => router.push('/leads/new')}
                     aria-label={`Add lead to ${label}`}
                   >
@@ -143,12 +143,12 @@ export default function LeadsPage() {
 
                 {/* Cards */}
                 <div
-                  className="flex-1 rounded-md border border-zinc-800 bg-zinc-950 p-2 space-y-2 min-h-[200px]"
+                  className="flex-1 rounded-md border border-zinc-200 bg-zinc-50 p-2 space-y-2 min-h-[200px]"
                   role="region"
                   aria-label={`${label} column`}
                 >
                   {stageLeads.length === 0 ? (
-                    <p className="text-xs text-zinc-700 text-center py-8">No {label.toLowerCase()} leads.</p>
+                    <p className="text-xs text-zinc-400 text-center py-8">No {label.toLowerCase()} leads.</p>
                   ) : (
                     stageLeads.map((lead) => (
                       <LeadCard key={lead.id} lead={lead} />

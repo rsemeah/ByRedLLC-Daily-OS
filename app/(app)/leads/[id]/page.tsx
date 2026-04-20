@@ -91,59 +91,59 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
       {/* Left: main content */}
       <div className="lg:col-span-2 space-y-6">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-1.5 text-xs text-zinc-500" aria-label="Breadcrumb">
-          <Link href="/leads" className="hover:text-zinc-300 transition-colors">Leads</Link>
+        <nav className="flex items-center gap-1.5 text-xs text-zinc-400" aria-label="Breadcrumb">
+          <Link href="/leads" className="hover:text-zinc-700 transition-colors">Leads</Link>
           <ChevronRight className="w-3 h-3" strokeWidth={1.75} />
-          <span className="text-zinc-400 truncate max-w-[200px]">{lead.name.slice(0, 40)}</span>
+          <span className="text-zinc-500 truncate max-w-[200px]">{lead.name.slice(0, 40)}</span>
         </nav>
 
-        <h1 className="text-2xl font-condensed font-bold text-zinc-100 tracking-tight">{lead.name}</h1>
+        <h1 className="text-2xl font-condensed font-bold text-zinc-800 tracking-tight">{lead.name}</h1>
 
         {/* Contact card */}
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-white border-zinc-200 shadow-sm">
           <CardContent className="p-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
               {lead.phone && (
                 <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-zinc-500 shrink-0" strokeWidth={1.75} />
-                  <a href={`tel:${lead.phone}`} className="text-zinc-300 hover:text-zinc-100 text-xs">
+                  <Phone className="w-4 h-4 text-zinc-400 shrink-0" strokeWidth={1.75} />
+                  <a href={`tel:${lead.phone}`} className="text-zinc-600 hover:text-zinc-800 text-xs">
                     {lead.phone}
                   </a>
-                  <button onClick={() => copy(lead.phone!)} className="text-zinc-600 hover:text-zinc-400">
+                  <button onClick={() => copy(lead.phone!)} className="text-zinc-400 hover:text-zinc-600">
                     <Copy className="w-3 h-3" strokeWidth={1.75} />
                   </button>
                 </div>
               )}
               {lead.email && (
                 <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-zinc-500 shrink-0" strokeWidth={1.75} />
-                  <a href={`mailto:${lead.email}`} className="text-zinc-300 hover:text-zinc-100 text-xs truncate">
+                  <Mail className="w-4 h-4 text-zinc-400 shrink-0" strokeWidth={1.75} />
+                  <a href={`mailto:${lead.email}`} className="text-zinc-600 hover:text-zinc-800 text-xs truncate">
                     {lead.email}
                   </a>
-                  <button onClick={() => copy(lead.email!)} className="text-zinc-600 hover:text-zinc-400">
+                  <button onClick={() => copy(lead.email!)} className="text-zinc-400 hover:text-zinc-600">
                     <Copy className="w-3 h-3" strokeWidth={1.75} />
                   </button>
                 </div>
               )}
               <div className="flex items-center gap-2">
-                <span className="text-xs text-zinc-500">Source</span>
-                <span className="text-xs text-zinc-300">{lead.source ?? '—'}</span>
+                <span className="text-xs text-zinc-400">Source</span>
+                <span className="text-xs text-zinc-600">{lead.source ?? '—'}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-zinc-500">Tenant</span>
+                <span className="text-xs text-zinc-400">Tenant</span>
                 <TenantPill tenantId={lead.tenant_id} />
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-zinc-500">Owner</span>
+                <span className="text-xs text-zinc-400">Owner</span>
                 {lead.assigned_user_id ? (
                   <div className="flex items-center gap-1.5">
-                    <div className="w-5 h-5 rounded-full bg-byred-red/20 border border-byred-red/30 flex items-center justify-center">
+                    <div className="w-5 h-5 rounded-full bg-byred-red/10 border border-byred-red/20 flex items-center justify-center">
                       <span className="text-[9px] font-semibold text-byred-red font-condensed">{initials}</span>
                     </div>
-                    <span className="text-xs text-zinc-300">{user.full_name}</span>
+                    <span className="text-xs text-zinc-600">{user.full_name}</span>
                   </div>
                 ) : (
-                  <span className="text-xs text-zinc-600">Unassigned</span>
+                  <span className="text-xs text-zinc-400">Unassigned</span>
                 )}
               </div>
             </div>
@@ -152,7 +152,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* Stage tracker */}
         <div>
-          <h3 className="text-sm font-medium text-zinc-400 mb-3">Stage</h3>
+          <h3 className="text-sm font-medium text-zinc-500 mb-3">Stage</h3>
           <div className="flex items-center gap-1 flex-wrap">
             {STAGES.map((s, i) => {
               const isActive = s === stage
@@ -163,7 +163,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                   onClick={() => handleStageClick(s)}
                   className={cn(
                     'px-3 py-1.5 rounded-sm text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-byred-red focus-visible:outline-none',
-                    isActive ? 'bg-byred-red text-zinc-100' : isCompleted ? 'text-zinc-400 bg-zinc-800' : 'text-zinc-600 bg-zinc-900 hover:text-zinc-300'
+                    isActive ? 'bg-byred-red text-white' : isCompleted ? 'text-zinc-500 bg-zinc-200' : 'text-zinc-400 bg-zinc-100 hover:text-zinc-700 hover:bg-zinc-200'
                   )}
                 >
                   {s}
@@ -175,11 +175,11 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* Activity timeline */}
         <div>
-          <h3 className="text-sm font-medium text-zinc-400 mb-2">Activity</h3>
+          <h3 className="text-sm font-medium text-zinc-500 mb-2">Activity</h3>
           {activities.length === 0 ? (
-            <p className="text-xs text-zinc-600">No activity.</p>
+            <p className="text-xs text-zinc-400">No activity.</p>
           ) : (
-            <div className="divide-y divide-zinc-800/50">
+            <div className="divide-y divide-zinc-100">
               {activities.map((a) => (
                 <ActivityItem key={a.id} activity={a} showObject={false} />
               ))}
@@ -189,13 +189,13 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* Log contact */}
         <div>
-          <h3 className="text-sm font-medium text-zinc-400 mb-2">Log contact</h3>
+          <h3 className="text-sm font-medium text-zinc-500 mb-2">Log contact</h3>
           <div className="space-y-2">
             <Textarea
               value={logNote}
               onChange={(e) => setLogNote(e.target.value)}
               placeholder="Describe the contact…"
-              className="bg-zinc-900 border-zinc-800 text-zinc-200 placeholder:text-zinc-600 text-xs focus-visible:ring-byred-red min-h-[80px]"
+              className="bg-white border-zinc-300 text-zinc-700 placeholder:text-zinc-400 text-xs focus-visible:ring-byred-red min-h-[80px]"
             />
             <Button
               size="sm"
@@ -212,22 +212,22 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
       {/* Right: sticky sidebar */}
       <div className="space-y-4 lg:sticky lg:top-20 self-start">
         {/* Revenue block */}
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-white border-zinc-200 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
-              <DollarSign className="w-4 h-4 text-emerald-400" strokeWidth={1.75} />
-              <p className="text-3xl font-condensed font-bold text-emerald-400">
+              <DollarSign className="w-4 h-4 text-emerald-600" strokeWidth={1.75} />
+              <p className="text-3xl font-condensed font-bold text-emerald-600">
                 {formatCurrency(lead.revenue_potential)}
               </p>
             </div>
-            <p className="text-xs text-zinc-500">potential</p>
+            <p className="text-xs text-zinc-400">potential</p>
           </CardContent>
         </Card>
 
         {/* Follow-up */}
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-white border-zinc-200 shadow-sm">
           <CardHeader className="pb-2">
-            <h3 className="text-sm font-condensed font-semibold text-zinc-300 uppercase tracking-wide">
+            <h3 className="text-sm font-condensed font-semibold text-zinc-600 uppercase tracking-wide">
               Follow-up
             </h3>
           </CardHeader>
@@ -245,7 +245,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
             <Button
               size="sm"
               variant="outline"
-              className="w-full border-zinc-700 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 text-xs gap-2"
+              className="w-full border-zinc-300 text-zinc-600 hover:text-zinc-800 hover:bg-zinc-50 text-xs gap-2"
               onClick={() => toast.success('Marked as contacted.')}
             >
               <CheckCircle className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -255,7 +255,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
             <Button
               size="sm"
               variant="outline"
-              className="w-full border-zinc-700 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 text-xs gap-2"
+              className="w-full border-zinc-300 text-zinc-600 hover:text-zinc-800 hover:bg-zinc-50 text-xs gap-2"
               onClick={() => toast.success('Follow-up scheduled.')}
             >
               <Calendar className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -265,9 +265,9 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
         </Card>
 
         {/* Quick actions */}
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-white border-zinc-200 shadow-sm">
           <CardHeader className="pb-2">
-            <h3 className="text-sm font-condensed font-semibold text-zinc-300 uppercase tracking-wide">
+            <h3 className="text-sm font-condensed font-semibold text-zinc-600 uppercase tracking-wide">
               Quick actions
             </h3>
           </CardHeader>
@@ -275,7 +275,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
             <Button
               size="sm"
               variant="outline"
-              className="w-full border-zinc-700 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 text-xs gap-2"
+              className="w-full border-zinc-300 text-zinc-600 hover:text-zinc-800 hover:bg-zinc-50 text-xs gap-2"
               onClick={() => toast.success('Task created from lead.')}
             >
               <CheckCircle className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -285,7 +285,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
             <Button
               size="sm"
               variant="outline"
-              className="w-full border-zinc-700 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 text-xs gap-2"
+              className="w-full border-zinc-300 text-zinc-600 hover:text-zinc-800 hover:bg-zinc-50 text-xs gap-2"
               onClick={() => toast.success('Lead reassigned.')}
             >
               <UserCheck className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -297,21 +297,21 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                 <Button
                   size="sm"
                   variant="outline"
-                  className="w-full border-zinc-800 text-zinc-600 hover:text-byred-red hover:border-byred-red/30 text-xs gap-2"
+                  className="w-full border-zinc-200 text-zinc-400 hover:text-byred-red hover:border-byred-red/30 text-xs gap-2"
                 >
                   <Archive className="w-3.5 h-3.5" strokeWidth={1.75} />
                   Archive
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent className="bg-zinc-900 border-zinc-800">
+              <AlertDialogContent className="bg-white border-zinc-200">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-zinc-100">Archive this lead?</AlertDialogTitle>
-                  <AlertDialogDescription className="text-zinc-400">
+                  <AlertDialogTitle className="text-zinc-800">Archive this lead?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-zinc-500">
                     This will move the lead to LOST. This cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel className="border-zinc-700 text-zinc-400">Cancel</AlertDialogCancel>
+                  <AlertDialogCancel className="border-zinc-300 text-zinc-500">Cancel</AlertDialogCancel>
                   <AlertDialogAction
                     className="bg-byred-red hover:bg-byred-red-hot text-white"
                     onClick={() => {

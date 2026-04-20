@@ -23,7 +23,7 @@ export default function ActivitiesPage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-3xl font-condensed font-bold text-zinc-100 tracking-tight">Activities</h1>
+        <h1 className="text-3xl font-condensed font-bold text-zinc-900 tracking-tight">Activities</h1>
         <p className="text-sm text-zinc-500 mt-1">
           {SEED_ACTIVITIES.length} {SEED_ACTIVITIES.length === 1 ? 'activity' : 'activities'}
         </p>
@@ -32,10 +32,10 @@ export default function ActivitiesPage() {
       <div className="space-y-6">
         {grouped.map(({ day, items }) => (
           <div key={day}>
-            <p className="text-xs font-medium text-zinc-600 uppercase tracking-widest mb-3">
+            <p className="text-xs font-medium text-zinc-400 uppercase tracking-widest mb-3">
               {format(parseISO(day), 'EEEE, MMMM d')}
             </p>
-            <div className="divide-y divide-zinc-800/50 rounded-md border border-zinc-800 bg-zinc-900 px-4">
+            <div className="divide-y divide-zinc-100 rounded-md border border-zinc-200 bg-white px-4 shadow-sm">
               {items.map((a) => (
                 <ActivityItem key={a.id} activity={a} showObject />
               ))}
@@ -44,7 +44,7 @@ export default function ActivitiesPage() {
         ))}
 
         {grouped.length === 0 && (
-          <p className="text-sm text-zinc-600">No activity.</p>
+          <p className="text-sm text-zinc-400">No activity.</p>
         )}
       </div>
     </div>

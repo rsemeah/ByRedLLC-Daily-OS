@@ -34,12 +34,12 @@ export default function CommandCenterPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-condensed font-bold text-zinc-100 tracking-tight">
-          Command Center
-        </h1>
-        <p className="text-sm text-zinc-500 mt-1">
-          All tasks across all tenants. Do what&apos;s urgent + highest revenue first.
-        </p>
+      <h1 className="text-3xl font-condensed font-bold text-zinc-900 tracking-tight">
+        Command Center
+      </h1>
+      <p className="text-sm text-zinc-500 mt-1">
+        All tasks across all tenants. Do what&apos;s urgent + highest revenue first.
+      </p>
       </div>
 
       {/* Metric cards */}
@@ -77,9 +77,9 @@ export default function CommandCenterPage() {
       {/* Task table */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-zinc-400">
+          <h2 className="text-sm font-medium text-zinc-500">
             All tasks
-            <span className="ml-2 text-zinc-600 font-mono text-xs">({tasks.length})</span>
+            <span className="ml-2 text-zinc-400 font-mono text-xs">({tasks.length})</span>
           </h2>
         </div>
         <TaskTable tasks={tasks} />

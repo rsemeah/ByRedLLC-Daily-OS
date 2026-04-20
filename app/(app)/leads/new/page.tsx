@@ -48,20 +48,20 @@ export default function NewLeadPage() {
   return (
     <div className="max-w-xl space-y-6">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-xs text-zinc-500" aria-label="Breadcrumb">
-        <Link href="/leads" className="hover:text-zinc-300 transition-colors">Leads</Link>
+      <nav className="flex items-center gap-1.5 text-xs text-zinc-400" aria-label="Breadcrumb">
+        <Link href="/leads" className="hover:text-zinc-700 transition-colors">Leads</Link>
         <ChevronRight className="w-3 h-3" strokeWidth={1.75} />
-        <span className="text-zinc-400">New lead</span>
+        <span className="text-zinc-500">New lead</span>
       </nav>
 
       <div>
-        <h1 className="text-3xl font-condensed font-bold text-zinc-100 tracking-tight">New lead</h1>
+        <h1 className="text-3xl font-condensed font-bold text-zinc-900 tracking-tight">New lead</h1>
         <p className="text-sm text-zinc-500 mt-1">Stage defaults to NEW.</p>
       </div>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-white border-zinc-200 shadow-sm">
         <CardHeader className="pb-3">
-          <p className="text-sm font-medium text-zinc-400">Lead details</p>
+          <p className="text-sm font-medium text-zinc-600">Lead details</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -73,13 +73,13 @@ export default function NewLeadPage() {
               <Select value={tenantId} onValueChange={setTenantId} required>
                 <SelectTrigger
                   id="tenant"
-                  className="bg-zinc-800 border-zinc-700 text-zinc-300 text-sm focus-visible:ring-byred-red"
+                  className="bg-white border-zinc-300 text-zinc-600 text-sm focus-visible:ring-byred-red"
                 >
                   <SelectValue placeholder="Select tenant" />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-800">
+                <SelectContent className="bg-white border-zinc-200 shadow-md">
                   {TENANT_OPTIONS.map((t) => (
-                    <SelectItem key={t.id} value={t.id} className="text-zinc-300 text-sm">
+                    <SelectItem key={t.id} value={t.id} className="text-zinc-600 text-sm">
                       {t.name}
                     </SelectItem>
                   ))}
@@ -97,7 +97,7 @@ export default function NewLeadPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="bg-zinc-800 border-zinc-700 text-zinc-200 placeholder:text-zinc-600 focus-visible:ring-byred-red"
+                className="bg-white border-zinc-300 text-zinc-700 placeholder:text-zinc-400 focus-visible:ring-byred-red"
                 placeholder="Acme Corp — portfolio"
               />
             </div>
@@ -110,7 +110,7 @@ export default function NewLeadPage() {
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="bg-zinc-800 border-zinc-700 text-zinc-200 placeholder:text-zinc-600 focus-visible:ring-byred-red"
+                className="bg-white border-zinc-300 text-zinc-700 placeholder:text-zinc-400 focus-visible:ring-byred-red"
                 placeholder="619-555-0100"
               />
             </div>
@@ -123,7 +123,7 @@ export default function NewLeadPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-zinc-800 border-zinc-700 text-zinc-200 placeholder:text-zinc-600 focus-visible:ring-byred-red"
+                className="bg-white border-zinc-300 text-zinc-700 placeholder:text-zinc-400 focus-visible:ring-byred-red"
                 placeholder="contact@example.com"
               />
             </div>
@@ -135,16 +135,10 @@ export default function NewLeadPage() {
                 id="source"
                 value={source}
                 onChange={(e) => setSource(e.target.value)}
-                className="bg-zinc-800 border-zinc-700 text-zinc-200 placeholder:text-zinc-600 focus-visible:ring-byred-red"
+                className="bg-white border-zinc-300 text-zinc-700 placeholder:text-zinc-400 focus-visible:ring-byred-red"
                 placeholder="Referral, cold outreach, etc."
                 list="source-suggestions"
               />
-              <datalist id="source-suggestions">
-                <option value="Referral" />
-                <option value="Cold outreach" />
-                <option value="Yardi referral" />
-                <option value="Inbound" />
-              </datalist>
             </div>
 
             {/* Revenue potential */}
@@ -156,7 +150,7 @@ export default function NewLeadPage() {
                 min="0"
                 value={revenuePotential}
                 onChange={(e) => setRevenuePotential(e.target.value)}
-                className="bg-zinc-800 border-zinc-700 text-zinc-200 placeholder:text-zinc-600 focus-visible:ring-byred-red"
+                className="bg-white border-zinc-300 text-zinc-700 placeholder:text-zinc-400 focus-visible:ring-byred-red"
                 placeholder="38400"
               />
             </div>
@@ -168,7 +162,7 @@ export default function NewLeadPage() {
                 id="notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="bg-zinc-800 border-zinc-700 text-zinc-200 placeholder:text-zinc-600 focus-visible:ring-byred-red min-h-[80px]"
+                className="bg-white border-zinc-300 text-zinc-700 placeholder:text-zinc-400 focus-visible:ring-byred-red min-h-[80px]"
                 placeholder="First contact context, additional details…"
               />
             </div>
@@ -185,7 +179,7 @@ export default function NewLeadPage() {
               <Button
                 type="button"
                 variant="ghost"
-                className="text-zinc-400 hover:text-zinc-200"
+                className="text-zinc-500 hover:text-zinc-700"
                 onClick={() => router.back()}
               >
                 Cancel

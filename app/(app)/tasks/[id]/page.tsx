@@ -42,13 +42,13 @@ import { SEED_TASKS, SEED_ACTIVITIES, SEED_USER } from '@/lib/seed'
 function ScoreBar({ value }: { value: number }) {
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+      <div className="flex-1 h-1.5 bg-zinc-200 rounded-full overflow-hidden">
         <div
           className="h-full bg-byred-red rounded-full transition-all"
           style={{ width: `${(value / 10) * 100}%` }}
         />
       </div>
-      <span className="text-xs text-zinc-500 font-mono w-4">{value}</span>
+      <span className="text-xs text-zinc-400 font-mono w-4">{value}</span>
     </div>
   )
 }
@@ -105,10 +105,10 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
       {/* Left: main content */}
       <div className="lg:col-span-2 space-y-6">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-1.5 text-xs text-zinc-500" aria-label="Breadcrumb">
-          <Link href="/tasks" className="hover:text-zinc-300 transition-colors">Tasks</Link>
+        <nav className="flex items-center gap-1.5 text-xs text-zinc-400" aria-label="Breadcrumb">
+          <Link href="/tasks" className="hover:text-zinc-700 transition-colors">Tasks</Link>
           <ChevronRight className="w-3 h-3" strokeWidth={1.75} />
-          <span className="text-zinc-400 truncate max-w-[200px]">{task.title.slice(0, 40)}{task.title.length > 40 ? '…' : ''}</span>
+          <span className="text-zinc-500 truncate max-w-[200px]">{task.title.slice(0, 40)}{task.title.length > 40 ? '…' : ''}</span>
         </nav>
 
         {/* Title */}
@@ -122,11 +122,11 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 setEditingTitle(false)
                 toast.success('Task updated.')
               }}
-              className="w-full text-2xl font-condensed font-bold text-zinc-100 tracking-tight bg-transparent border-b border-byred-red outline-none pb-1"
+              className="w-full text-2xl font-condensed font-bold text-zinc-800 tracking-tight bg-transparent border-b border-byred-red outline-none pb-1"
             />
           ) : (
             <h1
-              className="text-2xl font-condensed font-bold text-zinc-100 tracking-tight cursor-text hover:opacity-80 transition-opacity"
+              className="text-2xl font-condensed font-bold text-zinc-800 tracking-tight cursor-text hover:opacity-80 transition-opacity"
               onClick={() => setEditingTitle(true)}
               title="Click to edit"
             >
@@ -158,7 +158,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
         {/* Blocked by */}
         {task.blocked_by_task_id && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-zinc-500">Blocked by:</span>
+            <span className="text-xs text-zinc-400">Blocked by:</span>
             <Link
               href={`/tasks/${task.blocked_by_task_id}`}
               className="text-xs text-byred-red hover:underline underline-offset-2 font-mono"
@@ -170,15 +170,15 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* Description */}
         <div>
-          <h3 className="text-sm font-medium text-zinc-400 mb-2">Description</h3>
-          <Card className="bg-zinc-900 border-zinc-800">
+          <h3 className="text-sm font-medium text-zinc-500 mb-2">Description</h3>
+          <Card className="bg-white border-zinc-200">
             <CardContent className="p-4">
               {task.description ? (
-                <div className="prose prose-sm prose-invert max-w-none text-zinc-300 leading-relaxed">
+                <div className="prose prose-sm max-w-none text-zinc-600 leading-relaxed">
                   <ReactMarkdown>{task.description}</ReactMarkdown>
                 </div>
               ) : (
-                <p className="text-xs text-zinc-600">No description.</p>
+                <p className="text-xs text-zinc-400">No description.</p>
               )}
             </CardContent>
           </Card>
@@ -186,13 +186,13 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* Metadata */}
         <div>
-          <h3 className="text-sm font-medium text-zinc-400 mb-2">Metadata</h3>
-          <Card className="bg-zinc-900 border-zinc-800">
+          <h3 className="text-sm font-medium text-zinc-500 mb-2">Metadata</h3>
+          <Card className="bg-white border-zinc-200">
             <CardContent className="p-4">
               <dl className="space-y-3 text-sm">
                 {task.monday_item_id && (
                   <div className="flex justify-between">
-                    <dt className="text-zinc-500">Monday ID</dt>
+                    <dt className="text-zinc-400">Monday ID</dt>
                     <dd>
                       <a
                         href={`https://monday.com/boards/item/${task.monday_item_id}`}
@@ -206,40 +206,40 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <dt className="text-zinc-500">Estimated</dt>
-                  <dd className="text-zinc-300 font-mono text-xs">
+                  <dt className="text-zinc-400">Estimated</dt>
+                  <dd className="text-zinc-600 font-mono text-xs">
                     {task.estimated_minutes < 60
                       ? `${task.estimated_minutes}m`
                       : `${Math.floor(task.estimated_minutes / 60)}h ${task.estimated_minutes % 60 > 0 ? `${task.estimated_minutes % 60}m` : ''}`}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-zinc-500 mb-1.5">Revenue impact</dt>
+                  <dt className="text-zinc-400 mb-1.5">Revenue impact</dt>
                   <dd><ScoreBar value={task.revenue_impact_score} /></dd>
                 </div>
                 <div>
-                  <dt className="text-zinc-500 mb-1.5">Urgency</dt>
+                  <dt className="text-zinc-400 mb-1.5">Urgency</dt>
                   <dd><ScoreBar value={task.urgency_score} /></dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-zinc-500">Owner</dt>
+                  <dt className="text-zinc-400">Owner</dt>
                   <dd>
                     {task.owner_user_id ? (
                       <div className="flex items-center gap-1.5">
-                        <div className="w-5 h-5 rounded-full bg-byred-red/20 border border-byred-red/30 flex items-center justify-center">
+                        <div className="w-5 h-5 rounded-full bg-byred-red/10 border border-byred-red/20 flex items-center justify-center">
                           <span className="text-[9px] font-semibold text-byred-red font-condensed">{initials}</span>
                         </div>
-                        <span className="text-xs text-zinc-300">{user.full_name}</span>
+                        <span className="text-xs text-zinc-600">{user.full_name}</span>
                       </div>
                     ) : (
-                      <span className="text-xs text-zinc-600">Unassigned</span>
+                      <span className="text-xs text-zinc-400">Unassigned</span>
                     )}
                   </dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-zinc-500">Created</dt>
+                  <dt className="text-zinc-400">Created</dt>
                   <dd
-                    className="text-xs text-zinc-400 font-mono"
+                    className="text-xs text-zinc-500 font-mono"
                     title={format(parseISO(task.created_at), 'PPpp')}
                   >
                     {formatDistanceToNow(parseISO(task.created_at), { addSuffix: true })}
@@ -252,11 +252,11 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* Activity */}
         <div>
-          <h3 className="text-sm font-medium text-zinc-400 mb-2">Activity</h3>
+          <h3 className="text-sm font-medium text-zinc-500 mb-2">Activity</h3>
           {activities.length === 0 ? (
-            <p className="text-xs text-zinc-600">No activity.</p>
+            <p className="text-xs text-zinc-400">No activity.</p>
           ) : (
-            <div className="divide-y divide-zinc-800/50">
+            <div className="divide-y divide-zinc-100">
               {activities.map((a) => (
                 <ActivityItem key={a.id} activity={a} showObject={false} />
               ))}
@@ -268,15 +268,15 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
       {/* Right: sticky sidebar */}
       <div className="space-y-4 lg:sticky lg:top-20 self-start">
         {/* AI Actions */}
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-white border-zinc-200 shadow-sm">
           <CardHeader className="pb-3">
-            <h3 className="text-sm font-condensed font-semibold text-zinc-300 uppercase tracking-wide">
+            <h3 className="text-sm font-condensed font-semibold text-zinc-600 uppercase tracking-wide">
               AI Actions
             </h3>
           </CardHeader>
           <CardContent className="space-y-3">
             {task.ai_mode === 'HUMAN_ONLY' && (
-              <p className="text-xs text-zinc-600">This task is marked human-only.</p>
+              <p className="text-xs text-zinc-400">This task is marked human-only.</p>
             )}
 
             {(task.ai_mode === 'AI_ASSIST' || task.ai_mode === 'AI_DRAFT' || task.ai_mode === 'AI_EXECUTE') && (
@@ -293,7 +293,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
             {(task.ai_mode === 'AI_DRAFT' || task.ai_mode === 'AI_EXECUTE') && (
               <Button
                 variant="outline"
-                className="w-full border-zinc-700 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 text-sm gap-2"
+                className="w-full border-zinc-300 text-zinc-600 hover:text-zinc-800 hover:bg-zinc-50 text-sm gap-2"
                 onClick={() => handleAiAction('draft')}
                 disabled={aiLoading}
               >
@@ -313,15 +313,15 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                     Auto-execute
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent className="bg-zinc-900 border-zinc-800">
+                <AlertDialogContent className="bg-white border-zinc-200">
                   <AlertDialogHeader>
-                    <AlertDialogTitle className="text-zinc-100">Auto-execute this task?</AlertDialogTitle>
-                    <AlertDialogDescription className="text-zinc-400">
+                    <AlertDialogTitle className="text-zinc-800">Auto-execute this task?</AlertDialogTitle>
+                    <AlertDialogDescription className="text-zinc-500">
                       This will run without further confirmation. Continue?
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel className="border-zinc-700 text-zinc-400 hover:text-zinc-100">
+                    <AlertDialogCancel className="border-zinc-300 text-zinc-600 hover:text-zinc-800">
                       Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
@@ -340,15 +340,15 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
             {/* AI Result */}
             {aiResult && (
-              <div className="mt-3 rounded-md border border-zinc-700 bg-zinc-800/50 p-3">
+              <div className="mt-3 rounded-md border border-zinc-200 bg-zinc-50 p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] text-zinc-500 uppercase tracking-widest">
+                  <span className="text-[10px] text-zinc-400 uppercase tracking-widest">
                     {aiResult.type === 'assist' ? 'AI Suggestions' : 'Draft'}
                   </span>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="w-6 h-6 text-zinc-500 hover:text-zinc-300"
+                    className="w-6 h-6 text-zinc-400 hover:text-zinc-700"
                     onClick={() => {
                       navigator.clipboard.writeText(aiResult.content)
                       toast.success('Copied.')
@@ -357,7 +357,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                     <Copy className="w-3 h-3" strokeWidth={1.75} />
                   </Button>
                 </div>
-                <div className="prose prose-xs prose-invert max-w-none text-zinc-300 text-xs leading-relaxed overflow-y-auto max-h-48">
+                <div className="prose prose-xs max-w-none text-zinc-600 text-xs leading-relaxed overflow-y-auto max-h-48">
                   <ReactMarkdown>{aiResult.content}</ReactMarkdown>
                 </div>
               </div>
@@ -366,16 +366,16 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
         </Card>
 
         {/* Settings */}
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-white border-zinc-200 shadow-sm">
           <CardHeader className="pb-3">
-            <h3 className="text-sm font-condensed font-semibold text-zinc-300 uppercase tracking-wide">
+            <h3 className="text-sm font-condensed font-semibold text-zinc-600 uppercase tracking-wide">
               Settings
             </h3>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Blocker toggle */}
             <div className="flex items-center justify-between">
-              <Label htmlFor="blocker-toggle" className="text-xs text-zinc-400 cursor-pointer">
+              <Label htmlFor="blocker-toggle" className="text-xs text-zinc-500 cursor-pointer">
                 Blocker
               </Label>
               <Switch
@@ -388,14 +388,14 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
             {/* Status */}
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-500">Status</Label>
+              <Label className="text-xs text-zinc-400">Status</Label>
               <Select defaultValue={task.status ?? 'not_started'}>
-                <SelectTrigger className="h-8 bg-zinc-800 border-zinc-700 text-xs text-zinc-300">
+                <SelectTrigger className="h-8 bg-white border-zinc-300 text-xs text-zinc-600">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-800">
+                <SelectContent className="bg-white border-zinc-200 shadow-md">
                   {['not_started', 'in_progress', 'overdue', 'done', 'blocked'].map((s) => (
-                    <SelectItem key={s} value={s} className="text-xs text-zinc-300 capitalize">
+                    <SelectItem key={s} value={s} className="text-xs text-zinc-600 capitalize">
                       {s.replace('_', ' ')}
                     </SelectItem>
                   ))}
@@ -405,14 +405,14 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
             {/* Priority */}
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-500">Priority</Label>
+              <Label className="text-xs text-zinc-400">Priority</Label>
               <Select defaultValue={task.priority ?? 'Medium'}>
-                <SelectTrigger className="h-8 bg-zinc-800 border-zinc-700 text-xs text-zinc-300">
+                <SelectTrigger className="h-8 bg-white border-zinc-300 text-xs text-zinc-600">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-800">
+                <SelectContent className="bg-white border-zinc-200 shadow-md">
                   {['Critical', 'High', 'Medium', 'Low'].map((p) => (
-                    <SelectItem key={p} value={p} className="text-xs text-zinc-300">{p}</SelectItem>
+                    <SelectItem key={p} value={p} className="text-xs text-zinc-600">{p}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -420,14 +420,14 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
             {/* AI Mode */}
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-500">AI Mode</Label>
+              <Label className="text-xs text-zinc-400">AI Mode</Label>
               <Select defaultValue={task.ai_mode ?? 'HUMAN_ONLY'}>
-                <SelectTrigger className="h-8 bg-zinc-800 border-zinc-700 text-xs text-zinc-300">
+                <SelectTrigger className="h-8 bg-white border-zinc-300 text-xs text-zinc-600">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-800">
+                <SelectContent className="bg-white border-zinc-200 shadow-md">
                   {['HUMAN_ONLY', 'AI_ASSIST', 'AI_DRAFT', 'AI_EXECUTE'].map((m) => (
-                    <SelectItem key={m} value={m} className="text-xs text-zinc-300">{m}</SelectItem>
+                    <SelectItem key={m} value={m} className="text-xs text-zinc-600">{m}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -436,10 +436,10 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
             {/* Blocker reason */}
             {blockerFlag && (
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-500">Blocker reason</Label>
+                <Label className="text-xs text-zinc-400">Blocker reason</Label>
                 <Textarea
                   defaultValue={task.blocker_reason ?? ''}
-                  className="text-xs bg-zinc-800 border-zinc-700 text-zinc-300 focus-visible:ring-byred-red min-h-[60px]"
+                  className="text-xs bg-white border-zinc-300 text-zinc-600 focus-visible:ring-byred-red min-h-[60px]"
                   placeholder="Describe what is blocking this task…"
                 />
               </div>

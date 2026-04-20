@@ -44,16 +44,16 @@ export function AppTopbar() {
   const brief = SEED_DAILY_BRIEF
 
   return (
-    <header className="fixed top-0 left-60 right-0 h-14 z-30 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between px-6">
+    <header className="fixed top-0 left-60 right-0 h-14 z-30 bg-white border-b border-zinc-200 flex items-center justify-between px-6">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm" aria-label="Breadcrumb">
         {breadcrumbs.map((crumb, i) => (
           <span key={crumb.href} className="flex items-center gap-1.5">
-            {i > 0 && <ChevronRight className="w-3 h-3 text-zinc-600" strokeWidth={1.75} />}
+            {i > 0 && <ChevronRight className="w-3 h-3 text-zinc-400" strokeWidth={1.75} />}
             {i === breadcrumbs.length - 1 ? (
-              <span className="text-zinc-200 font-medium">{crumb.label}</span>
+              <span className="text-zinc-800 font-medium">{crumb.label}</span>
             ) : (
-              <Link href={crumb.href} className="text-zinc-500 hover:text-zinc-300 transition-colors">
+              <Link href={crumb.href} className="text-zinc-400 hover:text-zinc-700 transition-colors">
                 {crumb.label}
               </Link>
             )}
@@ -69,28 +69,28 @@ export function AppTopbar() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 gap-2 text-xs"
+              className="text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 gap-2 text-xs"
             >
               <FileText className="w-4 h-4" strokeWidth={1.75} />
               Brief
             </Button>
           </PopoverTrigger>
           <PopoverContent
-            className="w-80 bg-zinc-900 border-zinc-800 p-0"
+            className="w-80 bg-white border-zinc-200 p-0 shadow-md"
             align="end"
           >
-            <div className="p-4 border-b border-zinc-800">
-              <p className="text-xs text-zinc-500 mb-1">Daily Brief · Apr 20</p>
-              <p className="text-sm font-medium text-zinc-100 leading-snug">
+            <div className="p-4 border-b border-zinc-100">
+              <p className="text-xs text-zinc-400 mb-1">Daily Brief · Apr 20</p>
+              <p className="text-sm font-medium text-zinc-800 leading-snug">
                 {brief.summary.headline}
               </p>
             </div>
             <div className="p-4 space-y-3">
               <div>
-                <p className="text-[10px] text-zinc-600 uppercase tracking-widest mb-2">Top 3</p>
+                <p className="text-[10px] text-zinc-400 uppercase tracking-widest mb-2">Top 3</p>
                 <ol className="space-y-1">
                   {brief.summary.top_3.map((item, i) => (
-                    <li key={i} className="flex items-start gap-2 text-xs text-zinc-300">
+                    <li key={i} className="flex items-start gap-2 text-xs text-zinc-600">
                       <span className="text-byred-red font-mono font-medium shrink-0">{i + 1}.</span>
                       {item}
                     </li>
@@ -99,18 +99,18 @@ export function AppTopbar() {
               </div>
               {brief.summary.warnings.length > 0 && (
                 <div>
-                  <p className="text-[10px] text-zinc-600 uppercase tracking-widest mb-2">Warnings</p>
+                  <p className="text-[10px] text-zinc-400 uppercase tracking-widest mb-2">Warnings</p>
                   {brief.summary.warnings.map((w, i) => (
-                    <div key={i} className="flex items-start gap-2 text-xs text-amber-400">
+                    <div key={i} className="flex items-start gap-2 text-xs text-amber-600">
                       <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5" strokeWidth={1.75} />
                       {w}
                     </div>
                   ))}
                 </div>
               )}
-              <div className="pt-2 border-t border-zinc-800">
-                <p className="text-[10px] text-zinc-600 uppercase tracking-widest mb-1">Next Action</p>
-                <p className="text-sm font-medium text-zinc-100">{brief.summary.next_action}</p>
+              <div className="pt-2 border-t border-zinc-100">
+                <p className="text-[10px] text-zinc-400 uppercase tracking-widest mb-1">Next Action</p>
+                <p className="text-sm font-medium text-zinc-800">{brief.summary.next_action}</p>
               </div>
             </div>
           </PopoverContent>
@@ -120,7 +120,7 @@ export function AppTopbar() {
         <Button
           variant="ghost"
           size="icon"
-          className="text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 w-8 h-8"
+          className="text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 w-8 h-8"
           aria-label="Notifications"
         >
           <Bell className="w-4 h-4" strokeWidth={1.75} />
@@ -128,7 +128,7 @@ export function AppTopbar() {
 
         {/* Avatar */}
         <div
-          className="w-7 h-7 rounded-full bg-byred-red/20 border border-byred-red/30 flex items-center justify-center cursor-pointer"
+          className="w-7 h-7 rounded-full bg-byred-red/10 border border-byred-red/20 flex items-center justify-center cursor-pointer"
           aria-label="User menu"
         >
           <span className="text-xs font-semibold text-byred-red font-condensed">RO</span>

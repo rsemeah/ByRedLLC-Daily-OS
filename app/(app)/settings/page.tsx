@@ -45,15 +45,15 @@ export default function SettingsPage() {
   return (
     <div className="space-y-8 max-w-xl">
       <div>
-        <h1 className="text-3xl font-condensed font-bold text-zinc-100 tracking-tight">Settings</h1>
+        <h1 className="text-3xl font-condensed font-bold text-zinc-900 tracking-tight">Settings</h1>
       </div>
 
       {/* Profile */}
       <section>
-        <h2 className="text-sm font-condensed font-semibold text-zinc-400 uppercase tracking-wide mb-3">
+        <h2 className="text-sm font-condensed font-semibold text-zinc-500 uppercase tracking-wide mb-3">
           Profile
         </h2>
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-white border-zinc-200 shadow-sm">
           <CardContent className="p-4 space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="full-name" className="text-xs text-zinc-500">Full name</Label>
@@ -61,7 +61,7 @@ export default function SettingsPage() {
                 id="full-name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="bg-zinc-800 border-zinc-700 text-zinc-200 focus-visible:ring-byred-red"
+                className="bg-white border-zinc-300 text-zinc-700 focus-visible:ring-byred-red"
               />
             </div>
             <div className="space-y-1.5">
@@ -70,14 +70,14 @@ export default function SettingsPage() {
                 id="email-display"
                 value={user.email}
                 readOnly
-                className="bg-zinc-800/50 border-zinc-800 text-zinc-500 cursor-not-allowed"
+                className="bg-zinc-50 border-zinc-200 text-zinc-400 cursor-not-allowed"
               />
-              <p className="text-[10px] text-zinc-600">Email cannot be changed here.</p>
+              <p className="text-[10px] text-zinc-400">Email cannot be changed here.</p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-zinc-500">Role</Label>
-              <div className="h-9 px-3 flex items-center rounded-md bg-zinc-800/50 border border-zinc-800">
-                <span className="text-sm text-zinc-500 capitalize">{user.role}</span>
+              <div className="h-9 px-3 flex items-center rounded-md bg-zinc-50 border border-zinc-200">
+                <span className="text-sm text-zinc-400 capitalize">{user.role}</span>
               </div>
             </div>
             <Button
@@ -93,10 +93,10 @@ export default function SettingsPage() {
 
       {/* Defaults */}
       <section>
-        <h2 className="text-sm font-condensed font-semibold text-zinc-400 uppercase tracking-wide mb-3">
+        <h2 className="text-sm font-condensed font-semibold text-zinc-500 uppercase tracking-wide mb-3">
           Defaults
         </h2>
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-white border-zinc-200 shadow-sm">
           <CardHeader className="pb-2">
             <p className="text-xs text-zinc-500">Default AI mode for new tasks</p>
           </CardHeader>
@@ -118,7 +118,7 @@ export default function SettingsPage() {
                     className="mt-0.5 accent-byred-red"
                   />
                   <div>
-                    <p className="text-sm text-zinc-300 font-mono">{mode}</p>
+                    <p className="text-sm text-zinc-600 font-mono">{mode}</p>
                     {mode === 'AI_EXECUTE' && (
                       <div className="flex items-start gap-1.5 mt-1 p-2 rounded-sm bg-amber-500/10 border border-amber-500/20">
                         <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0 mt-0.5" strokeWidth={1.75} />
@@ -144,20 +144,20 @@ export default function SettingsPage() {
 
       {/* Integrations */}
       <section>
-        <h2 className="text-sm font-condensed font-semibold text-zinc-400 uppercase tracking-wide mb-3">
+        <h2 className="text-sm font-condensed font-semibold text-zinc-500 uppercase tracking-wide mb-3">
           Integrations
         </h2>
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-white border-zinc-200 shadow-sm">
           <CardContent className="p-4 space-y-3">
             {INTEGRATION_STATUS.map((int) => (
               <div key={int.name} className="flex items-center justify-between">
-                <span className="text-sm text-zinc-300">{int.name}</span>
+                <span className="text-sm text-zinc-600">{int.name}</span>
                 <span
                   className={cn(
                     'flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-sm',
                     int.connected
-                      ? 'bg-emerald-500/10 text-emerald-400'
-                      : 'bg-zinc-800 text-zinc-500'
+                      ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                      : 'bg-zinc-100 text-zinc-400'
                   )}
                 >
                   {int.connected ? (
@@ -178,11 +178,11 @@ export default function SettingsPage() {
         <h2 className="text-sm font-condensed font-semibold text-byred-red uppercase tracking-wide mb-3">
           Danger zone
         </h2>
-        <Card className="bg-zinc-900 border-byred-red/30">
+        <Card className="bg-white border-byred-red/20">
           <CardContent className="p-4 space-y-3">
             <Button
               variant="outline"
-              className="w-full border-zinc-700 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 gap-2"
+              className="w-full border-zinc-300 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50 gap-2"
               onClick={() => toast.success('Signed out.')}
             >
               <LogOut className="w-4 h-4" strokeWidth={1.75} />
@@ -199,15 +199,15 @@ export default function SettingsPage() {
                   Revoke all sessions
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent className="bg-zinc-900 border-zinc-800">
+              <AlertDialogContent className="bg-white border-zinc-200">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-zinc-100">Revoke all sessions?</AlertDialogTitle>
-                  <AlertDialogDescription className="text-zinc-400">
+                  <AlertDialogTitle className="text-zinc-800">Revoke all sessions?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-zinc-500">
                     All active sessions will be terminated immediately. You will be signed out.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel className="border-zinc-700 text-zinc-400">Cancel</AlertDialogCancel>
+                  <AlertDialogCancel className="border-zinc-300 text-zinc-500">Cancel</AlertDialogCancel>
                   <AlertDialogAction className="bg-byred-red hover:bg-byred-red-hot text-white">
                     Revoke all
                   </AlertDialogAction>

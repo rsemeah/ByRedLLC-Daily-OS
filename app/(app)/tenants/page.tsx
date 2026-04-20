@@ -11,7 +11,7 @@ export default function TenantsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-condensed font-bold text-zinc-100 tracking-tight">Tenants</h1>
+        <h1 className="text-3xl font-condensed font-bold text-zinc-900 tracking-tight">Tenants</h1>
         <p className="text-sm text-zinc-500 mt-1">4 tenants across 3 types.</p>
       </div>
 
@@ -32,7 +32,7 @@ export default function TenantsPage() {
           ).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
 
           return (
-            <Card key={tenant.id} className="bg-zinc-900 border-zinc-800">
+            <Card key={tenant.id} className="bg-white border-zinc-200 shadow-sm">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -54,34 +54,34 @@ export default function TenantsPage() {
               <CardContent className="space-y-4">
                 {/* Metrics */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-md bg-zinc-800">
-                    <p className="text-lg font-condensed font-bold text-zinc-100">{activeTasks}</p>
-                    <p className="text-[10px] text-zinc-500">Active tasks</p>
+                  <div className="p-3 rounded-md bg-zinc-50 border border-zinc-100">
+                    <p className="text-lg font-condensed font-bold text-zinc-800">{activeTasks}</p>
+                    <p className="text-[10px] text-zinc-400">Active tasks</p>
                   </div>
-                  <div className="p-3 rounded-md bg-zinc-800">
-                    <p className={cn('text-lg font-condensed font-bold', overdueTasks > 0 ? 'text-byred-red' : 'text-zinc-100')}>
+                  <div className="p-3 rounded-md bg-zinc-50 border border-zinc-100">
+                    <p className={cn('text-lg font-condensed font-bold', overdueTasks > 0 ? 'text-byred-red' : 'text-zinc-800')}>
                       {overdueTasks}
                     </p>
-                    <p className="text-[10px] text-zinc-500">Overdue tasks</p>
+                    <p className="text-[10px] text-zinc-400">Overdue tasks</p>
                   </div>
-                  <div className="p-3 rounded-md bg-zinc-800">
-                    <p className="text-lg font-condensed font-bold text-zinc-100">{openLeads}</p>
-                    <p className="text-[10px] text-zinc-500">Open leads</p>
+                  <div className="p-3 rounded-md bg-zinc-50 border border-zinc-100">
+                    <p className="text-lg font-condensed font-bold text-zinc-800">{openLeads}</p>
+                    <p className="text-[10px] text-zinc-400">Open leads</p>
                   </div>
-                  <div className="p-3 rounded-md bg-zinc-800">
-                    <p className="text-xs font-mono text-zinc-400 leading-tight">
+                  <div className="p-3 rounded-md bg-zinc-50 border border-zinc-100">
+                    <p className="text-xs font-mono text-zinc-500 leading-tight">
                       {lastActivity
                         ? formatDistanceToNow(parseISO(lastActivity.created_at), { addSuffix: true })
                         : 'No activity'}
                     </p>
-                    <p className="text-[10px] text-zinc-500 mt-0.5">Last activity</p>
+                    <p className="text-[10px] text-zinc-400 mt-0.5">Last activity</p>
                   </div>
                 </div>
 
                 <Button
                   asChild
                   variant="outline"
-                  className="w-full border-zinc-700 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 text-xs gap-2"
+                  className="w-full border-zinc-300 text-zinc-600 hover:text-zinc-800 hover:bg-zinc-50 text-xs gap-2"
                 >
                   <Link href={`/tasks?tenant_id=${tenant.id}`}>
                     <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.75} />
