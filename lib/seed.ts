@@ -1,18 +1,54 @@
 import type { Tenant, User, Task, Lead, Activity, DailyBrief } from '@/types/db';
 
 export const SEED_TENANTS: Tenant[] = [
-  { id: 't1', name: 'By Red LLC', type: 'parent', created_at: '2024-01-01T00:00:00Z' },
-  { id: 't2', name: 'Paradise Property Services', type: 'service', created_at: '2024-01-01T00:00:00Z' },
-  { id: 't3', name: 'HireWire', type: 'product', created_at: '2024-01-01T00:00:00Z' },
-  { id: 't4', name: 'Authentic Hadith', type: 'product', created_at: '2024-01-01T00:00:00Z' },
+  {
+    id: 't1',
+    name: 'By Red LLC',
+    type: 'parent',
+    color: '#d90009',
+    active: true,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 't2',
+    name: 'Paradise Property Services',
+    type: 'service',
+    color: '#0ea5e9',
+    active: true,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 't3',
+    name: 'HireWire',
+    type: 'product',
+    color: '#22c55e',
+    active: true,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 't4',
+    name: 'Authentic Hadith',
+    type: 'product',
+    color: '#a855f7',
+    active: true,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+  },
 ];
 
 export const SEED_USER: User = {
   id: 'u-ro',
   email: 'rorylee@pennenterprisesllc.com',
-  full_name: 'Ro Semeah',
+  name: 'Ro Semeah',
   role: 'admin',
+  active: true,
+  auth_user_id: null,
+  avatar_url: null,
   created_at: '2024-01-01T00:00:00Z',
+  updated_at: '2024-01-01T00:00:00Z',
 };
 
 export const SEED_TASKS: Task[] = [
@@ -184,6 +220,7 @@ export const SEED_ACTIVITIES: Activity[] = [
 export const SEED_DAILY_BRIEF: DailyBrief = {
   id: 'br-1',
   date: '2026-04-20',
+  user_id: null,
   summary: {
     headline: '3 due today. GL insurance is the money gate.',
     top_3: [

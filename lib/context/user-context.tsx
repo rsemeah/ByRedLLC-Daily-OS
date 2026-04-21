@@ -1,44 +1,102 @@
 "use client"
 
-import { createContext, useContext, type ReactNode } from "react"
+import { createContext, useContext, useMemo, useState, type ReactNode } from "react"
 import type { ByredUser, ByredTenant, ByredUserTenant } from "@/types/database"
 import type { User } from "@supabase/supabase-js"
+import { createClient } from "@/lib/supabase/client"
 
-export type CurrentUser = {
-  // Supabase auth user
+export type TenantAccess = ByredTenant & { role: ByredUserTenant["role"] }
+
+export type TenantContextValue = {
   authUser: User
-  // byred_users profile (may be null if not yet created)
   profile: ByredUser | null
-  // Tenants the user has access to
-  tenants: Array<ByredTenant & { role: ByredUserTenant["role"] }>
-  // Is the user an admin?
+  tenants: TenantAccess[]
+  activeTenantId: string | null
+  setActiveTenantId: (tenantId: string) => Promise<void>
   isAdmin: boolean
 }
 
-const UserContext = createContext<CurrentUser | null>(null)
+export type CurrentUser = TenantContextValue
+
+type TenantProviderProps = {
+  children: ReactNode
+  user: {
+    authUser: User
+    profile: ByredUser | null
+    tenants: TenantAccess[]
+    initialActiveTenantId: string | null
+  }
+}
+
+const TenantContext = createContext<TenantContextValue | null>(null)
+
+export function TenantProvider({ children, user }: TenantProviderProps) {
+  const [activeTenantId, setActiveTenantIdState] = useState<string | null>(
+    user.initialActiveTenantId
+  )
+
+  const value = useMemo<TenantContextValue>(() => {
+    const setActiveTenantId = async (tenantId: string) => {
+      if (!user.tenants.some((tenant) => tenant.id === tenantId)) {
+        throw new Error("Selected tenant is not available for this user")
+      }
+
+      setActiveTenantIdState(tenantId)
+
+      try {
+        const supabase = createClient()
+        await supabase.auth.updateUser({
+          data: {
+            active_tenant_id: tenantId,
+          },
+        })
+      } catch (error) {
+        console.error("Failed to persist active tenant metadata", error)
+      }
+    }
+
+    return {
+      authUser: user.authUser,
+      profile: user.profile,
+      tenants: user.tenants,
+      activeTenantId,
+      setActiveTenantId,
+      isAdmin: user.profile?.role === "admin",
+    }
+  }, [activeTenantId, user.authUser, user.profile, user.tenants])
+
+  return <TenantContext.Provider value={value}>{children}</TenantContext.Provider>
+}
 
 export function UserProvider({
   children,
   user,
 }: {
   children: ReactNode
-  user: CurrentUser | null
+  user: {
+    authUser: User
+    profile: ByredUser | null
+    tenants: TenantAccess[]
+    initialActiveTenantId: string | null
+  }
 }) {
-  return <UserContext.Provider value={user}>{children}</UserContext.Provider>
+  return <TenantProvider user={user}>{children}</TenantProvider>
+}
+
+export function useTenantContext() {
+  const context = useContext(TenantContext)
+  if (!context) {
+    throw new Error("useTenantContext must be used within a TenantProvider")
+  }
+
+  return context
 }
 
 export function useUser() {
-  const context = useContext(UserContext)
-  if (context === undefined) {
-    throw new Error("useUser must be used within a UserProvider")
-  }
-  return context
+  return useTenantContext()
 }
 
 export function useRequiredUser() {
   const user = useUser()
-  if (!user) {
-    throw new Error("User is required but not found in context")
-  }
   return user
 }

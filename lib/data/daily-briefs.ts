@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
-import type { DailyBriefSummary } from "@/types/database"
+import { requireTenantScope } from "@/lib/data/tenant-scope"
+import type { DailyBriefSummary, Json } from "@/types/database"
 
 const DEFAULT_BRIEF: DailyBriefSummary = {
   headline: "No brief generated yet",
@@ -19,40 +20,55 @@ export async function getTodayBrief(): Promise<{
     .from("byred_daily_briefs")
     .select("summary, date")
     .eq("date", today)
-    .is("user_id", null) // Global brief
-    .single()
+    .is("user_id", null)
+    .maybeSingle()
 
   if (error || !data) {
     return { summary: DEFAULT_BRIEF, date: today }
   }
 
+  const row = data as { summary: Json; date: string }
+
   return {
-    summary: data.summary as DailyBriefSummary,
-    date: data.date,
+    summary: row.summary as DailyBriefSummary,
+    date: row.date,
   }
 }
 
 export async function getUserBrief(
-  userId: string
+  profileId: string
 ): Promise<{ summary: DailyBriefSummary; date: string }> {
   const supabase = await createClient()
   const today = new Date().toISOString().split("T")[0]
 
-  // Try user-specific brief first
-  const { data: userBrief } = await supabase
+  const { data: userBrief, error: userErr } = await supabase
     .from("byred_daily_briefs")
     .select("summary, date")
     .eq("date", today)
-    .eq("user_id", userId)
-    .single()
+    .eq("user_id", profileId)
+    .maybeSingle()
 
-  if (userBrief) {
+  if (!userErr && userBrief) {
+    const row = userBrief as { summary: Json; date: string }
     return {
-      summary: userBrief.summary as DailyBriefSummary,
-      date: userBrief.date,
+      summary: row.summary as DailyBriefSummary,
+      date: row.date,
     }
   }
 
-  // Fall back to global brief
+  return getTodayBrief()
+}
+
+/**
+ * User-specific daily brief when present, otherwise the global brief (for the signed-in user).
+ */
+export async function getDailyBriefForSession(): Promise<{
+  summary: DailyBriefSummary
+  date: string
+}> {
+  const { profileId } = await requireTenantScope()
+  if (profileId) {
+    return getUserBrief(profileId)
+  }
   return getTodayBrief()
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronRight } from 'lucide-react'
@@ -17,15 +17,21 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { TENANT_NAMES } from '@/lib/tenant-colors'
-
-const TENANT_OPTIONS = Object.entries(TENANT_NAMES).map(([id, name]) => ({ id, name }))
+import { useUser } from '@/lib/context/user-context'
+import { syncActiveTenantForMutation } from '@/lib/client/sync-active-tenant'
+import { createLeadAction } from '@/lib/actions/leads'
 
 export default function NewLeadPage() {
   const router = useRouter()
+  const { tenants, activeTenantId, setActiveTenantId } = useUser()
+  const defaultTenantId = activeTenantId ?? tenants[0]?.id ?? ''
   const [loading, setLoading] = useState(false)
 
   const [tenantId, setTenantId] = useState('')
+
+  useEffect(() => {
+    setTenantId((prev) => (prev ? prev : defaultTenantId))
+  }, [defaultTenantId])
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
@@ -40,9 +46,32 @@ export default function NewLeadPage() {
       return
     }
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 600))
-    toast.success('Lead created.')
-    router.push('/leads')
+    try {
+      await syncActiveTenantForMutation(setActiveTenantId, activeTenantId, tenantId)
+      const rawRev = revenuePotential.trim()
+      const parsed =
+        rawRev === '' ? null : Number.parseFloat(rawRev)
+      const revenue =
+        parsed != null && !Number.isNaN(parsed) ? parsed : null
+      const result = await createLeadAction({
+        tenantId,
+        name,
+        phone: phone || undefined,
+        email: email || undefined,
+        source: source || undefined,
+        revenuePotential: revenue,
+        notes: notes || undefined,
+      })
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+      toast.success('Lead created.')
+      router.push(`/leads/${result.data.id}`)
+      router.refresh()
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -70,7 +99,17 @@ export default function NewLeadPage() {
               <Label htmlFor="tenant" className="text-xs text-zinc-500">
                 Tenant <span className="text-byred-red">*</span>
               </Label>
-              <Select value={tenantId} onValueChange={setTenantId} required>
+              {tenants.length === 0 && (
+                <p className="text-xs text-amber-700">
+                  You don&apos;t have access to any tenants yet. Ask an admin to add you to a workspace.
+                </p>
+              )}
+              <Select
+                value={tenantId}
+                onValueChange={setTenantId}
+                required
+                disabled={tenants.length === 0}
+              >
                 <SelectTrigger
                   id="tenant"
                   className="bg-white border-zinc-300 text-zinc-600 text-sm focus-visible:ring-byred-red"
@@ -78,7 +117,7 @@ export default function NewLeadPage() {
                   <SelectValue placeholder="Select tenant" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-zinc-200 shadow-md">
-                  {TENANT_OPTIONS.map((t) => (
+                  {tenants.map((t) => (
                     <SelectItem key={t.id} value={t.id} className="text-zinc-600 text-sm">
                       {t.name}
                     </SelectItem>

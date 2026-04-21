@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { CheckCircle, AlertTriangle, XCircle, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -19,8 +20,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useUser } from "@/lib/context/user-context"
-import { signOutAction, updateProfileAction } from "./actions"
+import { updateProfileAction } from "./actions"
 import { cn } from "@/lib/utils"
+import { createClient } from "@/lib/supabase/client"
 
 const AI_MODES = ["HUMAN_ONLY", "AI_ASSIST", "AI_DRAFT", "AI_EXECUTE"] as const
 
@@ -31,6 +33,7 @@ const INTEGRATION_STATUS = [
 ]
 
 export default function SettingsPage() {
+  const router = useRouter()
   const currentUser = useUser()
   const [fullName, setFullName] = useState(currentUser?.profile?.name ?? "")
   const [defaultAiMode, setDefaultAiMode] = useState<string>("HUMAN_ONLY")
@@ -55,7 +58,21 @@ export default function SettingsPage() {
   }
 
   async function handleSignOut() {
-    await signOutAction()
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        toast.error(error.message)
+        return
+      }
+
+      toast.success("Signed out.")
+      router.push("/login")
+      router.refresh()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to sign out"
+      toast.error(message)
+    }
   }
 
   const userEmail = currentUser?.profile?.email ?? currentUser?.authUser?.email ?? ""

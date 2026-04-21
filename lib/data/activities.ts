@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { assertTenantInScope, requireTenantScope } from "@/lib/data/tenant-scope"
 import type { Activity } from "@/types/db"
 
 export type ActivityRow = {
@@ -22,16 +23,20 @@ function mapActivityFromDb(row: ActivityRow): Activity {
     user_id: row.user_id,
     type: row.type,
     summary: row.summary,
-    created_at: row.created_at,
+    created_at: row.created_at ?? new Date().toISOString(),
   }
 }
 
 export async function getActivities(): Promise<Activity[]> {
+  const { tenantIds } = await requireTenantScope()
+  if (tenantIds.length === 0) return []
+
   const supabase = await createClient()
 
   const { data, error } = await supabase
     .from("byred_activities")
     .select("*")
+    .in("tenant_id", tenantIds)
     .order("created_at", { ascending: false })
     .limit(100)
 
@@ -47,6 +52,9 @@ export async function getActivitiesForObject(
   objectType: "task" | "lead",
   objectId: string
 ): Promise<Activity[]> {
+  const { tenantIds } = await requireTenantScope()
+  if (tenantIds.length === 0) return []
+
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -54,6 +62,7 @@ export async function getActivitiesForObject(
     .select("*")
     .eq("object_type", objectType)
     .eq("object_id", objectId)
+    .in("tenant_id", tenantIds)
     .order("created_at", { ascending: false })
 
   if (error) {
@@ -65,6 +74,9 @@ export async function getActivitiesForObject(
 }
 
 export async function getActivitiesByTenant(tenantId: string): Promise<Activity[]> {
+  const { tenantIds } = await requireTenantScope()
+  if (!assertTenantInScope(tenantId, tenantIds)) return []
+
   const supabase = await createClient()
 
   const { data, error } = await supabase

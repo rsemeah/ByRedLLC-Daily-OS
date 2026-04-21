@@ -10,6 +10,13 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { AlertOctagon } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { z } from "zod"
+import { toast } from "sonner"
+
+const loginSchema = z.object({
+  email: z.string().email("Enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+})
 
 export default function LoginPage() {
   const router = useRouter()
@@ -23,26 +30,39 @@ export default function LoginPage() {
     setError(null)
     setLoading(true)
 
-    if (!email || !password) {
-      setError("Email and password are required.")
+    const validation = loginSchema.safeParse({ email, password })
+    if (!validation.success) {
+      const message = validation.error.issues[0]?.message ?? "Invalid login payload"
+      setError(message)
+      toast.error(message)
       setLoading(false)
       return
     }
 
-    const supabase = createClient()
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      const supabase = createClient()
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: validation.data.email,
+        password: validation.data.password,
+      })
 
-    if (authError) {
-      setError(authError.message)
+      if (authError) {
+        setError(authError.message)
+        toast.error(authError.message)
+        setLoading(false)
+        return
+      }
+
+      router.push("/")
+      router.refresh()
+    } catch (authException) {
+      const message =
+        authException instanceof Error ? authException.message : "Sign-in failed unexpectedly"
+      setError(message)
+      toast.error(message)
+    } finally {
       setLoading(false)
-      return
     }
-
-    router.push("/")
-    router.refresh()
   }
 
   const year = new Date().getFullYear()

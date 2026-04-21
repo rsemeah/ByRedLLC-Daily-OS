@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   ChevronRight,
   Phone,
@@ -33,6 +34,15 @@ import {
 import { TenantPill } from "@/components/byred/tenant-pill"
 import { ActivityItem } from "@/components/byred/activity-item"
 import { useUser } from "@/lib/context/user-context"
+import { syncActiveTenantForMutation } from "@/lib/client/sync-active-tenant"
+import {
+  archiveLeadAction,
+  createTaskFromLeadAction,
+  logLeadContactNoteAction,
+  markLeadContactedAction,
+  setLeadFollowUpAction,
+  updateLeadStageAction,
+} from "@/lib/actions/leads"
 import { cn } from "@/lib/utils"
 import type { Lead, Activity } from "@/types/db"
 
@@ -66,7 +76,9 @@ interface LeadDetailProps {
 }
 
 export function LeadDetail({ lead, activities }: LeadDetailProps) {
+  const router = useRouter()
   const currentUser = useUser()
+  const { activeTenantId, setActiveTenantId } = currentUser
   const displayName =
     currentUser?.profile?.name ?? currentUser?.authUser?.email ?? "User"
   const initials = displayName
@@ -78,19 +90,157 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
 
   const [stage, setStage] = useState<Lead["stage"]>(lead.stage)
   const [logNote, setLogNote] = useState("")
+  const [followUpLocal, setFollowUpLocal] = useState("")
+  const [savingFollowUp, setSavingFollowUp] = useState(false)
+
+  useEffect(() => {
+    setStage(lead.stage)
+  }, [lead.id, lead.stage])
+
+  useEffect(() => {
+    if (lead.next_follow_up_at) {
+      const d = parseISO(lead.next_follow_up_at)
+      if (isValid(d)) {
+        const pad = (n: number) => String(n).padStart(2, "0")
+        setFollowUpLocal(
+          `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+        )
+      }
+    }
+  }, [lead.next_follow_up_at])
 
   const overdueFollowUp = isOverdue(lead.next_follow_up_at)
   const currentStageIndex = STAGES.indexOf(stage)
 
-  function handleStageClick(newStage: Lead["stage"]) {
+  async function handleStageClick(newStage: Lead["stage"]) {
+    const previousStage = stage
+    if (newStage === previousStage) return
     setStage(newStage)
-    toast.success(`Stage updated to ${newStage}.`)
+    try {
+      await syncActiveTenantForMutation(
+        setActiveTenantId,
+        activeTenantId,
+        lead.tenant_id
+      )
+      const result = await updateLeadStageAction({
+        leadId: lead.id,
+        tenantId: lead.tenant_id,
+        stage: newStage,
+        previousStage,
+      })
+      if (!result.ok) {
+        setStage(previousStage)
+        toast.error(result.error)
+        return
+      }
+      toast.success(`Stage updated to ${newStage}.`)
+      router.refresh()
+    } catch {
+      setStage(previousStage)
+      toast.error("Could not update stage.")
+    }
   }
 
-  function handleLogContact() {
+  async function handleLogContact() {
     if (!logNote.trim()) return
-    toast.success("Contact logged.")
-    setLogNote("")
+    try {
+      await syncActiveTenantForMutation(
+        setActiveTenantId,
+        activeTenantId,
+        lead.tenant_id
+      )
+      const result = await logLeadContactNoteAction({
+        leadId: lead.id,
+        tenantId: lead.tenant_id,
+        note: logNote,
+      })
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+      toast.success("Contact logged.")
+      setLogNote("")
+      router.refresh()
+    } catch {
+      toast.error("Could not log contact.")
+    }
+  }
+
+  async function handleMarkContacted() {
+    try {
+      await syncActiveTenantForMutation(
+        setActiveTenantId,
+        activeTenantId,
+        lead.tenant_id
+      )
+      const result = await markLeadContactedAction({
+        leadId: lead.id,
+        tenantId: lead.tenant_id,
+      })
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+      toast.success("Marked as contacted.")
+      router.refresh()
+    } catch {
+      toast.error("Could not update lead.")
+    }
+  }
+
+  async function handleSaveFollowUp() {
+    if (!followUpLocal) {
+      toast.error("Pick a date and time.")
+      return
+    }
+    setSavingFollowUp(true)
+    try {
+      await syncActiveTenantForMutation(
+        setActiveTenantId,
+        activeTenantId,
+        lead.tenant_id
+      )
+      const iso = new Date(followUpLocal).toISOString()
+      const result = await setLeadFollowUpAction({
+        leadId: lead.id,
+        tenantId: lead.tenant_id,
+        followUpAtIso: iso,
+      })
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+      toast.success("Follow-up saved.")
+      router.refresh()
+    } catch {
+      toast.error("Could not save follow-up.")
+    } finally {
+      setSavingFollowUp(false)
+    }
+  }
+
+  async function handleConvertToTask() {
+    try {
+      await syncActiveTenantForMutation(
+        setActiveTenantId,
+        activeTenantId,
+        lead.tenant_id
+      )
+      const result = await createTaskFromLeadAction({
+        leadId: lead.id,
+        tenantId: lead.tenant_id,
+        leadName: lead.name,
+      })
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+      toast.success("Task created.")
+      router.push(`/tasks/${result.data.taskId}`)
+      router.refresh()
+    } catch {
+      toast.error("Could not create task.")
+    }
   }
 
   function copy(text: string) {
@@ -308,21 +458,34 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
               size="sm"
               variant="outline"
               className="w-full border-zinc-300 text-zinc-600 hover:text-zinc-800 hover:bg-zinc-50 text-xs gap-2"
-              onClick={() => toast.success("Marked as contacted.")}
+              onClick={() => void handleMarkContacted()}
             >
               <CheckCircle className="w-3.5 h-3.5" strokeWidth={1.75} />
               Mark contacted
             </Button>
 
-            <Button
-              size="sm"
-              variant="outline"
-              className="w-full border-zinc-300 text-zinc-600 hover:text-zinc-800 hover:bg-zinc-50 text-xs gap-2"
-              onClick={() => toast.success("Follow-up scheduled.")}
-            >
-              <Calendar className="w-3.5 h-3.5" strokeWidth={1.75} />
-              Set follow-up
-            </Button>
+            <div className="space-y-2">
+              <label htmlFor="follow-up-local" className="text-[10px] text-zinc-400 uppercase tracking-wider">
+                Follow-up date
+              </label>
+              <input
+                id="follow-up-local"
+                type="datetime-local"
+                value={followUpLocal}
+                onChange={(e) => setFollowUpLocal(e.target.value)}
+                className="w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-xs text-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-byred-red"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full border-zinc-300 text-zinc-600 hover:text-zinc-800 hover:bg-zinc-50 text-xs gap-2"
+                disabled={savingFollowUp}
+                onClick={() => void handleSaveFollowUp()}
+              >
+                <Calendar className="w-3.5 h-3.5" strokeWidth={1.75} />
+                {savingFollowUp ? "Saving…" : "Save follow-up"}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -338,7 +501,7 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
               size="sm"
               variant="outline"
               className="w-full border-zinc-300 text-zinc-600 hover:text-zinc-800 hover:bg-zinc-50 text-xs gap-2"
-              onClick={() => toast.success("Task created from lead.")}
+              onClick={() => void handleConvertToTask()}
             >
               <CheckCircle className="w-3.5 h-3.5" strokeWidth={1.75} />
               Convert to task
@@ -347,8 +510,9 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
             <Button
               size="sm"
               variant="outline"
-              className="w-full border-zinc-300 text-zinc-600 hover:text-zinc-800 hover:bg-zinc-50 text-xs gap-2"
-              onClick={() => toast.success("Lead reassigned.")}
+              className="w-full border-zinc-300 text-zinc-400 text-xs gap-2"
+              disabled
+              title="Coming soon"
             >
               <UserCheck className="w-3.5 h-3.5" strokeWidth={1.75} />
               Reassign
@@ -378,15 +542,39 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
                   <AlertDialogCancel className="border-zinc-300 text-zinc-500">
                     Cancel
                   </AlertDialogCancel>
-                  <AlertDialogAction
-                    className="bg-byred-red hover:bg-byred-red-hot text-white"
-                    onClick={() => {
-                      setStage("LOST")
-                      toast.success("Lead archived.")
-                    }}
-                  >
-                    Archive
-                  </AlertDialogAction>
+                    <AlertDialogAction
+                      className="bg-byred-red hover:bg-byred-red-hot text-white"
+                      onClick={() => {
+                        void (async () => {
+                          const previousStage = stage
+                          setStage("LOST")
+                          try {
+                            await syncActiveTenantForMutation(
+                              setActiveTenantId,
+                              activeTenantId,
+                              lead.tenant_id
+                            )
+                            const result = await archiveLeadAction({
+                              leadId: lead.id,
+                              tenantId: lead.tenant_id,
+                              previousStage,
+                            })
+                            if (!result.ok) {
+                              setStage(previousStage)
+                              toast.error(result.error)
+                              return
+                            }
+                            toast.success("Lead archived.")
+                            router.refresh()
+                          } catch {
+                            setStage(previousStage)
+                            toast.error("Could not archive lead.")
+                          }
+                        })()
+                      }}
+                    >
+                      Archive
+                    </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import type { CurrentUser } from "@/lib/context/user-context"
+import type { CurrentUser, TenantAccess } from "@/lib/context/user-context"
+import type { ByredTenant, ByredUser, ByredUserTenant } from "@/types/database"
 
 /**
  * Get the current authenticated user with their byred_users profile and tenant access.
@@ -22,7 +23,9 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     .from("byred_users")
     .select("*")
     .eq("auth_user_id", authUser.id)
-    .single()
+    .maybeSingle()
+
+  const typedProfile = (profile ?? null) as ByredUser | null
 
   // Fetch the user's tenant access with tenant details
   const { data: userTenants } = await supabase
@@ -41,20 +44,51 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
       )
     `
     )
-    .eq("user_id", profile?.id ?? "")
+    .eq("user_id", typedProfile?.id ?? "")
 
-  const tenants = (userTenants ?? [])
-    .filter((ut) => ut.byred_tenants)
-    .map((ut) => ({
-      ...(ut.byred_tenants as NonNullable<typeof ut.byred_tenants>),
-      role: ut.role,
-    }))
+  const typedUserTenants = (userTenants ?? []) as Array<{
+    role: ByredUserTenant["role"]
+    byred_tenants: ByredTenant | ByredTenant[] | null
+  }>
+
+  const tenants: TenantAccess[] = typedUserTenants
+    .filter((record) => record.byred_tenants)
+    .map((record) => {
+      const baseTenant = Array.isArray(record.byred_tenants)
+        ? record.byred_tenants[0]
+        : record.byred_tenants
+
+      return {
+        id: baseTenant?.id ?? "",
+        name: baseTenant?.name ?? "Unknown tenant",
+        type: baseTenant?.type ?? "service",
+        color: baseTenant?.color ?? "#d90009",
+        active: baseTenant?.active ?? true,
+        created_at: baseTenant?.created_at ?? null,
+        updated_at: baseTenant?.updated_at ?? null,
+        role: record.role,
+      }
+    })
+
+  const metadataTenantId =
+    typeof authUser.user_metadata?.active_tenant_id === "string"
+      ? authUser.user_metadata.active_tenant_id
+      : null
+
+  const activeTenantId =
+    metadataTenantId && tenants.some((tenant) => tenant.id === metadataTenantId)
+      ? metadataTenantId
+      : tenants[0]?.id ?? null
 
   return {
     authUser,
-    profile,
+    profile: typedProfile,
     tenants,
-    isAdmin: profile?.role === "admin",
+    activeTenantId,
+    setActiveTenantId: async () => {
+      throw new Error("setActiveTenantId is only available in client components")
+    },
+    isAdmin: typedProfile?.role === "admin",
   }
 }
 

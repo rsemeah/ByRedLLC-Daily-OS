@@ -15,6 +15,13 @@ import {
 } from "lucide-react"
 import { TENANT_COLORS, TENANT_NAMES } from "@/lib/tenant-colors"
 import { useUser } from "@/lib/context/user-context"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 const WORK_NAV = [
   { label: "Command Center", href: "/", icon: LayoutDashboard },
@@ -27,13 +34,6 @@ const SYSTEM_NAV = [
   { label: "Activities", href: "/activities", icon: Activity },
   { label: "Tenants", href: "/tenants", icon: Building2 },
   { label: "Settings", href: "/settings", icon: Settings },
-]
-
-const TENANTS = [
-  { id: "t1", href: "/tasks?tenant_id=t1" },
-  { id: "t2", href: "/tasks?tenant_id=t2" },
-  { id: "t3", href: "/tasks?tenant_id=t3" },
-  { id: "t4", href: "/tasks?tenant_id=t4" },
 ]
 
 function NavItem({
@@ -66,6 +66,14 @@ function NavItem({
 export function AppSidebar() {
   const pathname = usePathname()
   const currentUser = useUser()
+  async function handleTenantSwitch(tenantId: string) {
+    try {
+      await currentUser.setActiveTenantId(tenantId)
+    } catch (error) {
+      console.error("Failed to switch tenant", error)
+    }
+  }
+
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/"
@@ -117,15 +125,37 @@ export function AppSidebar() {
           <p className="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase px-3 mb-2">
             Tenants
           </p>
+          {currentUser.tenants.length > 1 && (
+            <div className="px-3 mb-2">
+              <Select
+                value={currentUser.activeTenantId ?? undefined}
+                onValueChange={(value) => {
+                  void handleTenantSwitch(value)
+                }}
+              >
+                <SelectTrigger className="h-8 text-xs border-zinc-200 bg-white">
+                  <SelectValue placeholder="Switch tenant" />
+                </SelectTrigger>
+                <SelectContent>
+                  {currentUser.tenants.map((tenant) => (
+                    <SelectItem key={tenant.id} value={tenant.id} className="text-xs">
+                      {tenant.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="space-y-0.5">
-            {TENANTS.map(({ id, href }) => {
-              const colors = TENANT_COLORS[id]
-              const name = TENANT_NAMES[id]
-              const active = pathname.includes(`tenant_id=${id}`)
+            {currentUser.tenants.map((tenant) => {
+              const colors = TENANT_COLORS[tenant.id]
+              const fallbackName = TENANT_NAMES[tenant.id]
+              const name = tenant.name ?? fallbackName ?? tenant.id
+              const active = currentUser.activeTenantId === tenant.id
               return (
                 <Link
-                  key={id}
-                  href={href}
+                  key={tenant.id}
+                  href={`/tasks?tenant_id=${tenant.id}`}
                   className={cn(
                     "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors",
                     active
@@ -134,7 +164,8 @@ export function AppSidebar() {
                   )}
                 >
                   <span
-                    className={cn("w-2 h-2 rounded-full shrink-0", colors.dot)}
+                    className={cn("w-2 h-2 rounded-full shrink-0", colors?.dot)}
+                    style={!colors?.dot ? { backgroundColor: tenant.color } : undefined}
                   />
                   <span className="truncate text-xs">{name}</span>
                 </Link>

@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   ChevronRight,
   Sparkles,
@@ -44,7 +45,9 @@ import { AiModeChip } from "@/components/byred/ai-mode-chip"
 import { BlockerBanner } from "@/components/byred/blocker-banner"
 import { ActivityItem } from "@/components/byred/activity-item"
 import { useUser } from "@/lib/context/user-context"
-import type { Task, Activity } from "@/types/db"
+import { syncActiveTenantForMutation } from "@/lib/client/sync-active-tenant"
+import { updateTaskFieldsAction } from "@/lib/actions/tasks"
+import type { Task, Activity, AiMode, TaskPriority, TaskStatus } from "@/types/db"
 
 function ScoreBar({ value }: { value: number }) {
   return (
@@ -71,7 +74,9 @@ interface TaskDetailProps {
 }
 
 export function TaskDetail({ task, activities }: TaskDetailProps) {
+  const router = useRouter()
   const currentUser = useUser()
+  const { activeTenantId, setActiveTenantId } = currentUser
   const displayName =
     currentUser?.profile?.name ?? currentUser?.authUser?.email ?? "User"
   const initials = displayName
@@ -84,8 +89,28 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
   const [title, setTitle] = useState(task.title)
   const [editingTitle, setEditingTitle] = useState(false)
   const [blockerFlag, setBlockerFlag] = useState(task.blocker_flag)
+  const [status, setStatus] = useState<TaskStatus>(
+    (task.status ?? "not_started") as TaskStatus
+  )
+  const [priority, setPriority] = useState<TaskPriority>(
+    (task.priority ?? "medium") as TaskPriority
+  )
+  const [aiMode, setAiMode] = useState<AiMode>(
+    (task.ai_mode ?? "HUMAN_ONLY") as AiMode
+  )
+  const [blockerReason, setBlockerReason] = useState(task.blocker_reason ?? "")
   const [aiResult, setAiResult] = useState<AiActionResult | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    setTitle(task.title)
+    setBlockerFlag(task.blocker_flag)
+    setStatus((task.status ?? "not_started") as TaskStatus)
+    setPriority((task.priority ?? "medium") as TaskPriority)
+    setAiMode((task.ai_mode ?? "HUMAN_ONLY") as AiMode)
+    setBlockerReason(task.blocker_reason ?? "")
+  }, [task])
 
   async function handleAiAction(type: "assist" | "draft" | "execute") {
     setAiLoading(true)
@@ -105,8 +130,74 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
     toast.success("AI response generated.")
   }
 
-  function handleSave() {
-    toast.success("Task updated.")
+  async function persistFields(patch: Parameters<typeof updateTaskFieldsAction>[0]) {
+    try {
+      await syncActiveTenantForMutation(
+        setActiveTenantId,
+        activeTenantId,
+        task.tenant_id
+      )
+      const result = await updateTaskFieldsAction(patch)
+      if (!result.ok) {
+        toast.error(result.error)
+        return false
+      }
+      router.refresh()
+      return true
+    } catch {
+      toast.error("Could not save task.")
+      return false
+    }
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    try {
+      const ok = await persistFields({
+        taskId: task.id,
+        tenantId: task.tenant_id,
+        status,
+        priority,
+        ai_mode: aiMode,
+        blocker_flag: blockerFlag,
+        blocker_reason: blockerFlag ? blockerReason.trim() || null : null,
+      })
+      if (ok) toast.success("Task updated.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleTitleBlur() {
+    setEditingTitle(false)
+    const next = title.trim()
+    if (next === task.title) return
+    const ok = await persistFields({
+      taskId: task.id,
+      tenantId: task.tenant_id,
+      title: next,
+    })
+    if (ok) {
+      toast.success("Title saved.")
+    } else {
+      setTitle(task.title)
+    }
+  }
+
+  async function handleUnblock() {
+    setBlockerFlag(false)
+    const ok = await persistFields({
+      taskId: task.id,
+      tenantId: task.tenant_id,
+      blocker_flag: false,
+      blocker_reason: null,
+    })
+    if (ok) {
+      setBlockerReason("")
+      toast.success("Task unblocked.")
+    } else {
+      setBlockerFlag(task.blocker_flag)
+    }
   }
 
   return (
@@ -135,10 +226,7 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
               autoFocus
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              onBlur={() => {
-                setEditingTitle(false)
-                toast.success("Task updated.")
-              }}
+              onBlur={() => void handleTitleBlur()}
               className="w-full text-2xl font-condensed font-bold text-zinc-800 tracking-tight bg-transparent border-b border-byred-red outline-none pb-1"
             />
           ) : (
@@ -155,20 +243,17 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
           <div className="flex items-center gap-2 mt-3 flex-wrap">
             <TenantPill tenantId={task.tenant_id} />
             <DueDateCell dueDate={task.due_date} />
-            <PriorityFlag priority={task.priority} showLabel />
-            <StatusBadge status={task.status} />
-            <AiModeChip mode={task.ai_mode} />
+            <PriorityFlag priority={priority} showLabel />
+            <StatusBadge status={status} />
+            <AiModeChip mode={aiMode} />
           </div>
         </div>
 
         {/* Blocker banner */}
         {blockerFlag && (
           <BlockerBanner
-            reason={task.blocker_reason}
-            onUnblock={() => {
-              setBlockerFlag(false)
-              toast.success("Task unblocked.")
-            }}
+            reason={blockerReason || task.blocker_reason}
+            onUnblock={() => void handleUnblock()}
           />
         )}
 
@@ -426,7 +511,10 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
             {/* Status */}
             <div className="space-y-1.5">
               <Label className="text-xs text-zinc-400">Status</Label>
-              <Select defaultValue={task.status ?? "not_started"}>
+              <Select
+                value={status}
+                onValueChange={(v) => setStatus(v as TaskStatus)}
+              >
                 <SelectTrigger className="h-8 bg-white border-zinc-300 text-xs text-zinc-600">
                   <SelectValue />
                 </SelectTrigger>
@@ -437,6 +525,7 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
                     "overdue",
                     "done",
                     "blocked",
+                    "cancelled",
                   ].map((s) => (
                     <SelectItem
                       key={s}
@@ -453,7 +542,10 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
             {/* Priority */}
             <div className="space-y-1.5">
               <Label className="text-xs text-zinc-400">Priority</Label>
-              <Select defaultValue={task.priority ?? "medium"}>
+              <Select
+                value={priority}
+                onValueChange={(v) => setPriority(v as TaskPriority)}
+              >
                 <SelectTrigger className="h-8 bg-white border-zinc-300 text-xs text-zinc-600">
                   <SelectValue />
                 </SelectTrigger>
@@ -474,7 +566,10 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
             {/* AI Mode */}
             <div className="space-y-1.5">
               <Label className="text-xs text-zinc-400">AI Mode</Label>
-              <Select defaultValue={task.ai_mode ?? "HUMAN_ONLY"}>
+              <Select
+                value={aiMode}
+                onValueChange={(v) => setAiMode(v as AiMode)}
+              >
                 <SelectTrigger className="h-8 bg-white border-zinc-300 text-xs text-zinc-600">
                   <SelectValue />
                 </SelectTrigger>
@@ -499,7 +594,8 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
               <div className="space-y-1.5">
                 <Label className="text-xs text-zinc-400">Blocker reason</Label>
                 <Textarea
-                  defaultValue={task.blocker_reason ?? ""}
+                  value={blockerReason}
+                  onChange={(e) => setBlockerReason(e.target.value)}
                   className="text-xs bg-white border-zinc-300 text-zinc-600 focus-visible:ring-byred-red min-h-[60px]"
                   placeholder="Describe what is blocking this task..."
                 />
@@ -508,10 +604,11 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
 
             <Button
               className="w-full bg-byred-red hover:bg-byred-red-hot text-white text-sm gap-2"
-              onClick={handleSave}
+              onClick={() => void handleSave()}
+              disabled={saving}
             >
               <CheckCircle className="w-4 h-4" strokeWidth={1.75} />
-              Save
+              {saving ? "Saving…" : "Save"}
             </Button>
           </CardContent>
         </Card>

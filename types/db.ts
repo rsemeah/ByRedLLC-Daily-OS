@@ -1,11 +1,38 @@
-// Re-export types from the generated database types
+export type {
+  Database,
+  ByredTenant,
+  ByredTenantInsert,
+  ByredTenantUpdate,
+  ByredUser,
+  ByredUserInsert,
+  ByredUserUpdate,
+  ByredUserTenant,
+  ByredUserTenantInsert,
+  ByredUserTenantUpdate,
+  ByredTask,
+  ByredTaskInsert,
+  ByredTaskUpdate,
+  ByredLead,
+  ByredLeadInsert,
+  ByredLeadUpdate,
+  ByredActivity,
+  ByredActivityInsert,
+  ByredActivityUpdate,
+  ByredDailyBrief,
+  ByredDailyBriefInsert,
+  ByredDailyBriefUpdate,
+} from "./db.generated"
+
+import type { LeadStage } from "./database"
+
+// Re-export convenience aliases used by the existing UI
 export type {
   ByredTenant as Tenant,
   ByredUser as User,
-  ByredTask,
-  ByredLead as Lead,
-  ByredActivity as Activity,
   ByredDailyBrief as DailyBrief,
+} from "./db.generated"
+
+export type {
   DailyBriefSummary,
   TaskStatus,
   TaskPriority,
@@ -14,6 +41,34 @@ export type {
   UserRole,
   TenantType,
 } from "./database"
+
+/** Lead row shaped for CRM UI and server mappers */
+export type Lead = {
+  id: string
+  tenant_id: string
+  name: string
+  phone: string | null
+  email: string | null
+  source: string | null
+  stage: LeadStage
+  assigned_user_id: string | null
+  last_contacted_at: string | null
+  next_follow_up_at: string | null
+  revenue_potential: number | null
+  created_at: string
+}
+
+/** Activity timeline row for feed UI */
+export type Activity = {
+  id: string
+  tenant_id: string
+  object_type: "task" | "lead"
+  object_id: string
+  user_id: string | null
+  type: string
+  summary: string
+  created_at: string
+}
 
 // Keep backward-compatible Task type for existing components
 // Maps from byred_tasks schema to the UI expected shape

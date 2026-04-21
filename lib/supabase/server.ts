@@ -2,31 +2,41 @@ import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import type { Database } from "@/types/database"
 
-/**
- * Creates a Supabase client for server-side operations.
- * IMPORTANT: Do not store this in a global variable. Always create a new
- * client within each function when using it.
- */
-export async function createClient() {
+type CookieWrite = {
+  name: string
+  value: string
+  options?: Record<string, unknown>
+}
+
+type ServerSupabaseClient = ReturnType<typeof createServerClient<Database>>
+
+function getPublicEnv(name: "NEXT_PUBLIC_SUPABASE_URL" | "NEXT_PUBLIC_SUPABASE_ANON_KEY"): string {
+  const value = process.env[name]
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`)
+  }
+
+  return value
+}
+
+export async function createClient(): Promise<ServerSupabaseClient> {
   const cookieStore = await cookies()
 
   return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    getPublicEnv("NEXT_PUBLIC_SUPABASE_URL"),
+    getPublicEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
     {
       cookies: {
         getAll() {
           return cookieStore.getAll()
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: CookieWrite[]) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
             )
-          } catch {
-            // The "setAll" method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
+          } catch (error) {
+            console.error("Failed to set Supabase cookies in server context", error)
           }
         },
       },

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { Bell, ChevronRight, FileText, AlertTriangle } from "lucide-react"
@@ -11,7 +11,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { useUser } from "@/lib/context/user-context"
-import { createClient } from "@/lib/supabase/client"
 import type { DailyBriefSummary } from "@/types/database"
 
 const ROUTE_LABELS: Record<string, string> = {
@@ -47,35 +46,21 @@ const DEFAULT_BRIEF: DailyBriefSummary = {
   next_action: "Check back later for your daily brief",
 }
 
-export function AppTopbar() {
+export type AppTopbarProps = {
+  initialBrief?: DailyBriefSummary
+  initialBriefDate?: string | null
+}
+
+export function AppTopbar({
+  initialBrief,
+  initialBriefDate = null,
+}: AppTopbarProps) {
   const pathname = usePathname()
   const currentUser = useUser()
   const [briefOpen, setBriefOpen] = useState(false)
-  const [brief, setBrief] = useState<DailyBriefSummary>(DEFAULT_BRIEF)
-  const [briefDate, setBriefDate] = useState<string | null>(null)
+  const [brief] = useState<DailyBriefSummary>(initialBrief ?? DEFAULT_BRIEF)
+  const [briefDate] = useState<string | null>(initialBriefDate)
   const breadcrumbs = getBreadcrumbs(pathname)
-
-  // Fetch today's brief on mount
-  useEffect(() => {
-    async function fetchBrief() {
-      const supabase = createClient()
-      const today = new Date().toISOString().split("T")[0]
-
-      const { data } = await supabase
-        .from("byred_daily_briefs")
-        .select("summary, date")
-        .eq("date", today)
-        .is("user_id", null) // Global brief
-        .single()
-
-      if (data?.summary) {
-        setBrief(data.summary as DailyBriefSummary)
-        setBriefDate(data.date)
-      }
-    }
-
-    fetchBrief()
-  }, [])
 
   // User display info
   const displayName =

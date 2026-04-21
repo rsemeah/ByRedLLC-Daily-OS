@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { TenantPill } from "@/components/byred/tenant-pill"
 import { DueDateCell } from "@/components/byred/due-date-cell"
 import { getTasks } from "@/lib/data/tasks"
-import { getTodayBrief } from "@/lib/data/daily-briefs"
+import { getDailyBriefForSession } from "@/lib/data/daily-briefs"
 import Link from "next/link"
 import type { Task } from "@/types/db"
 
@@ -107,7 +107,7 @@ function TaskCard({ task }: { task: Task }) {
 }
 
 export default async function TodayPage() {
-  const [tasks, brief] = await Promise.all([getTasks(), getTodayBrief()])
+  const [tasks, brief] = await Promise.all([getTasks(), getDailyBriefForSession()])
 
   const today = new Date()
   const todayStr = format(today, "EEEE, MMMM d")
