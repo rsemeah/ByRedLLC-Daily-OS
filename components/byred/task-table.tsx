@@ -1,6 +1,9 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { MoreHorizontal, ExternalLink, Copy, Archive, Edit } from "lucide-react"
 import {
@@ -16,6 +19,8 @@ import { PriorityFlag } from "./priority-flag"
 import { DueDateCell } from "./due-date-cell"
 import { AiModeChip } from "./ai-mode-chip"
 import { useUser } from "@/lib/context/user-context"
+import { syncActiveTenantForMutation } from "@/lib/client/sync-active-tenant"
+import { updateTaskFieldsAction } from "@/lib/actions/tasks"
 import type { Task } from "@/types/db"
 
 function formatMinutes(minutes: number): string {
@@ -30,7 +35,10 @@ interface TaskTableProps {
 }
 
 export function TaskTable({ tasks }: TaskTableProps) {
+  const router = useRouter()
   const currentUser = useUser()
+  const { activeTenantId, setActiveTenantId } = currentUser
+  const [archivingId, setArchivingId] = useState<string | null>(null)
   const displayName =
     currentUser?.profile?.name ?? currentUser?.authUser?.email ?? "User"
   const initials = displayName
@@ -39,6 +47,32 @@ export function TaskTable({ tasks }: TaskTableProps) {
     .join("")
     .toUpperCase()
     .slice(0, 2)
+
+  async function handleArchive(task: Task) {
+    setArchivingId(task.id)
+    try {
+      await syncActiveTenantForMutation(
+        setActiveTenantId,
+        activeTenantId,
+        task.tenant_id
+      )
+      const result = await updateTaskFieldsAction({
+        taskId: task.id,
+        tenantId: task.tenant_id,
+        status: "cancelled",
+      })
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+      toast.success("Task archived.")
+      router.refresh()
+    } catch {
+      toast.error("Could not archive task.")
+    } finally {
+      setArchivingId(null)
+    }
+  }
 
   if (tasks.length === 0) {
     return (
@@ -209,9 +243,16 @@ export function TaskTable({ tasks }: TaskTableProps) {
                       <Copy className="w-3.5 h-3.5" strokeWidth={1.75} />
                       Copy link
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="text-zinc-400 focus:text-zinc-600 focus:bg-zinc-100 gap-2 text-xs cursor-pointer">
+                    <DropdownMenuItem
+                      className="text-zinc-600 focus:text-zinc-900 focus:bg-zinc-100 gap-2 text-xs cursor-pointer"
+                      disabled={archivingId === task.id || task.status === "cancelled"}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        void handleArchive(task)
+                      }}
+                    >
                       <Archive className="w-3.5 h-3.5" strokeWidth={1.75} />
-                      Archive
+                      {archivingId === task.id ? "Archiving…" : "Archive"}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

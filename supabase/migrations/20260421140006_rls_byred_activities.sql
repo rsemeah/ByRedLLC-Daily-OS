@@ -9,7 +9,7 @@ CREATE POLICY byred_activities_select_member
   FOR SELECT
   TO authenticated
   USING (
-    public.byred_is_member_of_tenant(public.byred_activities.tenant_id)
+    public.byred_is_member_of_tenant(public.byred_activities.tenant_id::uuid)
   );
 
 -- Inserts from the app: any tenant member may log activity in their tenant
@@ -19,10 +19,10 @@ CREATE POLICY byred_activities_insert_member
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    public.byred_is_member_of_tenant(public.byred_activities.tenant_id)
+    public.byred_is_member_of_tenant(public.byred_activities.tenant_id::uuid)
     AND (
       public.byred_jwt_active_tenant_id() IS NULL
-      OR public.byred_activities.tenant_id = public.byred_jwt_active_tenant_id()
+      OR public.byred_activities.tenant_id::uuid = public.byred_jwt_active_tenant_id()
     )
   );
 
@@ -32,17 +32,17 @@ CREATE POLICY byred_activities_update_member_admin_or_actor
   FOR UPDATE
   TO authenticated
   USING (
-    public.byred_is_member_of_tenant(public.byred_activities.tenant_id)
+    public.byred_is_member_of_tenant(public.byred_activities.tenant_id::uuid)
     AND (
-      public.byred_is_admin_for_tenant(public.byred_activities.tenant_id)
-      OR public.byred_activities.user_id = public.byred_current_user_id()::uuid
+      public.byred_is_admin_for_tenant(public.byred_activities.tenant_id::uuid)
+      OR public.byred_activities.user_id::uuid = public.byred_current_user_id()::uuid
     )
   )
   WITH CHECK (
-    public.byred_is_member_of_tenant(public.byred_activities.tenant_id)
+    public.byred_is_member_of_tenant(public.byred_activities.tenant_id::uuid)
     AND (
-      public.byred_is_admin_for_tenant(public.byred_activities.tenant_id)
-      OR public.byred_activities.user_id = public.byred_current_user_id()::uuid
+      public.byred_is_admin_for_tenant(public.byred_activities.tenant_id::uuid)
+      OR public.byred_activities.user_id::uuid = public.byred_current_user_id()::uuid
     )
   );
 
@@ -52,5 +52,5 @@ CREATE POLICY byred_activities_delete_admin
   FOR DELETE
   TO authenticated
   USING (
-    public.byred_is_admin_for_tenant(public.byred_activities.tenant_id)
+    public.byred_is_admin_for_tenant(public.byred_activities.tenant_id::uuid)
   );

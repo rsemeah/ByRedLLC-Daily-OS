@@ -9,14 +9,14 @@ CREATE POLICY byred_users_select_self_or_peer
   FOR SELECT
   TO authenticated
   USING (
-    public.byred_users.id = public.byred_current_user_id()::uuid
+    public.byred_users.id::uuid = public.byred_current_user_id()::uuid
     OR EXISTS (
       SELECT 1
       FROM public.byred_user_tenants me
       INNER JOIN public.byred_user_tenants peer
-        ON peer.tenant_id = me.tenant_id
-      WHERE me.user_id = public.byred_current_user_id()::uuid
-        AND peer.user_id = public.byred_users.id
+        ON peer.tenant_id::uuid = me.tenant_id::uuid
+      WHERE me.user_id::uuid = public.byred_current_user_id()::uuid
+        AND peer.user_id::uuid = public.byred_users.id::uuid
     )
   );
 
@@ -35,27 +35,27 @@ CREATE POLICY byred_users_update_self_or_admin_peer
   FOR UPDATE
   TO authenticated
   USING (
-    public.byred_users.id = public.byred_current_user_id()::uuid
+    public.byred_users.id::uuid = public.byred_current_user_id()::uuid
     OR EXISTS (
       SELECT 1
       FROM public.byred_user_tenants me
       INNER JOIN public.byred_user_tenants peer
-        ON peer.tenant_id = me.tenant_id
-      WHERE me.user_id = public.byred_current_user_id()::uuid
+        ON peer.tenant_id::uuid = me.tenant_id::uuid
+      WHERE me.user_id::uuid = public.byred_current_user_id()::uuid
         AND me.role = 'admin'
-        AND peer.user_id = public.byred_users.id
+        AND peer.user_id::uuid = public.byred_users.id::uuid
     )
   )
   WITH CHECK (
-    public.byred_users.id = public.byred_current_user_id()::uuid
+    public.byred_users.id::uuid = public.byred_current_user_id()::uuid
     OR EXISTS (
       SELECT 1
       FROM public.byred_user_tenants me
       INNER JOIN public.byred_user_tenants peer
-        ON peer.tenant_id = me.tenant_id
-      WHERE me.user_id = public.byred_current_user_id()::uuid
+        ON peer.tenant_id::uuid = me.tenant_id::uuid
+      WHERE me.user_id::uuid = public.byred_current_user_id()::uuid
         AND me.role = 'admin'
-        AND peer.user_id = public.byred_users.id
+        AND peer.user_id::uuid = public.byred_users.id::uuid
     )
   );
 
@@ -69,9 +69,9 @@ CREATE POLICY byred_users_delete_admin_peer
       SELECT 1
       FROM public.byred_user_tenants me
       INNER JOIN public.byred_user_tenants peer
-        ON peer.tenant_id = me.tenant_id
-      WHERE me.user_id = public.byred_current_user_id()::uuid
+        ON peer.tenant_id::uuid = me.tenant_id::uuid
+      WHERE me.user_id::uuid = public.byred_current_user_id()::uuid
         AND me.role = 'admin'
-        AND peer.user_id = public.byred_users.id
+        AND peer.user_id::uuid = public.byred_users.id::uuid
     )
   );

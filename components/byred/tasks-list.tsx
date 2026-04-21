@@ -15,13 +15,8 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { TaskTable } from "@/components/byred/task-table"
-import { TENANT_NAMES } from "@/lib/tenant-colors"
+import { useUser } from "@/lib/context/user-context"
 import type { Task } from "@/types/db"
-
-const TENANT_OPTIONS = Object.entries(TENANT_NAMES).map(([id, name]) => ({
-  id,
-  name,
-}))
 const STATUS_OPTIONS = ["not_started", "in_progress", "overdue", "done", "blocked"]
 const AI_MODE_OPTIONS = ["HUMAN_ONLY", "AI_ASSIST", "AI_DRAFT", "AI_EXECUTE"]
 const PRIORITY_OPTIONS = ["critical", "high", "medium", "low"]
@@ -31,6 +26,7 @@ interface TasksListProps {
 }
 
 export function TasksList({ initialTasks }: TasksListProps) {
+  const { tenants } = useUser()
   const [search, setSearch] = useState("")
   const [tenantFilter, setTenantFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -129,7 +125,7 @@ export function TasksList({ initialTasks }: TasksListProps) {
               <SelectItem value="all" className="text-xs text-zinc-600">
                 All tenants
               </SelectItem>
-              {TENANT_OPTIONS.map((t) => (
+              {tenants.map((t) => (
                 <SelectItem
                   key={t.id}
                   value={t.id}

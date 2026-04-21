@@ -33,8 +33,8 @@ AS $$
   SELECT EXISTS (
     SELECT 1
     FROM public.byred_user_tenants ut
-    WHERE ut.tenant_id = p_tenant_id
-      AND ut.user_id = public.byred_current_user_id()::uuid
+    WHERE ut.tenant_id::uuid = p_tenant_id
+      AND ut.user_id::uuid = public.byred_current_user_id()::uuid
   );
 $$;
 
@@ -49,8 +49,8 @@ AS $$
   SELECT EXISTS (
     SELECT 1
     FROM public.byred_user_tenants ut
-    WHERE ut.tenant_id = p_tenant_id
-      AND ut.user_id = public.byred_current_user_id()::uuid
+    WHERE ut.tenant_id::uuid = p_tenant_id
+      AND ut.user_id::uuid = public.byred_current_user_id()::uuid
       AND ut.role = 'admin'
   );
 $$;
@@ -78,10 +78,10 @@ BEGIN
     RETURN NULL;
   END IF;
 
-  SELECT ut.tenant_id
+  SELECT ut.tenant_id::uuid
   INTO v_tenant
   FROM public.byred_user_tenants ut
-  WHERE ut.user_id = v_user
+  WHERE ut.user_id::uuid = v_user
   ORDER BY ut.created_at ASC NULLS LAST
   LIMIT 1;
 
