@@ -64,7 +64,7 @@ function ScoreBar({ value }: { value: number }) {
 }
 
 interface AiActionResult {
-  type: "assist" | "draft"
+  type: "assist" | "draft" | "execute"
   content: string
 }
 
@@ -114,20 +114,55 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
 
   async function handleAiAction(type: "assist" | "draft" | "execute") {
     setAiLoading(true)
-    await new Promise((r) => setTimeout(r, 1000))
-    if (type === "assist") {
-      setAiResult({
-        type: "assist",
-        content: `**Suggested actions:**\n\n1. Review task requirements and gather relevant documentation\n2. Coordinate with stakeholders to align on timeline\n3. Begin execution using the checklist in the description\n\n**Risk:** Deadline pressure may require scope reduction.\n\n**Next Action:** Block 90 minutes tomorrow morning.`,
+    setAiResult({ type, content: "" })
+    try {
+      const res = await fetch("/api/ai/task-action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          taskId: task.id,
+          tenantId: task.tenant_id,
+          action: type,
+          userDisplayName: displayName,
+        }),
       })
-    } else if (type === "draft") {
-      setAiResult({
-        type: "draft",
-        content: `**Subject:** Action Required: ${task.title}\n\n**Body:**\nHi team,\n\nThis task requires immediate attention. The due date is ${task.due_date ?? "TBD"} and current status is ${task.status ?? "not started"}.\n\nPlease review and take action.\n\n— ${displayName}`,
-      })
+
+      if (!res.ok) {
+        const err = (await res.json().catch(() => null)) as { error?: string } | null
+        toast.error(err?.error ?? "AI request failed.")
+        setAiResult(null)
+        return
+      }
+
+      const reader = res.body?.getReader()
+      if (!reader) {
+        toast.error("No response stream.")
+        setAiResult(null)
+        return
+      }
+
+      const decoder = new TextDecoder()
+      let content = ""
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        content += decoder.decode(value, { stream: true })
+        setAiResult({ type, content })
+      }
+
+      if (!content.trim()) {
+        toast.error("Empty AI response.")
+        setAiResult(null)
+        return
+      }
+
+      toast.success("AI response generated.")
+    } catch {
+      toast.error("Could not reach AI.")
+      setAiResult(null)
+    } finally {
+      setAiLoading(false)
     }
-    setAiLoading(false)
-    toast.success("AI response generated.")
   }
 
   async function persistFields(patch: Parameters<typeof updateTaskFieldsAction>[0]) {
@@ -445,9 +480,9 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
                     </AlertDialogCancel>
                     <AlertDialogAction
                       className="bg-byred-red hover:bg-byred-red-hot text-white"
-                      onClick={() => {
-                        handleAiAction("execute")
-                        toast.success("Task executed.")
+                      onClick={(e) => {
+                        e.preventDefault()
+                        void handleAiAction("execute")
                       }}
                     >
                       Execute
@@ -462,7 +497,11 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
               <div className="mt-3 rounded-md border border-zinc-200 bg-zinc-50 p-3">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] text-zinc-400 uppercase tracking-widest">
-                    {aiResult.type === "assist" ? "AI Suggestions" : "Draft"}
+                    {aiResult.type === "assist"
+                      ? "AI Suggestions"
+                      : aiResult.type === "draft"
+                        ? "Draft"
+                        : "Execution plan"}
                   </span>
                   <Button
                     variant="ghost"
