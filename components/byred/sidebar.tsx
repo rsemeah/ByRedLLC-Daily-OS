@@ -1,9 +1,9 @@
-'use client'
+"use client"
 
-import Link from 'next/link'
-import Image from 'next/image'
-import { usePathname } from 'next/navigation'
-import { cn } from '@/lib/utils'
+import Link from "next/link"
+import Image from "next/image"
+import { usePathname } from "next/navigation"
+import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
   CalendarDays,
@@ -12,28 +12,28 @@ import {
   Activity,
   Building2,
   Settings,
-} from 'lucide-react'
-import { TENANT_COLORS, TENANT_NAMES } from '@/lib/tenant-colors'
-import { SEED_USER } from '@/lib/seed'
+} from "lucide-react"
+import { TENANT_COLORS, TENANT_NAMES } from "@/lib/tenant-colors"
+import { useUser } from "@/lib/context/user-context"
 
 const WORK_NAV = [
-  { label: 'Command Center', href: '/',          icon: LayoutDashboard },
-  { label: 'Today',          href: '/today',     icon: CalendarDays },
-  { label: 'Tasks',          href: '/tasks',     icon: CheckSquare },
-  { label: 'Leads',          href: '/leads',     icon: Users },
+  { label: "Command Center", href: "/", icon: LayoutDashboard },
+  { label: "Today", href: "/today", icon: CalendarDays },
+  { label: "Tasks", href: "/tasks", icon: CheckSquare },
+  { label: "Leads", href: "/leads", icon: Users },
 ]
 
 const SYSTEM_NAV = [
-  { label: 'Activities', href: '/activities', icon: Activity },
-  { label: 'Tenants',    href: '/tenants',    icon: Building2 },
-  { label: 'Settings',   href: '/settings',   icon: Settings },
+  { label: "Activities", href: "/activities", icon: Activity },
+  { label: "Tenants", href: "/tenants", icon: Building2 },
+  { label: "Settings", href: "/settings", icon: Settings },
 ]
 
 const TENANTS = [
-  { id: 't1', href: '/tasks?tenant_id=t1' },
-  { id: 't2', href: '/tasks?tenant_id=t2' },
-  { id: 't3', href: '/tasks?tenant_id=t3' },
-  { id: 't4', href: '/tasks?tenant_id=t4' },
+  { id: "t1", href: "/tasks?tenant_id=t1" },
+  { id: "t2", href: "/tasks?tenant_id=t2" },
+  { id: "t3", href: "/tasks?tenant_id=t3" },
+  { id: "t4", href: "/tasks?tenant_id=t4" },
 ]
 
 function NavItem({
@@ -51,10 +51,10 @@ function NavItem({
     <Link
       href={href}
       className={cn(
-        'flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors relative',
+        "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors relative",
         active
-          ? 'text-zinc-900 bg-zinc-100 border-l-2 border-byred-red -ml-px pl-[11px] font-medium'
-          : 'text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100'
+          ? "text-zinc-900 bg-zinc-100 border-l-2 border-byred-red -ml-px pl-[11px] font-medium"
+          : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100"
       )}
     >
       <Icon className="w-4 h-4 shrink-0" strokeWidth={1.75} />
@@ -65,16 +65,22 @@ function NavItem({
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const currentUser = useUser()
 
   function isActive(href: string) {
-    if (href === '/') return pathname === '/'
+    if (href === "/") return pathname === "/"
     return pathname.startsWith(href)
   }
 
-  const user = SEED_USER
-  const initials = user.full_name
-    ? user.full_name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
-    : 'RO'
+  // Get user display info from profile or auth user
+  const displayName = currentUser?.profile?.name ?? currentUser?.authUser?.email ?? "User"
+  const displayRole = currentUser?.profile?.role ?? "member"
+  const initials = displayName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2)
 
   return (
     <aside className="w-60 shrink-0 flex flex-col h-screen bg-white border-r border-zinc-200 fixed left-0 top-0 z-40">
@@ -121,13 +127,15 @@ export function AppSidebar() {
                   key={id}
                   href={href}
                   className={cn(
-                    'flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors',
+                    "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors",
                     active
-                      ? 'text-zinc-900 bg-zinc-100 font-medium'
-                      : 'text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100'
+                      ? "text-zinc-900 bg-zinc-100 font-medium"
+                      : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100"
                   )}
                 >
-                  <span className={cn('w-2 h-2 rounded-full shrink-0', colors.dot)} />
+                  <span
+                    className={cn("w-2 h-2 rounded-full shrink-0", colors.dot)}
+                  />
                   <span className="truncate text-xs">{name}</span>
                 </Link>
               )
@@ -152,11 +160,17 @@ export function AppSidebar() {
       <div className="p-3 border-t border-zinc-200">
         <div className="flex items-center gap-2.5 px-2 py-2">
           <div className="w-7 h-7 rounded-full bg-byred-red/10 border border-byred-red/20 flex items-center justify-center shrink-0">
-            <span className="text-xs font-semibold text-byred-red font-condensed">{initials}</span>
+            <span className="text-xs font-semibold text-byred-red font-condensed">
+              {initials}
+            </span>
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-medium text-zinc-800 truncate">{user.full_name}</p>
-            <p className="text-[10px] text-zinc-400 truncate">{user.role}</p>
+            <p className="text-xs font-medium text-zinc-800 truncate">
+              {displayName}
+            </p>
+            <p className="text-[10px] text-zinc-400 truncate capitalize">
+              {displayRole}
+            </p>
           </div>
         </div>
       </div>

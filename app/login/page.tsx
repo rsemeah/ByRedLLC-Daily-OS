@@ -1,19 +1,20 @@
-'use client'
+"use client"
 
-import Image from 'next/image'
-import Link from 'next/link'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { AlertOctagon } from 'lucide-react'
+import Image from "next/image"
+import Link from "next/link"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { AlertOctagon } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -22,16 +23,26 @@ export default function LoginPage() {
     setError(null)
     setLoading(true)
 
-    // Simulate auth — in production this would call Supabase Auth
-    await new Promise((r) => setTimeout(r, 600))
-
     if (!email || !password) {
-      setError('Email and password are required.')
+      setError("Email and password are required.")
       setLoading(false)
       return
     }
 
-    router.push('/')
+    const supabase = createClient()
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (authError) {
+      setError(authError.message)
+      setLoading(false)
+      return
+    }
+
+    router.push("/")
+    router.refresh()
   }
 
   const year = new Date().getFullYear()
@@ -104,7 +115,7 @@ export default function LoginPage() {
                 disabled={loading}
                 className="w-full bg-byred-red hover:bg-byred-red-hot active:bg-byred-red-deep text-white font-medium focus-visible:ring-byred-red"
               >
-                {loading ? 'Signing in…' : 'Sign in'}
+                {loading ? "Signing in..." : "Sign in"}
               </Button>
 
               <div className="text-center">

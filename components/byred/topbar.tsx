@@ -1,59 +1,121 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { usePathname } from 'next/navigation'
-import Link from 'next/link'
-import { Bell, ChevronRight, FileText } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
+import Link from "next/link"
+import { Bell, ChevronRight, FileText, AlertTriangle } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover'
-import { SEED_DAILY_BRIEF } from '@/lib/seed'
-import { AlertTriangle } from 'lucide-react'
+} from "@/components/ui/popover"
+import { useUser } from "@/lib/context/user-context"
+import { createClient } from "@/lib/supabase/client"
+import type { DailyBriefSummary } from "@/types/database"
 
 const ROUTE_LABELS: Record<string, string> = {
-  '/':           'Command Center',
-  '/today':      'Today',
-  '/tasks':      'Tasks',
-  '/leads':      'Leads',
-  '/activities': 'Activities',
-  '/tenants':    'Tenants',
-  '/settings':   'Settings',
+  "/": "Command Center",
+  "/today": "Today",
+  "/tasks": "Tasks",
+  "/leads": "Leads",
+  "/activities": "Activities",
+  "/tenants": "Tenants",
+  "/settings": "Settings",
 }
 
 function getBreadcrumbs(pathname: string): { label: string; href: string }[] {
-  const segments = pathname.split('/').filter(Boolean)
-  if (segments.length === 0) return [{ label: 'Command Center', href: '/' }]
+  const segments = pathname.split("/").filter(Boolean)
+  if (segments.length === 0) return [{ label: "Command Center", href: "/" }]
 
   const crumbs: { label: string; href: string }[] = []
-  let path = ''
+  let path = ""
   for (const seg of segments) {
     path += `/${seg}`
-    const label = ROUTE_LABELS[path] ?? (seg.length > 12 ? `${seg.slice(0, 10)}…` : seg)
+    const label =
+      ROUTE_LABELS[path] ?? (seg.length > 12 ? `${seg.slice(0, 10)}...` : seg)
     crumbs.push({ label, href: path })
   }
   return crumbs
 }
 
+// Default brief when none exists
+const DEFAULT_BRIEF: DailyBriefSummary = {
+  headline: "No brief generated yet",
+  top_3: [],
+  warnings: [],
+  next_action: "Check back later for your daily brief",
+}
+
 export function AppTopbar() {
   const pathname = usePathname()
+  const currentUser = useUser()
   const [briefOpen, setBriefOpen] = useState(false)
+  const [brief, setBrief] = useState<DailyBriefSummary>(DEFAULT_BRIEF)
+  const [briefDate, setBriefDate] = useState<string | null>(null)
   const breadcrumbs = getBreadcrumbs(pathname)
-  const brief = SEED_DAILY_BRIEF
+
+  // Fetch today's brief on mount
+  useEffect(() => {
+    async function fetchBrief() {
+      const supabase = createClient()
+      const today = new Date().toISOString().split("T")[0]
+
+      const { data } = await supabase
+        .from("byred_daily_briefs")
+        .select("summary, date")
+        .eq("date", today)
+        .is("user_id", null) // Global brief
+        .single()
+
+      if (data?.summary) {
+        setBrief(data.summary as DailyBriefSummary)
+        setBriefDate(data.date)
+      }
+    }
+
+    fetchBrief()
+  }, [])
+
+  // User display info
+  const displayName =
+    currentUser?.profile?.name ?? currentUser?.authUser?.email ?? "User"
+  const initials = displayName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2)
+
+  const formattedDate = briefDate
+    ? new Date(briefDate).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      })
+    : "Today"
 
   return (
     <header className="fixed top-0 left-60 right-0 h-14 z-30 bg-white border-b border-zinc-200 flex items-center justify-between px-6">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-sm" aria-label="Breadcrumb">
+      <nav
+        className="flex items-center gap-1.5 text-sm"
+        aria-label="Breadcrumb"
+      >
         {breadcrumbs.map((crumb, i) => (
           <span key={crumb.href} className="flex items-center gap-1.5">
-            {i > 0 && <ChevronRight className="w-3 h-3 text-zinc-400" strokeWidth={1.75} />}
+            {i > 0 && (
+              <ChevronRight
+                className="w-3 h-3 text-zinc-400"
+                strokeWidth={1.75}
+              />
+            )}
             {i === breadcrumbs.length - 1 ? (
               <span className="text-zinc-800 font-medium">{crumb.label}</span>
             ) : (
-              <Link href={crumb.href} className="text-zinc-400 hover:text-zinc-700 transition-colors">
+              <Link
+                href={crumb.href}
+                className="text-zinc-400 hover:text-zinc-700 transition-colors"
+              >
                 {crumb.label}
               </Link>
             )}
@@ -80,37 +142,60 @@ export function AppTopbar() {
             align="end"
           >
             <div className="p-4 border-b border-zinc-100">
-              <p className="text-xs text-zinc-400 mb-1">Daily Brief · Apr 20</p>
+              <p className="text-xs text-zinc-400 mb-1">
+                Daily Brief · {formattedDate}
+              </p>
               <p className="text-sm font-medium text-zinc-800 leading-snug">
-                {brief.summary.headline}
+                {brief.headline}
               </p>
             </div>
             <div className="p-4 space-y-3">
-              <div>
-                <p className="text-[10px] text-zinc-400 uppercase tracking-widest mb-2">Top 3</p>
-                <ol className="space-y-1">
-                  {brief.summary.top_3.map((item, i) => (
-                    <li key={i} className="flex items-start gap-2 text-xs text-zinc-600">
-                      <span className="text-byred-red font-mono font-medium shrink-0">{i + 1}.</span>
-                      {item}
-                    </li>
-                  ))}
-                </ol>
-              </div>
-              {brief.summary.warnings.length > 0 && (
+              {brief.top_3.length > 0 && (
                 <div>
-                  <p className="text-[10px] text-zinc-400 uppercase tracking-widest mb-2">Warnings</p>
-                  {brief.summary.warnings.map((w, i) => (
-                    <div key={i} className="flex items-start gap-2 text-xs text-amber-600">
-                      <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5" strokeWidth={1.75} />
+                  <p className="text-[10px] text-zinc-400 uppercase tracking-widest mb-2">
+                    Top 3
+                  </p>
+                  <ol className="space-y-1">
+                    {brief.top_3.map((item, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start gap-2 text-xs text-zinc-600"
+                      >
+                        <span className="text-byred-red font-mono font-medium shrink-0">
+                          {i + 1}.
+                        </span>
+                        {typeof item === "string" ? item : item.title}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+              {brief.warnings.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-zinc-400 uppercase tracking-widest mb-2">
+                    Warnings
+                  </p>
+                  {brief.warnings.map((w, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-2 text-xs text-amber-600"
+                    >
+                      <AlertTriangle
+                        className="w-3 h-3 shrink-0 mt-0.5"
+                        strokeWidth={1.75}
+                      />
                       {w}
                     </div>
                   ))}
                 </div>
               )}
               <div className="pt-2 border-t border-zinc-100">
-                <p className="text-[10px] text-zinc-400 uppercase tracking-widest mb-1">Next Action</p>
-                <p className="text-sm font-medium text-zinc-800">{brief.summary.next_action}</p>
+                <p className="text-[10px] text-zinc-400 uppercase tracking-widest mb-1">
+                  Next Action
+                </p>
+                <p className="text-sm font-medium text-zinc-800">
+                  {brief.next_action}
+                </p>
               </div>
             </div>
           </PopoverContent>
@@ -131,7 +216,9 @@ export function AppTopbar() {
           className="w-7 h-7 rounded-full bg-byred-red/10 border border-byred-red/20 flex items-center justify-center cursor-pointer"
           aria-label="User menu"
         >
-          <span className="text-xs font-semibold text-byred-red font-condensed">RO</span>
+          <span className="text-xs font-semibold text-byred-red font-condensed">
+            {initials}
+          </span>
         </div>
       </div>
     </header>

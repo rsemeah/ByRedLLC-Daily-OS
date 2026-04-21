@@ -1,12 +1,12 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { toast } from 'sonner'
-import { CheckCircle, AlertTriangle, XCircle, LogOut } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { useState } from "react"
+import { toast } from "sonner"
+import { CheckCircle, AlertTriangle, XCircle, LogOut } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,35 +17,56 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import { SEED_USER } from '@/lib/seed'
-import { cn } from '@/lib/utils'
+} from "@/components/ui/alert-dialog"
+import { useUser } from "@/lib/context/user-context"
+import { signOutAction, updateProfileAction } from "./actions"
+import { cn } from "@/lib/utils"
 
-const AI_MODES = ['HUMAN_ONLY', 'AI_ASSIST', 'AI_DRAFT', 'AI_EXECUTE'] as const
+const AI_MODES = ["HUMAN_ONLY", "AI_ASSIST", "AI_DRAFT", "AI_EXECUTE"] as const
 
 const INTEGRATION_STATUS = [
-  { name: 'Monday.com', connected: false },
-  { name: 'Zapier nightly', connected: false },
-  { name: 'AI provider', connected: true },
+  { name: "Monday.com", connected: false },
+  { name: "Zapier nightly", connected: false },
+  { name: "AI provider", connected: true },
 ]
 
 export default function SettingsPage() {
-  const user = SEED_USER
-  const [fullName, setFullName] = useState(user.full_name ?? '')
-  const [defaultAiMode, setDefaultAiMode] = useState<string>('HUMAN_ONLY')
+  const currentUser = useUser()
+  const [fullName, setFullName] = useState(currentUser?.profile?.name ?? "")
+  const [defaultAiMode, setDefaultAiMode] = useState<string>("HUMAN_ONLY")
+  const [saving, setSaving] = useState(false)
 
-  function handleProfileSave() {
-    toast.success('Profile updated.')
+  async function handleProfileSave() {
+    setSaving(true)
+    const formData = new FormData()
+    formData.append("fullName", fullName)
+    const result = await updateProfileAction(formData)
+    setSaving(false)
+
+    if (result.error) {
+      toast.error(result.error)
+    } else {
+      toast.success("Profile updated.")
+    }
   }
 
   function handleDefaultsSave() {
-    toast.success('Defaults updated.')
+    toast.success("Defaults updated.")
   }
+
+  async function handleSignOut() {
+    await signOutAction()
+  }
+
+  const userEmail = currentUser?.profile?.email ?? currentUser?.authUser?.email ?? ""
+  const userRole = currentUser?.profile?.role ?? "member"
 
   return (
     <div className="space-y-8 max-w-xl">
       <div>
-        <h1 className="text-3xl font-condensed font-bold text-zinc-900 tracking-tight">Settings</h1>
+        <h1 className="text-3xl font-condensed font-bold text-zinc-900 tracking-tight">
+          Settings
+        </h1>
       </div>
 
       {/* Profile */}
@@ -56,7 +77,9 @@ export default function SettingsPage() {
         <Card className="bg-white border-zinc-200 shadow-sm">
           <CardContent className="p-4 space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="full-name" className="text-xs text-zinc-500">Full name</Label>
+              <Label htmlFor="full-name" className="text-xs text-zinc-500">
+                Full name
+              </Label>
               <Input
                 id="full-name"
                 value={fullName}
@@ -65,27 +88,34 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="email-display" className="text-xs text-zinc-500">Email</Label>
+              <Label htmlFor="email-display" className="text-xs text-zinc-500">
+                Email
+              </Label>
               <Input
                 id="email-display"
-                value={user.email}
+                value={userEmail}
                 readOnly
                 className="bg-zinc-50 border-zinc-200 text-zinc-400 cursor-not-allowed"
               />
-              <p className="text-[10px] text-zinc-400">Email cannot be changed here.</p>
+              <p className="text-[10px] text-zinc-400">
+                Email cannot be changed here.
+              </p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-zinc-500">Role</Label>
               <div className="h-9 px-3 flex items-center rounded-md bg-zinc-50 border border-zinc-200">
-                <span className="text-sm text-zinc-400 capitalize">{user.role}</span>
+                <span className="text-sm text-zinc-400 capitalize">
+                  {userRole}
+                </span>
               </div>
             </div>
             <Button
               size="sm"
               className="bg-byred-red hover:bg-byred-red-hot text-white"
               onClick={handleProfileSave}
+              disabled={saving}
             >
-              Save profile
+              {saving ? "Saving..." : "Save profile"}
             </Button>
           </CardContent>
         </Card>
@@ -101,7 +131,11 @@ export default function SettingsPage() {
             <p className="text-xs text-zinc-500">Default AI mode for new tasks</p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2" role="radiogroup" aria-label="Default AI mode">
+            <div
+              className="space-y-2"
+              role="radiogroup"
+              aria-label="Default AI mode"
+            >
               {AI_MODES.map((mode) => (
                 <label
                   key={mode}
@@ -119,11 +153,15 @@ export default function SettingsPage() {
                   />
                   <div>
                     <p className="text-sm text-zinc-600 font-mono">{mode}</p>
-                    {mode === 'AI_EXECUTE' && (
+                    {mode === "AI_EXECUTE" && (
                       <div className="flex items-start gap-1.5 mt-1 p-2 rounded-sm bg-amber-500/10 border border-amber-500/20">
-                        <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0 mt-0.5" strokeWidth={1.75} />
+                        <AlertTriangle
+                          className="w-3 h-3 text-amber-400 shrink-0 mt-0.5"
+                          strokeWidth={1.75}
+                        />
                         <p className="text-[10px] text-amber-400">
-                          AI_EXECUTE runs tasks without confirmation. Use with caution.
+                          AI_EXECUTE runs tasks without confirmation. Use with
+                          caution.
                         </p>
                       </div>
                     )}
@@ -154,10 +192,10 @@ export default function SettingsPage() {
                 <span className="text-sm text-zinc-600">{int.name}</span>
                 <span
                   className={cn(
-                    'flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-sm',
+                    "flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-sm",
                     int.connected
-                      ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
-                      : 'bg-zinc-100 text-zinc-400'
+                      ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
+                      : "bg-zinc-100 text-zinc-400"
                   )}
                 >
                   {int.connected ? (
@@ -165,7 +203,7 @@ export default function SettingsPage() {
                   ) : (
                     <XCircle className="w-3 h-3" strokeWidth={1.75} />
                   )}
-                  {int.connected ? 'Connected' : 'Not connected'}
+                  {int.connected ? "Connected" : "Not connected"}
                 </span>
               </div>
             ))}
@@ -183,7 +221,7 @@ export default function SettingsPage() {
             <Button
               variant="outline"
               className="w-full border-zinc-300 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50 gap-2"
-              onClick={() => toast.success('Signed out.')}
+              onClick={handleSignOut}
             >
               <LogOut className="w-4 h-4" strokeWidth={1.75} />
               Sign out
@@ -201,14 +239,22 @@ export default function SettingsPage() {
               </AlertDialogTrigger>
               <AlertDialogContent className="bg-white border-zinc-200">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-zinc-800">Revoke all sessions?</AlertDialogTitle>
+                  <AlertDialogTitle className="text-zinc-800">
+                    Revoke all sessions?
+                  </AlertDialogTitle>
                   <AlertDialogDescription className="text-zinc-500">
-                    All active sessions will be terminated immediately. You will be signed out.
+                    All active sessions will be terminated immediately. You will
+                    be signed out.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel className="border-zinc-300 text-zinc-500">Cancel</AlertDialogCancel>
-                  <AlertDialogAction className="bg-byred-red hover:bg-byred-red-hot text-white">
+                  <AlertDialogCancel className="border-zinc-300 text-zinc-500">
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-byred-red hover:bg-byred-red-hot text-white"
+                    onClick={handleSignOut}
+                  >
                     Revoke all
                   </AlertDialogAction>
                 </AlertDialogFooter>
