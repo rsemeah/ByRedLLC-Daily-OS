@@ -5,7 +5,7 @@ import { generateObject } from "ai"
 import { z } from "zod"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { calendarDatePacific } from "@/lib/time/pacific-date"
-import type { DailyBriefSummary } from "@/types/database"
+import type { DailyBriefSummary, Json } from "@/types/database"
 
 type TaskRow = {
   id: string
@@ -186,7 +186,7 @@ export async function runGlobalDailyBriefGeneration(): Promise<
       .is("user_id", null)
       .maybeSingle()
 
-    const payload = summary as unknown as Record<string, unknown>
+    const payload = summary as unknown as Json
 
     if (existing?.id) {
       const { error: upErr } = await admin
