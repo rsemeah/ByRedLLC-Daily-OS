@@ -70,16 +70,18 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-sm space-y-8">
-        {/* Logo */}
+        {/* Logo: PNG is authored for dark backgrounds — nest on a dark plate so it reads on this light page */}
         <div className="flex flex-col items-center">
-          <Image
-            src="/brand/by-red-logo.png"
-            alt="By Red, LLC."
-            width={240}
-            height={96}
-            className="object-contain"
-            priority
-          />
+          <div className="rounded-2xl bg-zinc-950 px-10 py-6 shadow-md ring-1 ring-zinc-900/20">
+            <Image
+              src="/brand/by-red-logo.png"
+              alt="By Red, LLC."
+              width={240}
+              height={96}
+              className="object-contain"
+              priority
+            />
+          </div>
           <h1 className="mt-6 text-4xl font-condensed font-bold text-zinc-900 tracking-tight lowercase">
             byred_os
           </h1>

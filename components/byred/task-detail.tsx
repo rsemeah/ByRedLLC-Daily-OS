@@ -47,6 +47,7 @@ import { ActivityItem } from "@/components/byred/activity-item"
 import { useUser } from "@/lib/context/user-context"
 import { syncActiveTenantForMutation } from "@/lib/client/sync-active-tenant"
 import { updateTaskFieldsAction } from "@/lib/actions/tasks"
+import { syncTaskToMondayAction } from "@/lib/actions/monday-sync"
 import type { Task, Activity, AiMode, TaskPriority, TaskStatus } from "@/types/db"
 
 function ScoreBar({ value }: { value: number }) {
@@ -71,9 +72,15 @@ interface AiActionResult {
 interface TaskDetailProps {
   task: Task
   activities: Activity[]
+  /** Server: true when `MONDAY_API_KEY` + `MONDAY_BOARD_ID` are set */
+  mondaySyncEnabled?: boolean
 }
 
-export function TaskDetail({ task, activities }: TaskDetailProps) {
+export function TaskDetail({
+  task,
+  activities,
+  mondaySyncEnabled = false,
+}: TaskDetailProps) {
   const router = useRouter()
   const currentUser = useUser()
   const { activeTenantId, setActiveTenantId } = currentUser
@@ -102,6 +109,7 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
   const [aiResult, setAiResult] = useState<AiActionResult | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [mondayPushing, setMondayPushing] = useState(false)
 
   useEffect(() => {
     setTitle(task.title)
@@ -219,6 +227,26 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
     }
   }
 
+  async function handlePushMonday() {
+    setMondayPushing(true)
+    try {
+      const result = await syncTaskToMondayAction({
+        taskId: task.id,
+        tenantId: task.tenant_id,
+      })
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+      toast.success("Monday item created.")
+      router.refresh()
+    } catch {
+      toast.error("Monday sync failed.")
+    } finally {
+      setMondayPushing(false)
+    }
+  }
+
   async function handleUnblock() {
     setBlockerFlag(false)
     const ok = await persistFields({
@@ -311,7 +339,7 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
           <Card className="bg-white border-zinc-200">
             <CardContent className="p-4">
               {task.description ? (
-                <div className="prose prose-sm max-w-none text-zinc-600 leading-relaxed">
+                <div className="prose prose-sm prose-zinc max-w-none leading-relaxed [&_p]:text-zinc-600 [&_li]:text-zinc-600 [&_strong]:text-zinc-700">
                   <ReactMarkdown>{task.description}</ReactMarkdown>
                 </div>
               ) : (
@@ -327,20 +355,38 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
           <Card className="bg-white border-zinc-200">
             <CardContent className="p-4">
               <dl className="space-y-3 text-sm">
-                {task.monday_item_id && (
-                  <div className="flex justify-between">
-                    <dt className="text-zinc-400">Monday ID</dt>
-                    <dd>
+                {task.monday_item_id ? (
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-zinc-400 shrink-0">Monday.com</dt>
+                    <dd className="text-right min-w-0">
                       <a
                         href={`https://monday.com/boards/item/${task.monday_item_id}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs font-mono text-byred-red hover:underline"
+                        className="text-xs font-mono text-byred-red hover:underline break-all"
                       >
                         {task.monday_item_id}
                       </a>
                     </dd>
                   </div>
+                ) : (
+                  mondaySyncEnabled && (
+                    <div className="flex justify-between items-center gap-4">
+                      <dt className="text-zinc-400">Monday.com</dt>
+                      <dd>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 border-zinc-300 text-xs text-zinc-600"
+                          disabled={mondayPushing}
+                          onClick={() => void handlePushMonday()}
+                        >
+                          {mondayPushing ? "Pushing…" : "Push to Monday"}
+                        </Button>
+                      </dd>
+                    </div>
+                  )
                 )}
                 <div className="flex justify-between">
                   <dt className="text-zinc-400">Estimated</dt>
@@ -515,7 +561,7 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
                     <Copy className="w-3 h-3" strokeWidth={1.75} />
                   </Button>
                 </div>
-                <div className="prose prose-xs max-w-none text-zinc-600 text-xs leading-relaxed overflow-y-auto max-h-48">
+                <div className="prose prose-sm prose-zinc max-w-none text-xs leading-relaxed overflow-y-auto max-h-48 [&_p]:text-zinc-600 [&_li]:text-zinc-600 [&_strong]:text-zinc-700">
                   <ReactMarkdown>{aiResult.content}</ReactMarkdown>
                 </div>
               </div>

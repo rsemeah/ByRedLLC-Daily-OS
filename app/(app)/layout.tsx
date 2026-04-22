@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/components/byred/sidebar"
 import { AppTopbar } from "@/components/byred/topbar"
+import { CommandPalette } from "@/components/byred/command-palette"
 import { getDailyBriefForSession } from "@/lib/data/daily-briefs"
 import { TenantProvider } from "@/lib/context/user-context"
 import { createClient } from "@/lib/supabase/server"
@@ -101,6 +102,7 @@ export default async function AppLayout({
         initialActiveTenantId,
       }}
     >
+      <CommandPalette />
       <div className="flex min-h-screen bg-zinc-950">
         <AppSidebar />
         <div className="flex-1 flex flex-col ml-60">

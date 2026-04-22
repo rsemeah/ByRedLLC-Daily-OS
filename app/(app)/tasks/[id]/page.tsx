@@ -19,5 +19,15 @@ export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
     notFound()
   }
 
-  return <TaskDetail task={task} activities={activities} />
+  const mondaySyncEnabled = Boolean(
+    process.env.MONDAY_API_KEY?.trim() || process.env.MONDAY_TOKEN?.trim()
+  )
+
+  return (
+    <TaskDetail
+      task={task}
+      activities={activities}
+      mondaySyncEnabled={mondaySyncEnabled}
+    />
+  )
 }
