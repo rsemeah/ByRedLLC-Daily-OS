@@ -181,23 +181,28 @@ function SidebarContent({
         <div
           className={cn(
             "border-b border-zinc-200 flex items-center",
-            collapsed ? "p-3 justify-center" : "px-5 py-4"
+            collapsed ? "p-3 justify-center" : "px-4 py-3"
           )}
         >
-          <Link href="/" className="flex items-center" onClick={onNavClick}>
+          <Link href="/" className="flex flex-col items-center" onClick={onNavClick}>
             {collapsed ? (
               <span className="font-condensed font-bold text-byred-red text-sm tracking-widest">
                 BR
               </span>
             ) : (
-              <Image
-                src="/brand/by-red-logo.png"
-                alt="By Red, LLC. — Daily OS"
-                width={130}
-                height={44}
-                className="object-contain object-left"
-                priority
-              />
+              <>
+                <Image
+                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%20Apr%2020%2C%202026%2C%2012_29_20%20PM-I7S2bElstTNcxd1EJtPc9VUAct7fGz.png"
+                  alt="By Red, LLC."
+                  width={120}
+                  height={50}
+                  className="object-contain"
+                  priority
+                />
+                <span className="text-[10px] font-semibold tracking-[0.25em] text-zinc-400 uppercase -mt-1">
+                  Daily OS
+                </span>
+              </>
             )}
           </Link>
         </div>
