@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { requireTenantScope } from "@/lib/data/tenant-scope"
+import { calendarDatePacific } from "@/lib/time/pacific-date"
 import type { DailyBriefSummary, Json } from "@/types/database"
 
 const DEFAULT_BRIEF: DailyBriefSummary = {
@@ -14,7 +15,7 @@ export async function getTodayBrief(): Promise<{
   date: string
 }> {
   const supabase = await createClient()
-  const today = new Date().toISOString().split("T")[0]
+  const today = calendarDatePacific()
 
   const { data, error } = await supabase
     .from("byred_daily_briefs")
@@ -39,7 +40,7 @@ export async function getUserBrief(
   profileId: string
 ): Promise<{ summary: DailyBriefSummary; date: string }> {
   const supabase = await createClient()
-  const today = new Date().toISOString().split("T")[0]
+  const today = calendarDatePacific()
 
   const { data: userBrief, error: userErr } = await supabase
     .from("byred_daily_briefs")
