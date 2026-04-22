@@ -1,5 +1,23 @@
 import { randomBytes } from "node:crypto"
-import { createAdminClient } from "../lib/supabase/admin"
+import { createClient, type SupabaseClient } from "@supabase/supabase-js"
+import type { Database } from "../types/database"
+
+function createSeedAdminClient(): SupabaseClient<Database> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
+  if (!url) {
+    throw new Error("Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL")
+  }
+  if (!key) {
+    throw new Error("Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY")
+  }
+  return createClient<Database>(url, key, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  })
+}
 
 type SeedUserConfig = {
   key: "KP" | "RORY"
@@ -21,7 +39,7 @@ function generatePassword(): string {
 }
 
 async function ensureUser(
-  adminClient: ReturnType<typeof createAdminClient>,
+  adminClient: SupabaseClient<Database>,
   config: SeedUserConfig
 ): Promise<{ byredUserId: string; email: string; password: string }> {
   const password = generatePassword()
@@ -68,7 +86,7 @@ async function ensureUser(
 }
 
 async function main(): Promise<void> {
-  const adminClient = createAdminClient()
+  const adminClient = createSeedAdminClient()
 
   const users: SeedUserConfig[] = [
     {
