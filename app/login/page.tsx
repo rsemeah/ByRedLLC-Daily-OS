@@ -71,7 +71,7 @@ export default function LoginPage() {
         {/* Auth card */}
         <Card className="bg-white border-zinc-200 shadow-sm">
           <CardHeader className="pb-4">
-            <p className="text-sm font-medium text-zinc-700">Sign in</p>
+            <p className="text-sm font-semibold text-byred-red">Sign in</p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
