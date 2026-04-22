@@ -23,7 +23,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'byred_os — By Red, LLC.',
+  title: 'By Red, LLC. — Daily OS',
   description: 'Internal operations. Execution, not ambition.',
 }
 

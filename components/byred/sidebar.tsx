@@ -181,23 +181,21 @@ function SidebarContent({
         <div
           className={cn(
             "border-b border-zinc-200 flex items-center",
-            collapsed ? "p-3 justify-center" : "p-5"
+            collapsed ? "p-3 justify-center" : "px-5 py-4"
           )}
         >
           <Link href="/" className="flex items-center" onClick={onNavClick}>
             {collapsed ? (
-              <div className="w-8 h-8 bg-byred-red rounded flex items-center justify-center">
-                <span className="text-white font-bold font-condensed text-sm">
-                  BR
-                </span>
-              </div>
+              <span className="font-condensed font-bold text-byred-red text-sm tracking-widest">
+                BR
+              </span>
             ) : (
               <Image
                 src="/brand/by-red-logo.png"
-                alt="By Red, LLC."
-                width={120}
-                height={48}
-                className="object-contain"
+                alt="By Red, LLC. — Daily OS"
+                width={130}
+                height={44}
+                className="object-contain object-left"
                 priority
               />
             )}
