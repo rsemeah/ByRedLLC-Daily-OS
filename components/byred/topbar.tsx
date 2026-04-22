@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { Bell, ChevronRight, FileText, AlertTriangle } from "lucide-react"
+import { Bell, ChevronRight, FileText, AlertTriangle, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Popover,
@@ -11,7 +11,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { useUser } from "@/lib/context/user-context"
+import { useSidebar } from "@/lib/context/sidebar-context"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { createClient } from "@/lib/supabase/client"
+import { cn } from "@/lib/utils"
 import type { DailyBriefSummary } from "@/types/database"
 
 const ROUTE_LABELS: Record<string, string> = {
@@ -50,6 +53,8 @@ const DEFAULT_BRIEF: DailyBriefSummary = {
 export function AppTopbar() {
   const pathname = usePathname()
   const currentUser = useUser()
+  const { isCollapsed, toggleMobile } = useSidebar()
+  const isMobile = useIsMobile()
   const [briefOpen, setBriefOpen] = useState(false)
   const [brief, setBrief] = useState<DailyBriefSummary>(DEFAULT_BRIEF)
   const [briefDate, setBriefDate] = useState<string | null>(null)
@@ -95,46 +100,69 @@ export function AppTopbar() {
     : "Today"
 
   return (
-    <header className="fixed top-0 left-60 right-0 h-14 z-30 bg-white border-b border-zinc-200 flex items-center justify-between px-6">
-      {/* Breadcrumb */}
-      <nav
-        className="flex items-center gap-1.5 text-sm"
-        aria-label="Breadcrumb"
-      >
-        {breadcrumbs.map((crumb, i) => (
-          <span key={crumb.href} className="flex items-center gap-1.5">
-            {i > 0 && (
-              <ChevronRight
-                className="w-3 h-3 text-zinc-400"
-                strokeWidth={1.75}
-              />
-            )}
-            {i === breadcrumbs.length - 1 ? (
-              <span className="text-zinc-800 font-medium">{crumb.label}</span>
-            ) : (
-              <Link
-                href={crumb.href}
-                className="text-zinc-400 hover:text-zinc-700 transition-colors"
-              >
-                {crumb.label}
-              </Link>
-            )}
-          </span>
-        ))}
-      </nav>
+    <header
+      className={cn(
+        "fixed top-0 right-0 h-14 z-30 bg-white border-b border-zinc-200 flex items-center justify-between px-4 md:px-6 transition-all duration-300",
+        isMobile ? "left-0" : isCollapsed ? "left-16" : "left-60"
+      )}
+    >
+      {/* Left side */}
+      <div className="flex items-center gap-3">
+        {/* Mobile hamburger */}
+        {isMobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleMobile}
+            className="w-8 h-8 text-zinc-600 hover:text-zinc-800 hover:bg-zinc-100 -ml-1"
+            aria-label="Open menu"
+          >
+            <Menu className="w-5 h-5" strokeWidth={1.75} />
+          </Button>
+        )}
+
+        {/* Breadcrumb */}
+        <nav
+          className="flex items-center gap-1.5 text-sm"
+          aria-label="Breadcrumb"
+        >
+          {breadcrumbs.map((crumb, i) => (
+            <span key={crumb.href} className="flex items-center gap-1.5">
+              {i > 0 && (
+                <ChevronRight
+                  className="w-3 h-3 text-zinc-400"
+                  strokeWidth={1.75}
+                />
+              )}
+              {i === breadcrumbs.length - 1 ? (
+                <span className="text-zinc-800 font-medium truncate max-w-[150px] md:max-w-none">
+                  {crumb.label}
+                </span>
+              ) : (
+                <Link
+                  href={crumb.href}
+                  className="text-zinc-400 hover:text-zinc-700 transition-colors hidden md:inline"
+                >
+                  {crumb.label}
+                </Link>
+              )}
+            </span>
+          ))}
+        </nav>
+      </div>
 
       {/* Right actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 md:gap-2">
         {/* Daily Brief */}
         <Popover open={briefOpen} onOpenChange={setBriefOpen}>
           <PopoverTrigger asChild>
             <Button
               variant="ghost"
               size="sm"
-              className="text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 gap-2 text-xs"
+              className="text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 gap-2 text-xs px-2 md:px-3"
             >
               <FileText className="w-4 h-4" strokeWidth={1.75} />
-              Brief
+              <span className="hidden md:inline">Brief</span>
             </Button>
           </PopoverTrigger>
           <PopoverContent
@@ -212,14 +240,15 @@ export function AppTopbar() {
         </Button>
 
         {/* Avatar */}
-        <div
+        <Link
+          href="/settings"
           className="w-7 h-7 rounded-full bg-byred-red/10 border border-byred-red/20 flex items-center justify-center cursor-pointer"
           aria-label="User menu"
         >
           <span className="text-xs font-semibold text-byred-red font-condensed">
             {initials}
           </span>
-        </div>
+        </Link>
       </div>
     </header>
   )

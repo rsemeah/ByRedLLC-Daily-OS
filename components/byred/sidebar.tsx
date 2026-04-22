@@ -12,9 +12,25 @@ import {
   Activity,
   Building2,
   Settings,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 import { TENANT_COLORS, TENANT_NAMES } from "@/lib/tenant-colors"
 import { useUser } from "@/lib/context/user-context"
+import { useSidebar } from "@/lib/context/sidebar-context"
+import { useIsMobile } from "@/hooks/use-mobile"
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import { Button } from "@/components/ui/button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 const WORK_NAV = [
   { label: "Command Center", href: "/", icon: LayoutDashboard },
@@ -41,31 +57,106 @@ function NavItem({
   icon: Icon,
   label,
   active,
+  collapsed,
+  onClick,
 }: {
   href: string
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>
   label: string
   active: boolean
+  collapsed: boolean
+  onClick?: () => void
 }) {
-  return (
+  const content = (
     <Link
       href={href}
+      onClick={onClick}
       className={cn(
-        "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors relative",
+        "flex items-center gap-2.5 rounded-md text-sm transition-colors relative",
+        collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2",
         active
-          ? "text-zinc-900 bg-zinc-100 border-l-2 border-byred-red -ml-px pl-[11px] font-medium"
-          : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100"
+          ? "text-zinc-900 bg-zinc-100 font-medium"
+          : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100",
+        active && !collapsed && "border-l-2 border-byred-red -ml-px pl-[11px]"
       )}
     >
       <Icon className="w-4 h-4 shrink-0" strokeWidth={1.75} />
-      <span>{label}</span>
+      {!collapsed && <span>{label}</span>}
     </Link>
   )
+
+  if (collapsed) {
+    return (
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>{content}</TooltipTrigger>
+        <TooltipContent side="right" className="text-xs">
+          {label}
+        </TooltipContent>
+      </Tooltip>
+    )
+  }
+
+  return content
 }
 
-export function AppSidebar() {
+function TenantItem({
+  id,
+  href,
+  active,
+  collapsed,
+  onClick,
+}: {
+  id: string
+  href: string
+  active: boolean
+  collapsed: boolean
+  onClick?: () => void
+}) {
+  const colors = TENANT_COLORS[id]
+  const name = TENANT_NAMES[id]
+
+  const content = (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-2.5 rounded-md text-sm transition-colors",
+        collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2",
+        active
+          ? "text-zinc-900 bg-zinc-100 font-medium"
+          : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100"
+      )}
+    >
+      <span className={cn("w-2 h-2 rounded-full shrink-0", colors.dot)} />
+      {!collapsed && <span className="truncate text-xs">{name}</span>}
+    </Link>
+  )
+
+  if (collapsed) {
+    return (
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>{content}</TooltipTrigger>
+        <TooltipContent side="right" className="text-xs">
+          {name}
+        </TooltipContent>
+      </Tooltip>
+    )
+  }
+
+  return content
+}
+
+function SidebarContent({
+  collapsed,
+  onNavClick,
+}: {
+  collapsed: boolean
+  onNavClick?: () => void
+}) {
   const pathname = usePathname()
   const currentUser = useUser()
+  const { toggleCollapsed } = useSidebar()
+  const isMobile = useIsMobile()
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/"
@@ -73,7 +164,8 @@ export function AppSidebar() {
   }
 
   // Get user display info from profile or auth user
-  const displayName = currentUser?.profile?.name ?? currentUser?.authUser?.email ?? "User"
+  const displayName =
+    currentUser?.profile?.name ?? currentUser?.authUser?.email ?? "User"
   const displayRole = currentUser?.profile?.role ?? "member"
   const initials = displayName
     .split(" ")
@@ -83,97 +175,197 @@ export function AppSidebar() {
     .slice(0, 2)
 
   return (
-    <aside className="w-60 shrink-0 flex flex-col h-screen bg-white border-r border-zinc-200 fixed left-0 top-0 z-40">
-      {/* Logo */}
-      <div className="p-5 border-b border-zinc-200">
-        <Link href="/" className="flex items-center">
-          <Image
-            src="/brand/by-red-logo.png"
-            alt="By Red, LLC."
-            width={120}
-            height={48}
-            className="object-contain"
-            priority
-          />
-        </Link>
-      </div>
-
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
-        {/* Work */}
-        <div>
-          <p className="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase px-3 mb-2">
-            Work
-          </p>
-          <div className="space-y-0.5">
-            {WORK_NAV.map((item) => (
-              <NavItem key={item.href} {...item} active={isActive(item.href)} />
-            ))}
-          </div>
+    <TooltipProvider>
+      <div className="flex flex-col h-full">
+        {/* Logo */}
+        <div
+          className={cn(
+            "border-b border-zinc-200 flex items-center",
+            collapsed ? "p-3 justify-center" : "p-5"
+          )}
+        >
+          <Link href="/" className="flex items-center" onClick={onNavClick}>
+            {collapsed ? (
+              <div className="w-8 h-8 bg-byred-red rounded flex items-center justify-center">
+                <span className="text-white font-bold font-condensed text-sm">
+                  BR
+                </span>
+              </div>
+            ) : (
+              <Image
+                src="/brand/by-red-logo.png"
+                alt="By Red, LLC."
+                width={120}
+                height={48}
+                className="object-contain"
+                priority
+              />
+            )}
+          </Link>
         </div>
 
-        {/* Tenants */}
-        <div>
-          <p className="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase px-3 mb-2">
-            Tenants
-          </p>
-          <div className="space-y-0.5">
-            {TENANTS.map(({ id, href }) => {
-              const colors = TENANT_COLORS[id]
-              const name = TENANT_NAMES[id]
-              const active = pathname.includes(`tenant_id=${id}`)
-              return (
-                <Link
-                  key={id}
-                  href={href}
-                  className={cn(
-                    "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors",
-                    active
-                      ? "text-zinc-900 bg-zinc-100 font-medium"
-                      : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100"
-                  )}
-                >
-                  <span
-                    className={cn("w-2 h-2 rounded-full shrink-0", colors.dot)}
+        {/* Nav */}
+        <nav
+          className={cn(
+            "flex-1 overflow-y-auto py-4 space-y-6",
+            collapsed ? "px-2" : "px-3"
+          )}
+        >
+          {/* Work */}
+          <div>
+            {!collapsed && (
+              <p className="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase px-3 mb-2">
+                Work
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {WORK_NAV.map((item) => (
+                <NavItem
+                  key={item.href}
+                  {...item}
+                  active={isActive(item.href)}
+                  collapsed={collapsed}
+                  onClick={onNavClick}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Tenants */}
+          <div>
+            {!collapsed && (
+              <p className="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase px-3 mb-2">
+                Tenants
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {TENANTS.map(({ id, href }) => {
+                const active = pathname.includes(`tenant_id=${id}`)
+                return (
+                  <TenantItem
+                    key={id}
+                    id={id}
+                    href={href}
+                    active={active}
+                    collapsed={collapsed}
+                    onClick={onNavClick}
                   />
-                  <span className="truncate text-xs">{name}</span>
-                </Link>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
-        </div>
 
-        {/* System */}
-        <div>
-          <p className="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase px-3 mb-2">
-            System
-          </p>
-          <div className="space-y-0.5">
-            {SYSTEM_NAV.map((item) => (
-              <NavItem key={item.href} {...item} active={isActive(item.href)} />
-            ))}
+          {/* System */}
+          <div>
+            {!collapsed && (
+              <p className="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase px-3 mb-2">
+                System
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {SYSTEM_NAV.map((item) => (
+                <NavItem
+                  key={item.href}
+                  {...item}
+                  active={isActive(item.href)}
+                  collapsed={collapsed}
+                  onClick={onNavClick}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      </nav>
+        </nav>
 
-      {/* User block */}
-      <div className="p-3 border-t border-zinc-200">
-        <div className="flex items-center gap-2.5 px-2 py-2">
-          <div className="w-7 h-7 rounded-full bg-byred-red/10 border border-byred-red/20 flex items-center justify-center shrink-0">
-            <span className="text-xs font-semibold text-byred-red font-condensed">
-              {initials}
-            </span>
+        {/* Collapse toggle (desktop only) */}
+        {!isMobile && (
+          <div className="px-3 py-2 border-t border-zinc-200">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleCollapsed}
+              className={cn(
+                "w-full text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100",
+                collapsed ? "px-2" : "justify-start"
+              )}
+            >
+              {collapsed ? (
+                <ChevronRight className="w-4 h-4" strokeWidth={1.75} />
+              ) : (
+                <>
+                  <ChevronLeft className="w-4 h-4 mr-2" strokeWidth={1.75} />
+                  <span className="text-xs">Collapse</span>
+                </>
+              )}
+            </Button>
           </div>
-          <div className="min-w-0">
-            <p className="text-xs font-medium text-zinc-800 truncate">
-              {displayName}
-            </p>
-            <p className="text-[10px] text-zinc-400 truncate capitalize">
-              {displayRole}
-            </p>
+        )}
+
+        {/* User block */}
+        <div
+          className={cn(
+            "border-t border-zinc-200",
+            collapsed ? "p-2" : "p-3"
+          )}
+        >
+          <div
+            className={cn(
+              "flex items-center px-2 py-2",
+              collapsed ? "justify-center" : "gap-2.5"
+            )}
+          >
+            <div className="w-7 h-7 rounded-full bg-byred-red/10 border border-byred-red/20 flex items-center justify-center shrink-0">
+              <span className="text-xs font-semibold text-byred-red font-condensed">
+                {initials}
+              </span>
+            </div>
+            {!collapsed && (
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-zinc-800 truncate">
+                  {displayName}
+                </p>
+                <p className="text-[10px] text-zinc-400 truncate capitalize">
+                  {displayRole}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
+    </TooltipProvider>
+  )
+}
+
+export function AppSidebar() {
+  const { isCollapsed, isMobileOpen, setIsMobileOpen } = useSidebar()
+  const isMobile = useIsMobile()
+
+  // Mobile: use Sheet
+  if (isMobile) {
+    return (
+      <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+        <SheetContent
+          side="left"
+          className="w-64 p-0 bg-white border-r border-zinc-200"
+        >
+          <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+          <SidebarContent
+            collapsed={false}
+            onNavClick={() => setIsMobileOpen(false)}
+          />
+        </SheetContent>
+      </Sheet>
+    )
+  }
+
+  // Desktop: fixed sidebar
+  return (
+    <aside
+      className={cn(
+        "shrink-0 flex flex-col h-screen bg-white border-r border-zinc-200 fixed left-0 top-0 z-40 transition-all duration-300",
+        isCollapsed ? "w-16" : "w-60"
+      )}
+    >
+      <SidebarContent collapsed={isCollapsed} />
     </aside>
   )
 }
