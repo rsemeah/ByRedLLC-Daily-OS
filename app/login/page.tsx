@@ -51,19 +51,19 @@ export default function LoginPage() {
     <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-sm space-y-8">
         {/* Logo */}
-        <div className="flex flex-col items-center gap-1">
+        <div className="flex flex-col items-center">
           <Image
             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%20Apr%2020%2C%202026%2C%2012_29_20%20PM-ATivvvRJFjDMpelGYEfLYkYncVvkIr.png"
             alt="By Red, LLC."
             width={200}
             height={80}
-            className="object-contain"
+            className="object-contain -mb-2"
             priority
           />
           <p className="text-[11px] font-semibold tracking-[0.3em] text-zinc-400 uppercase">
             Daily OS
           </p>
-          <p className="mt-3 text-sm text-zinc-500">
+          <p className="mt-4 text-sm text-zinc-500">
             Internal operations. Execution, not ambition.
           </p>
         </div>
