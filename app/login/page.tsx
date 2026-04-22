@@ -53,7 +53,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="flex flex-col items-center gap-1">
           <Image
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%20Apr%2020%2C%202026%2C%2012_29_20%20PM-I7S2bElstTNcxd1EJtPc9VUAct7fGz.png"
+            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%20Apr%2020%2C%202026%2C%2012_29_20%20PM-ATivvvRJFjDMpelGYEfLYkYncVvkIr.png"
             alt="By Red, LLC."
             width={200}
             height={80}
