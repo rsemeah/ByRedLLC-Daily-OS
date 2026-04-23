@@ -538,8 +538,10 @@ export type Database = {
           created_at: string | null
           email: string
           id: string
+          monday_user_id: string | null
           name: string
           role: string
+          source: string
           updated_at: string | null
         }
         Insert: {
@@ -549,8 +551,10 @@ export type Database = {
           created_at?: string | null
           email: string
           id?: string
+          monday_user_id?: string | null
           name: string
           role?: string
+          source?: string
           updated_at?: string | null
         }
         Update: {
@@ -560,8 +564,10 @@ export type Database = {
           created_at?: string | null
           email?: string
           id?: string
+          monday_user_id?: string | null
           name?: string
           role?: string
+          source?: string
           updated_at?: string | null
         }
         Relationships: []

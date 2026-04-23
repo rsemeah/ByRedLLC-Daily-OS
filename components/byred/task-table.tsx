@@ -18,6 +18,7 @@ import { StatusBadge } from "./status-badge"
 import { PriorityFlag } from "./priority-flag"
 import { DueDateCell } from "./due-date-cell"
 import { AiModeChip } from "./ai-mode-chip"
+import { OwnerAvatar } from "./owner-avatar"
 import { useUser } from "@/lib/context/user-context"
 import { syncActiveTenantForMutation } from "@/lib/client/sync-active-tenant"
 import { updateTaskFieldsAction } from "@/lib/actions/tasks"
@@ -39,14 +40,6 @@ export function TaskTable({ tasks }: TaskTableProps) {
   const currentUser = useUser()
   const { activeTenantId, setActiveTenantId } = currentUser
   const [archivingId, setArchivingId] = useState<string | null>(null)
-  const displayName =
-    currentUser?.profile?.name ?? currentUser?.authUser?.email ?? "User"
-  const initials = displayName
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2)
 
   async function handleArchive(task: Task) {
     setArchivingId(task.id)
@@ -165,20 +158,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
 
               {/* Owner */}
               <td className="px-4 py-2 hidden xl:table-cell">
-                {task.owner_user_id ? (
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-5 h-5 rounded-full bg-byred-red/10 border border-byred-red/20 flex items-center justify-center shrink-0">
-                      <span className="text-[9px] font-semibold text-byred-red font-condensed">
-                        {initials}
-                      </span>
-                    </div>
-                    <span className="text-xs text-zinc-500">
-                      {displayName.split(" ")[0]}
-                    </span>
-                  </div>
-                ) : (
-                  <span className="text-xs text-zinc-400">—</span>
-                )}
+                <OwnerAvatar ownerId={task.owner_user_id} size="xs" showName />
               </td>
 
               {/* AI mode */}

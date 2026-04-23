@@ -57,6 +57,8 @@ export const SEED_USER: User = {
   avatar_url: null,
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
+  source: 'seed',
+  monday_user_id: null,
 };
 
 export const SEED_TASKS: Task[] = [

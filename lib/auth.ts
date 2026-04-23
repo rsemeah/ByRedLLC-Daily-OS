@@ -93,6 +93,11 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
       throw new Error("setActiveTenantId is only available in client components")
     },
     isAdmin: typedProfile?.role === "admin",
+    // Server-side consumers of this function don't render owner avatars;
+    // the directory is only meaningful on the client. Layout separately
+    // loads it for the TenantProvider.
+    directory: [],
+    directoryById: new Map(),
   }
 }
 

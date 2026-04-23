@@ -7,6 +7,19 @@ import { createClient } from "@/lib/supabase/client"
 
 export type TenantAccess = ByredTenant & { role: ByredUserTenant["role"] }
 
+/**
+ * Roster-level shape used for rendering owner avatars / names on tasks.
+ * Intentionally smaller than a full `ByredUser` so the provider only ships
+ * what's needed (name + avatar + email) to the client bundle.
+ */
+export type DirectoryUser = {
+  id: string
+  name: string
+  email: string
+  avatar_url: string | null
+  role: string | null
+}
+
 export type TenantContextValue = {
   authUser: User
   profile: ByredUser | null
@@ -14,6 +27,8 @@ export type TenantContextValue = {
   activeTenantId: string | null
   setActiveTenantId: (tenantId: string) => Promise<void>
   isAdmin: boolean
+  directory: DirectoryUser[]
+  directoryById: Map<string, DirectoryUser>
 }
 
 export type CurrentUser = TenantContextValue
@@ -25,6 +40,7 @@ type TenantProviderProps = {
     profile: ByredUser | null
     tenants: TenantAccess[]
     initialActiveTenantId: string | null
+    directory?: DirectoryUser[]
   }
 }
 
@@ -34,6 +50,12 @@ export function TenantProvider({ children, user }: TenantProviderProps) {
   const [activeTenantId, setActiveTenantIdState] = useState<string | null>(
     user.initialActiveTenantId
   )
+
+  const directoryById = useMemo(() => {
+    const m = new Map<string, DirectoryUser>()
+    for (const u of user.directory ?? []) m.set(u.id, u)
+    return m
+  }, [user.directory])
 
   const value = useMemo<TenantContextValue>(() => {
     const setActiveTenantId = async (tenantId: string) => {
@@ -62,8 +84,17 @@ export function TenantProvider({ children, user }: TenantProviderProps) {
       activeTenantId,
       setActiveTenantId,
       isAdmin: user.profile?.role === "admin",
+      directory: user.directory ?? [],
+      directoryById,
     }
-  }, [activeTenantId, user.authUser, user.profile, user.tenants])
+  }, [
+    activeTenantId,
+    user.authUser,
+    user.profile,
+    user.tenants,
+    user.directory,
+    directoryById,
+  ])
 
   return <TenantContext.Provider value={value}>{children}</TenantContext.Provider>
 }
@@ -78,6 +109,7 @@ export function UserProvider({
     profile: ByredUser | null
     tenants: TenantAccess[]
     initialActiveTenantId: string | null
+    directory?: DirectoryUser[]
   }
 }) {
   return <TenantProvider user={user}>{children}</TenantProvider>

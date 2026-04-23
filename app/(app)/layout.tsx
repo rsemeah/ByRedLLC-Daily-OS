@@ -106,6 +106,28 @@ export default async function AppLayout({
 
   const dailyBrief = await getDailyBriefForSession()
 
+  // Directory: byred_users visible via RLS (tenant peers + Monday-imported
+  // roster). Powers owner avatars on task / lead rows without each row
+  // component firing its own fetch.
+  const { data: directoryRows } = await supabase
+    .from("byred_users")
+    .select("id, name, email, avatar_url, role")
+    .eq("active", true)
+
+  const directory = ((directoryRows ?? []) as Array<{
+    id: string
+    name: string
+    email: string
+    avatar_url: string | null
+    role: string | null
+  }>).map((r) => ({
+    id: r.id,
+    name: r.name,
+    email: r.email,
+    avatar_url: r.avatar_url,
+    role: r.role,
+  }))
+
   return (
     <TenantProvider
       user={{
@@ -113,10 +135,11 @@ export default async function AppLayout({
         profile: typedProfile,
         tenants,
         initialActiveTenantId,
+        directory,
       }}
     >
       <CommandPalette />
-      <div className="flex min-h-screen bg-zinc-950">
+      <div className="flex min-h-screen bg-background">
         <AppSidebar />
         <div className="flex-1 flex flex-col ml-60">
           <AppTopbar
