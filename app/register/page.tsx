@@ -135,9 +135,9 @@ export default function RegisterPage() {
         <div className="flex flex-col items-center">
           <div className="rounded-2xl bg-zinc-950 px-10 py-6 shadow-md ring-1 ring-zinc-900/20">
             <Image
-              src="/brand/by-red-logo.png"
+              src="/brand/byredllc.png"
               alt="By Red, LLC."
-              width={240}
+              width={288}
               height={96}
               className="object-contain"
               priority

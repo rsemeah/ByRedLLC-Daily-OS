@@ -1,5 +1,6 @@
 "use client"
 
+import type { ComponentType } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
@@ -45,7 +46,7 @@ function NavItem({
   active,
 }: {
   href: string
-  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>
+  icon: ComponentType<{ className?: string; strokeWidth?: number }>
   label: string
   active: boolean
 }) {
@@ -98,9 +99,9 @@ export function AppSidebar() {
       <div className="p-5 border-b border-zinc-200">
         <Link href="/" className="flex items-center">
           <Image
-            src="/brand/by-red-logo.png"
+            src="/brand/byredllc.png"
             alt="By Red, LLC."
-            width={120}
+            width={144}
             height={48}
             className="object-contain"
             priority

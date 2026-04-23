@@ -61,17 +61,32 @@ export default function LoginPage() {
     }
 
     try {
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: validation.data.email,
-        password: validation.data.password,
+      // Rate-limited server login. Even if someone bypasses this call and
+      // hits Supabase directly, the server has the authoritative limiter.
+      const loginRes = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: validation.data.email,
+          password: validation.data.password,
+        }),
       })
 
-      if (authError) {
-        setError(authError.message)
-        toast.error(authError.message)
+      if (!loginRes.ok) {
+        const errBody = (await loginRes.json().catch(() => ({}))) as {
+          error?: string
+        }
+        const message = errBody.error ?? "Sign-in failed."
+        setError(message)
+        toast.error(message)
         setLoading(false)
         return
       }
+
+      // Refresh the client-side Supabase session so the browser has cookies
+      // + JWT in sync with the server. The /api/auth/login route already
+      // wrote the auth cookie.
+      await supabase.auth.refreshSession().catch(() => {})
 
       router.push("/")
       router.refresh()
@@ -94,9 +109,9 @@ export default function LoginPage() {
         <div className="flex flex-col items-center">
           <div className="rounded-2xl bg-zinc-950 px-10 py-6 shadow-md ring-1 ring-zinc-900/20">
             <Image
-              src="/brand/by-red-logo.png"
+              src="/brand/byredllc.png"
               alt="By Red, LLC."
-              width={240}
+              width={288}
               height={96}
               className="object-contain"
               priority
