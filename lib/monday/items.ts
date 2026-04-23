@@ -1,6 +1,7 @@
 import "server-only"
 
 import { mondayGraphql } from "@/lib/monday/graphql"
+import { resolveBoardColumnMap } from "@/lib/monday/column-mapping"
 
 type RawColumnValue = {
   id: string
@@ -26,6 +27,12 @@ type ItemsWithBoardResult = {
     | null
 }
 
+export type MondayAssignee = {
+  mondayUserId: string
+  email: string | null
+  name: string | null
+}
+
 export type MondayBoardItem = {
   id: string
   name: string
@@ -33,6 +40,7 @@ export type MondayBoardItem = {
   status: string | null
   dueDate: string | null
   priorityLabel: string | null
+  assignees: MondayAssignee[]
 }
 
 export type MondayItemWithBoard = {
@@ -72,52 +80,96 @@ const ITEMS_PAGE_FRAGMENT = `
 `
 
 /**
- * Extract a normalized view of the Monday item:
- *   status      — label from the first `status`/`color` column, if any
- *   dueDate     — YYYY-MM-DD from the first `date` column, else start of
- *                 `timeline`/`timerange`, if any
- *   priorityLabel — label from the first column id / type that looks like
- *                 priority; purely a hint for UI.
+ * Extract a normalized view of the Monday item.
  *
- * Monday does not guarantee a universal schema across boards, so this is
- * best-effort. Tenant-specific column mappings can be layered on top later.
+ * With a `columnMap`, columns are resolved by id (deterministic per board).
+ * Without one, we fall back to heuristics: first status-typed column that
+ * isn't a priority, first date column, first column whose id/type looks
+ * like priority. Assignees always come from `people`-typed columns.
  */
-function normalizeItem(raw: RawBoardItem): MondayBoardItem {
+function normalizeItem(
+  raw: RawBoardItem,
+  columnMap?: {
+    statusId: string | null
+    priorityId: string | null
+    dueDateId: string | null
+    timelineId: string | null
+    peopleId: string | null
+  }
+): MondayBoardItem {
   const cols = raw.column_values ?? []
 
   let status: string | null = null
   let dueDate: string | null = null
   let priority: string | null = null
+  const assignees: MondayAssignee[] = []
+
+  const matchesId = (c: RawColumnValue, id: string | null | undefined) =>
+    id !== null && id !== undefined && c.id === id
 
   for (const c of cols) {
     const type = (c.type ?? "").toLowerCase()
     const id = (c.id ?? "").toLowerCase()
     const text = c.text?.trim() || null
 
-    if (!status && (type === "status" || type === "color")) {
-      status = text
+    // Status — explicit id wins, else first non-priority status-typed column.
+    if (columnMap?.statusId) {
+      if (!status && matchesId(c, columnMap.statusId)) status = text
+    } else if (!status && (type === "status" || type === "color")) {
+      if (!id.includes("priority")) status = text
     }
 
-    if (!dueDate) {
-      if (type === "date" && text) {
-        dueDate = text.slice(0, 10)
-      } else if (type === "timeline" || type === "timerange") {
-        try {
-          const parsed = c.value ? (JSON.parse(c.value) as { from?: string }) : null
-          if (parsed?.from) dueDate = String(parsed.from).slice(0, 10)
-        } catch {
-          // Malformed timeline payloads are rare; swallow.
-        }
+    // Priority — explicit id wins, else id/type heuristic.
+    if (columnMap?.priorityId) {
+      if (!priority && matchesId(c, columnMap.priorityId)) priority = text
+    } else if (!priority) {
+      if (id.includes("priority") || id === "prio" || type === "priority") {
+        priority = text
       }
     }
 
-    if (!priority) {
-      if (
-        id.includes("priority") ||
-        id === "prio" ||
-        type === "priority" // some boards use a priority-typed column
-      ) {
-        priority = text
+    // Due date — explicit, then timeline.from, then first date-typed column.
+    if (columnMap?.dueDateId) {
+      if (!dueDate && matchesId(c, columnMap.dueDateId) && text) {
+        dueDate = text.slice(0, 10)
+      }
+    } else if (!dueDate && type === "date" && text) {
+      dueDate = text.slice(0, 10)
+    }
+    if (
+      !dueDate &&
+      ((columnMap?.timelineId && matchesId(c, columnMap.timelineId)) ||
+        (!columnMap?.timelineId && (type === "timeline" || type === "timerange")))
+    ) {
+      try {
+        const parsed = c.value ? (JSON.parse(c.value) as { from?: string }) : null
+        if (parsed?.from) dueDate = String(parsed.from).slice(0, 10)
+      } catch {
+        // Malformed timeline payloads are rare; swallow.
+      }
+    }
+
+    // People — bound by either the explicit column id or any people-typed
+    // column if no mapping is available.
+    const isPeopleCol = columnMap?.peopleId
+      ? matchesId(c, columnMap.peopleId)
+      : type === "people" || type === "multiple-person"
+
+    if (isPeopleCol && c.value) {
+      try {
+        const parsed = JSON.parse(c.value) as {
+          personsAndTeams?: Array<{ id: number | string; kind?: string }>
+        }
+        for (const p of parsed.personsAndTeams ?? []) {
+          if (p.kind && p.kind !== "person") continue
+          assignees.push({
+            mondayUserId: String(p.id),
+            email: null,
+            name: null,
+          })
+        }
+      } catch {
+        // Ignore malformed payloads.
       }
     }
   }
@@ -129,6 +181,7 @@ function normalizeItem(raw: RawBoardItem): MondayBoardItem {
     status,
     dueDate,
     priorityLabel: priority,
+    assignees,
   }
 }
 
@@ -186,6 +239,17 @@ export async function fetchAllBoardItems(
   const pageSize = Math.min(Math.max(opts.pageSize ?? 200, 1), 500)
   const pageLimit = opts.pageLimit ?? 50
 
+  // Resolve board-specific column ids so column_values are matched by id
+  // (deterministic) instead of by type heuristics.
+  const map = await resolveBoardColumnMap(boardId)
+  const columnMap = {
+    statusId: map.status?.id ?? null,
+    priorityId: map.priority?.id ?? null,
+    dueDateId: map.dueDate?.id ?? null,
+    timelineId: map.timeline?.id ?? null,
+    peopleId: map.people?.id ?? null,
+  }
+
   const first = await mondayGraphql<BoardItemsPageResult>({
     query: `
       query BoardItems($ids: [ID!], $limit: Int!) {
@@ -205,8 +269,8 @@ export async function fetchAllBoardItems(
   const board = first.boards?.[0]
   if (!board) return []
 
-  const collected: MondayBoardItem[] = (board.items_page.items ?? []).map(
-    normalizeItem
+  const collected: MondayBoardItem[] = (board.items_page.items ?? []).map((raw) =>
+    normalizeItem(raw, columnMap)
   )
   let cursor = board.items_page.cursor
   let pages = 1
@@ -225,7 +289,9 @@ export async function fetchAllBoardItems(
       `,
       variables: { cursor, limit: pageSize },
     })
-    collected.push(...(next.next_items_page.items ?? []).map(normalizeItem))
+    collected.push(
+      ...(next.next_items_page.items ?? []).map((raw) => normalizeItem(raw, columnMap))
+    )
     cursor = next.next_items_page.cursor
     pages += 1
   }

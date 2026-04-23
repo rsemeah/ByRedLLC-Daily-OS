@@ -70,6 +70,7 @@ type UpsertRow = {
   status?: string
   priority?: string
   due_date?: string | null
+  owner_user_id?: string | null
   archived_at: null
   updated_at: string
 }
@@ -81,6 +82,7 @@ type ExistingRow = {
   status: string | null
   priority: string | null
   due_date: string | null
+  owner_user_id: string | null
   monday_item_id: string | null
   monday_updated_at: string | null
   archived_at: string | null
@@ -94,11 +96,56 @@ function rowDiffers(hit: ExistingRow, next: UpsertRow): boolean {
   if (next.priority !== undefined && hit.priority !== next.priority) return true
   if (next.due_date !== undefined && hit.due_date !== next.due_date) return true
   if (
+    next.owner_user_id !== undefined &&
+    hit.owner_user_id !== next.owner_user_id
+  )
+    return true
+  if (
     next.monday_updated_at !== null &&
     hit.monday_updated_at !== next.monday_updated_at
   )
     return true
   return false
+}
+
+/**
+ * Map monday_user_id → byred_users.id for every assignee seen on this
+ * board's items. Falls back to null when no byred_user exists — the pull
+ * never creates placeholder byred_users, that's the Monday users sync's
+ * job (run via `syncMondayUsersToByred`).
+ */
+async function buildOwnerLookup(
+  admin: SupabaseAdmin,
+  items: MondayBoardItem[]
+): Promise<Map<string, string>> {
+  const mondayIds = new Set<string>()
+  for (const item of items) {
+    for (const a of item.assignees) {
+      if (a.mondayUserId) mondayIds.add(a.mondayUserId)
+    }
+  }
+  if (mondayIds.size === 0) return new Map()
+
+  const { data, error } = await admin
+    .from("byred_users")
+    .select("id, monday_user_id")
+    .in("monday_user_id", [...mondayIds])
+
+  if (error) {
+    console.warn(
+      JSON.stringify({
+        event: "monday_pull.owner_lookup_failed",
+        error: error.message,
+      })
+    )
+    return new Map()
+  }
+
+  const out = new Map<string, string>()
+  for (const r of (data ?? []) as Array<{ id: string; monday_user_id: string | null }>) {
+    if (r.monday_user_id) out.set(String(r.monday_user_id), r.id)
+  }
+  return out
 }
 
 async function getCursor(
@@ -209,7 +256,7 @@ async function pullOneBoard(
     const { data: existingRows, error: fetchErr } = await admin
       .from("byred_tasks")
       .select(
-        "id, title, monday_item_id, monday_updated_at, tenant_id, status, priority, due_date, archived_at"
+        "id, title, monday_item_id, monday_updated_at, tenant_id, status, priority, due_date, owner_user_id, archived_at"
       )
       .in("monday_item_id", ids)
 
@@ -221,6 +268,9 @@ async function pullOneBoard(
   }
   base.linked = existing.size
 
+  // Resolve Monday assignees → byred_users.id once per pull (not per item).
+  const ownerByMondayId = await buildOwnerLookup(admin, boardItems)
+
   const now = new Date().toISOString()
   type UpdateRow = UpsertRow & { id: string }
   const updates: UpdateRow[] = []
@@ -231,6 +281,10 @@ async function pullOneBoard(
     const clean = item.name.trim() || "(untitled)"
     const mappedStatus = mapMondayStatus(item.status)
     const mappedPriority = mapMondayPriority(item.priorityLabel)
+    const primaryAssignee = item.assignees[0] ?? null
+    const resolvedOwner = primaryAssignee
+      ? ownerByMondayId.get(primaryAssignee.mondayUserId) ?? null
+      : null
 
     const next: UpsertRow = {
       tenant_id: binding.tenantId,
@@ -244,6 +298,15 @@ async function pullOneBoard(
     if (mappedStatus) next.status = mappedStatus
     if (mappedPriority) next.priority = mappedPriority
     if (item.dueDate !== null) next.due_date = item.dueDate
+    // Only write owner_user_id when (a) Monday told us someone is assigned
+    // and (b) that someone matches a byred_users row. When Monday shows no
+    // assignee we explicitly clear the owner on our side so the app mirrors
+    // upstream state.
+    if (primaryAssignee) {
+      next.owner_user_id = resolvedOwner
+    } else {
+      next.owner_user_id = null
+    }
 
     const hit = existing.get(mondayId)
     if (hit) {
@@ -376,6 +439,24 @@ async function pullOneBoard(
   await persistCursor(admin, binding.tenantId, binding.boardId, newest, delta)
 
   return base
+}
+
+/**
+ * Pull a single tenant's Monday board into `byred_tasks`. Used by the
+ * per-tenant sync route (tab "sync now" button). Same reconciliation logic
+ * as the cron path but scoped to one board, so it returns quickly and does
+ * not need the cross-process sync lock — the composite unique index is
+ * enough to keep concurrent runs safe at the DB layer.
+ */
+export async function pullMondayBoardForTenant(
+  tenantId: string,
+  opts: { forceFull?: boolean } = {}
+): Promise<MondayPullSyncResult | null> {
+  const admin = createAdminClient()
+  const bindings = await getBoundTenantBoards({ activeOnly: true })
+  const binding = bindings.find((b) => b.tenantId === tenantId)
+  if (!binding) return null
+  return pullOneBoard(admin, binding, opts)
 }
 
 /**
