@@ -16,7 +16,14 @@ import { toast } from "sonner"
 const registerSchema = z.object({
   name: z.string().min(1, "Name is required").max(200),
   orgName: z.string().max(120).optional(),
-  email: z.string().email("Enter a valid email address"),
+  // Normalize email: trim + lowercase so the account created here matches the
+  // canonical form Supabase and the login schema use — "Clashon64@Gmail.com"
+  // and "clashon64@gmail.com" become the same identity, no duplicate rows.
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("Enter a valid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 })
 

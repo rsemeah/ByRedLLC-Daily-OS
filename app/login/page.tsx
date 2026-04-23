@@ -14,7 +14,14 @@ import { z } from "zod"
 import { toast } from "sonner"
 
 const loginSchema = z.object({
-  email: z.string().email("Enter a valid email address"),
+  // Normalize email: trim whitespace + lowercase so "Clashon64@Gmail.com ",
+  // " CLASHON64@gmail.com", and "clashon64@gmail.com" all resolve to the same
+  // canonical identifier before hitting Supabase.
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("Enter a valid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 })
 
