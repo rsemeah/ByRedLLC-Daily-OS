@@ -39,8 +39,21 @@ export default function LoginPage() {
       return
     }
 
+    let supabase
     try {
-      const supabase = createClient()
+      supabase = createClient()
+    } catch (initException) {
+      const detail = initException instanceof Error ? initException.message : String(initException)
+      console.error("Supabase client init failed on /login", detail)
+      const friendly =
+        "Sign-in is temporarily unavailable — the app is misconfigured. Ask the admin to check NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY on this environment."
+      setError(friendly)
+      toast.error(friendly)
+      setLoading(false)
+      return
+    }
+
+    try {
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: validation.data.email,
         password: validation.data.password,

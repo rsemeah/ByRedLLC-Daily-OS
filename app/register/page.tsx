@@ -49,8 +49,21 @@ export default function RegisterPage() {
       return
     }
 
+    let supabase
     try {
-      const supabase = createClient()
+      supabase = createClient()
+    } catch (initException) {
+      const detail = initException instanceof Error ? initException.message : String(initException)
+      console.error("Supabase client init failed on /register", detail)
+      const friendly =
+        "Sign-up is temporarily unavailable — the app is misconfigured. Ask the admin to check NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY on this environment."
+      setError(friendly)
+      toast.error(friendly)
+      setLoading(false)
+      return
+    }
+
+    try {
       const emailRedirectTo = `${window.location.origin}/auth/callback?next=/onboarding`
       const { data, error: authError } = await supabase.auth.signUp({
         email: validation.data.email,
