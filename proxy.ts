@@ -3,21 +3,20 @@ import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 import type { Database } from "@/types/database"
 
-function getPublicEnv(name: "NEXT_PUBLIC_SUPABASE_URL" | "NEXT_PUBLIC_SUPABASE_ANON_KEY"): string {
-  const value = process.env[name]
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`)
-  }
-
-  return value
-}
-
 function isProtectedPath(pathname: string): boolean {
   if (pathname === "/") {
     return true
   }
 
-  const protectedPrefixes = ["/today", "/tasks", "/leads", "/activities", "/tenants", "/settings"]
+  const protectedPrefixes = [
+    "/today",
+    "/tasks",
+    "/leads",
+    "/activities",
+    "/tenants",
+    "/settings",
+    "/integrations",
+  ]
   return protectedPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
 }
 
@@ -27,41 +26,47 @@ function cloneCookies(from: NextResponse, to: NextResponse): void {
   })
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!url) {
+    throw new Error("Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL")
+  }
+  if (!anonKey) {
+    throw new Error("Missing required environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY")
+  }
+
   const sessionResponse = await updateSession(request)
   const pathname = request.nextUrl.pathname
 
-  const supabase = createServerClient<Database>(
-    getPublicEnv("NEXT_PUBLIC_SUPABASE_URL"),
-    getPublicEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll() {
-          // Middleware cookie updates are handled inside updateSession.
-        },
+  const supabase = createServerClient<Database>(url, anonKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll()
       },
-    }
-  )
+      setAll() {
+        // Middleware cookie updates are handled inside updateSession.
+      },
+    },
+  })
 
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   if (!user && isProtectedPath(pathname)) {
-    const url = request.nextUrl.clone()
-    url.pathname = "/login"
-    const redirectResponse = NextResponse.redirect(url)
+    const redirectUrl = request.nextUrl.clone()
+    redirectUrl.pathname = "/login"
+    const redirectResponse = NextResponse.redirect(redirectUrl)
     cloneCookies(sessionResponse, redirectResponse)
     return redirectResponse
   }
 
-  if (user && pathname === "/login") {
-    const url = request.nextUrl.clone()
-    url.pathname = "/"
-    const redirectResponse = NextResponse.redirect(url)
+  if (user && (pathname === "/login" || pathname === "/register")) {
+    const redirectUrl = request.nextUrl.clone()
+    redirectUrl.pathname = "/"
+    const redirectResponse = NextResponse.redirect(redirectUrl)
     cloneCookies(sessionResponse, redirectResponse)
     return redirectResponse
   }

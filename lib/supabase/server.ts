@@ -10,36 +10,33 @@ type CookieWrite = {
 
 type ServerSupabaseClient = ReturnType<typeof createServerClient<Database>>
 
-function getPublicEnv(name: "NEXT_PUBLIC_SUPABASE_URL" | "NEXT_PUBLIC_SUPABASE_ANON_KEY"): string {
-  const value = process.env[name]
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`)
+export async function createClient(): Promise<ServerSupabaseClient> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!url) {
+    throw new Error("Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL")
+  }
+  if (!anonKey) {
+    throw new Error("Missing required environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY")
   }
 
-  return value
-}
-
-export async function createClient(): Promise<ServerSupabaseClient> {
   const cookieStore = await cookies()
 
-  return createServerClient<Database>(
-    getPublicEnv("NEXT_PUBLIC_SUPABASE_URL"),
-    getPublicEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet: CookieWrite[]) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch (error) {
-            console.error("Failed to set Supabase cookies in server context", error)
-          }
-        },
+  return createServerClient<Database>(url, anonKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll()
       },
-    }
-  )
+      setAll(cookiesToSet: CookieWrite[]) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          )
+        } catch (error) {
+          console.error("Failed to set Supabase cookies in server context", error)
+        }
+      },
+    },
+  })
 }
