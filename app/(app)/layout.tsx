@@ -32,8 +32,12 @@ export default async function AppLayout({
     console.error("Failed to fetch byred_users profile", profileError)
   }
 
-  const typedProfile = (profile ?? null) as ByredUser | null
-  const userId = typedProfile?.id ?? ""
+  if (!profile) {
+    redirect("/onboarding")
+  }
+
+  const typedProfile = profile as ByredUser
+  const userId = typedProfile.id
 
   const { data: userTenants, error: tenantError } = await supabase
     .from("byred_user_tenants")
@@ -55,6 +59,7 @@ export default async function AppLayout({
 
   if (tenantError) {
     console.error("Failed to fetch user tenants", tenantError)
+    redirect("/onboarding")
   }
 
   const typedUserTenants = (userTenants ?? []) as Array<{
@@ -80,6 +85,10 @@ export default async function AppLayout({
         role: record.role,
       }
     })
+
+  if (tenants.length === 0) {
+    redirect("/onboarding")
+  }
 
   const metadataTenantId =
     typeof authUser.user_metadata?.active_tenant_id === "string"
