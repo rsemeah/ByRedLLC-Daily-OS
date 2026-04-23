@@ -3,7 +3,7 @@
 import type { ComponentType } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
@@ -36,6 +36,7 @@ const SYSTEM_NAV = [
   { label: "Activities", href: "/activities", icon: Activity },
   { label: "Tenants", href: "/tenants", icon: Building2 },
   { label: "Monday", href: "/integrations/monday", icon: LayoutGrid },
+  { label: "Team", href: "/settings/team", icon: Users },
   { label: "Settings", href: "/settings", icon: Settings },
 ]
 
@@ -68,10 +69,14 @@ function NavItem({
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   const currentUser = useUser()
+
   async function handleTenantSwitch(tenantId: string) {
+    if (tenantId === currentUser.activeTenantId) return
     try {
       await currentUser.setActiveTenantId(tenantId)
+      router.refresh()
     } catch (error) {
       console.error("Failed to switch tenant", error)
     }
@@ -156,11 +161,12 @@ export function AppSidebar() {
               const name = tenant.name ?? fallbackName ?? tenant.id
               const active = currentUser.activeTenantId === tenant.id
               return (
-                <Link
+                <button
                   key={tenant.id}
-                  href={`/tasks?tenant_id=${tenant.id}`}
+                  type="button"
+                  onClick={() => void handleTenantSwitch(tenant.id)}
                   className={cn(
-                    "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors",
+                    "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors w-full text-left",
                     active
                       ? "text-zinc-900 bg-zinc-100 font-medium"
                       : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100"
@@ -171,7 +177,7 @@ export function AppSidebar() {
                     style={!colors?.dot ? { backgroundColor: tenant.color } : undefined}
                   />
                   <span className="truncate text-xs">{name}</span>
-                </Link>
+                </button>
               )
             })}
           </div>

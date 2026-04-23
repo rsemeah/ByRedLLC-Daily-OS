@@ -47,6 +47,15 @@ async function listTenantsForCurrentUser(): Promise<TenantRow[]> {
 export default async function MondayIntegrationPage() {
   const configured = mondayApiTokenConfigured()
 
+  // Resolve the active tenant from user metadata so switching in the sidebar
+  // immediately filters this page to the selected board.
+  const supabaseAuth = await createClient()
+  const { data: { user: authUser } } = await supabaseAuth.auth.getUser()
+  const activeTenantId =
+    typeof authUser?.user_metadata?.active_tenant_id === "string"
+      ? authUser.user_metadata.active_tenant_id
+      : null
+
   let boards: Awaited<ReturnType<typeof fetchAllMondayBoards>> = []
   let boardsFetchError: string | null = null
   if (configured) {
@@ -73,6 +82,10 @@ export default async function MondayIntegrationPage() {
   const bindings = await getBoundTenantBoardsForCurrentUser({
     activeOnly: false,
   }).catch(() => [])
+
+  // Filter to active tenant if one is selected
+  const activeTenant = activeTenantId ? tenants.find((t) => t.id === activeTenantId) : null
+  const displayTenants = activeTenant ? [activeTenant] : tenants
 
   // Detect orphan bindings: tenant points at a board_id that's not visible to
   // the current Monday token (wrong workspace, archived, token scope, etc.).
@@ -155,19 +168,30 @@ export default async function MondayIntegrationPage() {
 
       <Card className="border-zinc-200 bg-white shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold text-zinc-900">
-            Tenant bindings ({bound.length} bound, {unbound.length} unbound)
-          </CardTitle>
-          <CardDescription className="text-zinc-500">
-            One tenant → one Monday board. Edit via the{" "}
-            <code className="text-xs font-mono">byred_tenants.monday_board_id</code>{" "}
-            column until the editable UI ships.
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base font-semibold text-zinc-900">
+                {activeTenant
+                  ? `${activeTenant.name}`
+                  : `Tenant bindings (${bound.length} bound, ${unbound.length} unbound)`}
+              </CardTitle>
+              <CardDescription className="text-zinc-500">
+                {activeTenant
+                  ? "Showing board for the selected tenant. Switch tenants in the sidebar."
+                  : "One tenant → one Monday board. Select a tenant in the sidebar to focus."}
+              </CardDescription>
+            </div>
+            {activeTenant && (
+              <span className="text-[10px] uppercase tracking-wide font-semibold text-byred-red border border-byred-red/30 rounded px-2 py-0.5">
+                Active
+              </span>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="pt-4">
           {tenantsError ? (
             <p className="text-xs text-red-700 font-mono">{tenantsError}</p>
-          ) : tenants.length === 0 ? (
+          ) : displayTenants.length === 0 ? (
             <p className="text-sm text-zinc-500 text-center py-6">
               No tenants found.
             </p>
@@ -190,7 +214,7 @@ export default async function MondayIntegrationPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {tenants.map((t) => {
+                  {displayTenants.map((t) => {
                     const boardId = t.monday_board_id?.trim() || null
                     const board = boardId ? boardsById.get(boardId) : null
                     const isOrphan =
@@ -279,7 +303,7 @@ export default async function MondayIntegrationPage() {
         </CardContent>
       </Card>
 
-      {configured && !boardsFetchError && sortedBoards.length > 0 && (
+      {configured && !boardsFetchError && sortedBoards.length > 0 && !activeTenant && (
         <Card className="border-zinc-200 bg-white shadow-sm overflow-hidden">
           <CardHeader className="pb-0">
             <CardTitle className="text-base font-semibold text-zinc-900">
