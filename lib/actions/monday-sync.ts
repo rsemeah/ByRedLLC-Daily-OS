@@ -41,7 +41,7 @@ export async function syncTaskToMondayAction(input: {
       }
     }
 
-    const mondayId = await createMondayItemForTask(task.title)
+    const mondayId = await createMondayItemForTask(task.title, task.tenant_id)
 
     const { error: updateErr } = await supabase
       .from("byred_tasks")

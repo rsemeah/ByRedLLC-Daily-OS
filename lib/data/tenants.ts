@@ -12,6 +12,8 @@ function mapTenantRow(row: {
   type: string
   color: string | null
   active: boolean | null
+  monday_board_id?: string | null
+  monday_group_id?: string | null
   created_at: string | null
   updated_at: string | null
 }): Tenant {
@@ -21,6 +23,8 @@ function mapTenantRow(row: {
     type: row.type as Tenant["type"],
     color: row.color ?? "#d90009",
     active: row.active ?? true,
+    monday_board_id: row.monday_board_id ?? null,
+    monday_group_id: row.monday_group_id ?? null,
     created_at: row.created_at ?? new Date().toISOString(),
     updated_at: row.updated_at ?? new Date().toISOString(),
   }

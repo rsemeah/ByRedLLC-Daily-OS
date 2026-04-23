@@ -39,6 +39,8 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
         type,
         color,
         active,
+        monday_board_id,
+        monday_group_id,
         created_at,
         updated_at
       )
@@ -64,6 +66,8 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
         type: baseTenant?.type ?? "service",
         color: baseTenant?.color ?? "#d90009",
         active: baseTenant?.active ?? true,
+        monday_board_id: baseTenant?.monday_board_id ?? null,
+        monday_group_id: baseTenant?.monday_group_id ?? null,
         created_at: baseTenant?.created_at ?? null,
         updated_at: baseTenant?.updated_at ?? null,
         role: record.role,

@@ -272,6 +272,8 @@ export type Database = {
           color: string
           created_at: string | null
           id: string
+          monday_board_id: string | null
+          monday_group_id: string | null
           name: string
           type: string
           updated_at: string | null
@@ -281,6 +283,8 @@ export type Database = {
           color: string
           created_at?: string | null
           id: string
+          monday_board_id?: string | null
+          monday_group_id?: string | null
           name: string
           type: string
           updated_at?: string | null
@@ -290,6 +294,8 @@ export type Database = {
           color?: string
           created_at?: string | null
           id?: string
+          monday_board_id?: string | null
+          monday_group_id?: string | null
           name?: string
           type?: string
           updated_at?: string | null

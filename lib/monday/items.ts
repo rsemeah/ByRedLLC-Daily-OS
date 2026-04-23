@@ -2,11 +2,23 @@ import "server-only"
 
 import { mondayGraphql } from "@/lib/monday/graphql"
 
-type ItemsResult = {
-  items: Array<{ id: string; name: string }> | null
+type ItemsWithBoardResult = {
+  items:
+    | Array<{
+        id: string
+        name: string
+        board: { id: string } | null
+      }>
+    | null
 }
 
 export type MondayBoardItem = { id: string; name: string }
+
+export type MondayItemWithBoard = {
+  id: string
+  name: string
+  boardId: string | null
+}
 
 type BoardItemsPageResult = {
   boards:
@@ -27,23 +39,26 @@ type BoardNextPageResult = {
 }
 
 /**
- * Returns item id → name for the given Monday pulse/item ids (chunked).
+ * Returns id → (name, boardId) for the given Monday item ids. Used by the
+ * webhook to route items to the correct tenant when the event payload omits
+ * `boardId`.
  */
-export async function fetchMondayItemNamesByIds(
+export async function fetchMondayItemsWithBoardByIds(
   ids: string[]
-): Promise<Map<string, string>> {
-  const map = new Map<string, string>()
+): Promise<Map<string, MondayItemWithBoard>> {
+  const map = new Map<string, MondayItemWithBoard>()
   const unique = [...new Set(ids.map((id) => String(id).trim()).filter(Boolean))]
   const chunkSize = 100
 
   for (let i = 0; i < unique.length; i += chunkSize) {
     const chunk = unique.slice(i, i + chunkSize)
-    const data = await mondayGraphql<ItemsResult>({
+    const data = await mondayGraphql<ItemsWithBoardResult>({
       query: `
-        query ItemsByIds($ids: [ID!]) {
+        query ItemsWithBoard($ids: [ID!]) {
           items(ids: $ids) {
             id
             name
+            board { id }
           }
         }
       `,
@@ -51,7 +66,11 @@ export async function fetchMondayItemNamesByIds(
     })
 
     for (const row of data.items ?? []) {
-      map.set(String(row.id), row.name)
+      map.set(String(row.id), {
+        id: String(row.id),
+        name: row.name,
+        boardId: row.board?.id ? String(row.board.id) : null,
+      })
     }
   }
 
