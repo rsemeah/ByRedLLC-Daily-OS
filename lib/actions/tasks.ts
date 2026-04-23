@@ -48,9 +48,14 @@ export async function createTaskAction(input: {
       monday_item_id: null,
     }
 
+    // Supabase-js@newer pins PostgrestVersion "14.1" and collapses the
+    // Insert/Update generic to `never`, so a real TaskInsert value still
+    // fails to typecheck. Known upstream issue — cast through `never` once
+    // here, the shape above is the source of truth and is exercised by
+    // the runtime / DB constraints.
     const { data, error } = await supabase
       .from("byred_tasks")
-      .insert(row as never)
+      .insert(row as TaskInsert as never)
       .select("id")
       .single()
 
@@ -123,7 +128,7 @@ export async function updateTaskFieldsAction(input: {
 
     const { error } = await supabase
       .from("byred_tasks")
-      .update(patch as never)
+      .update(patch as TaskUpdate as never)
       .eq("id", input.taskId)
       .eq("tenant_id", input.tenantId)
 

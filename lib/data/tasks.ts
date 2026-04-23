@@ -7,19 +7,47 @@ type TaskStatRow = Pick<
   "id" | "priority" | "due_date" | "estimated_minutes" | "revenue_impact_score" | "status"
 >
 
-export async function getTasks(): Promise<Task[]> {
+// Cap page size to protect against a query that would load a whole tenant's
+// task backlog into a server payload. UI can fetch more via pagination.
+const DEFAULT_PAGE_SIZE = 200
+const MAX_PAGE_SIZE = 500
+
+type PageOpts = {
+  limit?: number
+  offset?: number
+  includeArchived?: boolean
+}
+
+function normPage(opts: PageOpts): { limit: number; offset: number } {
+  const limit = Math.min(
+    Math.max(opts.limit ?? DEFAULT_PAGE_SIZE, 1),
+    MAX_PAGE_SIZE
+  )
+  const offset = Math.max(opts.offset ?? 0, 0)
+  return { limit, offset }
+}
+
+export async function getTasks(opts: PageOpts = {}): Promise<Task[]> {
   const { tenantIds } = await requireTenantScope()
   if (tenantIds.length === 0) return []
 
   const supabase = await createClient()
+  const { limit, offset } = normPage(opts)
 
-  const { data, error } = await supabase
+  let q = supabase
     .from("byred_tasks")
     .select("*")
     .in("tenant_id", tenantIds)
     .order("revenue_impact_score", { ascending: false })
     .order("urgency_score", { ascending: false })
     .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1)
+
+  if (!opts.includeArchived) {
+    q = q.is("archived_at", null)
+  }
+
+  const { data, error } = await q
 
   if (error) {
     console.error("Error fetching tasks:", error)
@@ -50,19 +78,30 @@ export async function getTaskById(id: string): Promise<Task | null> {
   return mapTaskFromDb(data)
 }
 
-export async function getTasksByTenant(tenantId: string): Promise<Task[]> {
+export async function getTasksByTenant(
+  tenantId: string,
+  opts: PageOpts = {}
+): Promise<Task[]> {
   const { tenantIds } = await requireTenantScope()
   if (!assertTenantInScope(tenantId, tenantIds)) return []
 
   const supabase = await createClient()
+  const { limit, offset } = normPage(opts)
 
-  const { data, error } = await supabase
+  let q = supabase
     .from("byred_tasks")
     .select("*")
     .eq("tenant_id", tenantId)
     .order("revenue_impact_score", { ascending: false })
     .order("urgency_score", { ascending: false })
     .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1)
+
+  if (!opts.includeArchived) {
+    q = q.is("archived_at", null)
+  }
+
+  const { data, error } = await q
 
   if (error) {
     console.error("Error fetching tasks:", error)
@@ -72,19 +111,30 @@ export async function getTasksByTenant(tenantId: string): Promise<Task[]> {
   return data.map(mapTaskFromDb)
 }
 
-export async function getTasksByStatus(status: string): Promise<Task[]> {
+export async function getTasksByStatus(
+  status: string,
+  opts: PageOpts = {}
+): Promise<Task[]> {
   const { tenantIds } = await requireTenantScope()
   if (tenantIds.length === 0) return []
 
   const supabase = await createClient()
+  const { limit, offset } = normPage(opts)
 
-  const { data, error } = await supabase
+  let q = supabase
     .from("byred_tasks")
     .select("*")
     .eq("status", status)
     .in("tenant_id", tenantIds)
     .order("revenue_impact_score", { ascending: false })
     .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1)
+
+  if (!opts.includeArchived) {
+    q = q.is("archived_at", null)
+  }
+
+  const { data, error } = await q
 
   if (error) {
     console.error("Error fetching tasks:", error)
@@ -94,11 +144,12 @@ export async function getTasksByStatus(status: string): Promise<Task[]> {
   return data.map(mapTaskFromDb)
 }
 
-export async function getTasksForToday(): Promise<Task[]> {
+export async function getTasksForToday(opts: PageOpts = {}): Promise<Task[]> {
   const { tenantIds } = await requireTenantScope()
   if (tenantIds.length === 0) return []
 
   const supabase = await createClient()
+  const { limit, offset } = normPage(opts)
   const today = new Date().toISOString().split("T")[0]
 
   const { data, error } = await supabase
@@ -108,8 +159,10 @@ export async function getTasksForToday(): Promise<Task[]> {
     .or(`due_date.lte.${today},status.eq.in_progress,status.eq.not_started`)
     .neq("status", "done")
     .neq("status", "cancelled")
+    .is("archived_at", null)
     .order("priority", { ascending: true })
     .order("due_date", { ascending: true })
+    .range(offset, offset + limit - 1)
 
   if (error) {
     console.error("Error fetching today tasks:", error)
@@ -134,6 +187,7 @@ export async function getTaskStats() {
     .in("tenant_id", tenantIds)
     .neq("status", "done")
     .neq("status", "cancelled")
+    .is("archived_at", null)
 
   if (error || !tasks) {
     console.error("Error fetching task stats:", error)

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { timingSafeEqual } from "node:crypto"
 import { pullAllMondayBoardsIntoTasks } from "@/lib/monday/pull-sync"
+import { sendAlert } from "@/lib/observability/alerts"
+import { correlationId, logger } from "@/lib/observability/logger"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -26,34 +28,45 @@ function authorizeCron(req: Request): boolean {
  */
 async function run(req: Request): Promise<NextResponse> {
   const startedAt = Date.now()
-  const requestId =
-    req.headers.get("x-vercel-id") ??
-    req.headers.get("x-request-id") ??
-    crypto.randomUUID()
+  const requestId = correlationId(req)
+  const log = logger.child({ component: "monday_sync", request_id: requestId })
 
   if (!authorizeCron(req)) {
-    console.warn(
-      JSON.stringify({
-        event: "monday_sync.unauthorized",
-        request_id: requestId,
-      })
-    )
+    log.warn("unauthorized")
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 })
   }
 
+  const url = new URL(req.url)
+  const forceFull =
+    url.searchParams.get("full") === "1" ||
+    url.searchParams.get("full") === "true" ||
+    req.headers.get("x-byred-sync-mode")?.toLowerCase() === "full"
+
   try {
-    const batch = await pullAllMondayBoardsIntoTasks()
+    const batch = await pullAllMondayBoardsIntoTasks({ forceFull })
     const durationMs = Date.now() - startedAt
 
-    console.info(
-      JSON.stringify({
-        event: "monday_sync.ok",
-        request_id: requestId,
-        duration_ms: durationMs,
-        tenants: batch.tenants,
-        totals: batch.totals,
+    log.info("ok", {
+      duration_ms: durationMs,
+      force_full: forceFull,
+      tenants: batch.tenants,
+      totals: batch.totals,
+    })
+
+    if (batch.totals.errors > 0) {
+      await sendAlert({
+        event: "monday_sync.partial_failure",
+        severity: "warn",
+        message: `Monday sync finished with ${batch.totals.errors} errors (${batch.tenants} tenants)`,
+        context: {
+          request_id: requestId,
+          totals: batch.totals,
+          per_tenant_errors: batch.results
+            .filter((r) => r.errors > 0)
+            .map((r) => ({ tenant: r.tenantName, board: r.boardId, errors: r.errors })),
+        },
       })
-    )
+    }
 
     return NextResponse.json({
       ok: true,
@@ -65,14 +78,13 @@ async function run(req: Request): Promise<NextResponse> {
   } catch (e) {
     const message = e instanceof Error ? e.message : "Monday board pull failed."
     const durationMs = Date.now() - startedAt
-    console.error(
-      JSON.stringify({
-        event: "monday_sync.failed",
-        request_id: requestId,
-        duration_ms: durationMs,
-        error: message,
-      })
-    )
+    log.error("failed", { duration_ms: durationMs }, e)
+    await sendAlert({
+      event: "monday_sync.failed",
+      severity: "error",
+      message: `Monday sync threw: ${message}`,
+      context: { request_id: requestId, duration_ms: durationMs },
+    })
     return NextResponse.json({ ok: false, error: message }, { status: 500 })
   }
 }

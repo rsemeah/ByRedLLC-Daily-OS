@@ -1,6 +1,7 @@
 import "server-only"
 
 import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
 
 /** Legacy single-board default, used only when no per-tenant binding exists. */
 export const DEFAULT_MONDAY_BOARD_ID = "18408502764"
@@ -33,19 +34,20 @@ export async function boardIdForTenant(tenantId: string): Promise<string | null>
   return row.monday_board_id?.trim() || null
 }
 
-/** Every tenant that has a Monday board bound. Source of truth for sync fan-out. */
-export async function getBoundTenantBoards(opts: {
-  activeOnly?: boolean
-} = {}): Promise<TenantBoardBinding[]> {
-  const admin = createAdminClient()
-  let q = admin
+type AnySupabase = {
+  from: ReturnType<typeof createAdminClient>["from"]
+}
+
+async function readBoundBoards(
+  client: AnySupabase,
+  activeOnly: boolean
+): Promise<TenantBoardBinding[]> {
+  let q = client
     .from("byred_tenants")
     .select("id, name, active, monday_board_id, monday_group_id")
     .not("monday_board_id", "is", null)
 
-  if (opts.activeOnly !== false) {
-    q = q.eq("active", true)
-  }
+  if (activeOnly) q = q.eq("active", true)
 
   const { data, error } = await q
   if (error) throw new Error(`tenants.boards: ${error.message}`)
@@ -65,6 +67,28 @@ export async function getBoundTenantBoards(opts: {
       groupId: r.monday_group_id?.trim() || null,
       active: r.active ?? true,
     }))
+}
+
+/**
+ * Every tenant that has a Monday board bound. **Admin-scoped** — bypasses RLS.
+ * Source of truth for cron/webhook fan-out. Do not call from user-facing
+ * request handlers; use `getBoundTenantBoardsForCurrentUser()` instead.
+ */
+export async function getBoundTenantBoards(opts: {
+  activeOnly?: boolean
+} = {}): Promise<TenantBoardBinding[]> {
+  return readBoundBoards(createAdminClient(), opts.activeOnly !== false)
+}
+
+/**
+ * RLS-scoped read of bound boards for the current authenticated user. Only
+ * returns tenants the user is a member of. Safe for UI.
+ */
+export async function getBoundTenantBoardsForCurrentUser(opts: {
+  activeOnly?: boolean
+} = {}): Promise<TenantBoardBinding[]> {
+  const supabase = await createClient()
+  return readBoundBoards(supabase, opts.activeOnly !== false)
 }
 
 /** Reverse lookup: which tenant owns this Monday board? */

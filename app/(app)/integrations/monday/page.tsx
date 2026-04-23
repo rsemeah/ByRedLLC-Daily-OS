@@ -1,9 +1,9 @@
 import Link from "next/link"
 import { ExternalLink, LayoutGrid, CheckCircle2, AlertCircle } from "lucide-react"
-import { getBoundTenantBoards } from "@/lib/monday/board-id"
+import { getBoundTenantBoardsForCurrentUser } from "@/lib/monday/board-id"
 import { mondayApiTokenConfigured } from "@/lib/monday/integration"
 import { fetchAllMondayBoards } from "@/lib/monday/fetch-boards"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -31,9 +31,12 @@ type TenantRow = {
   monday_group_id: string | null
 }
 
-async function listAllTenants(): Promise<TenantRow[]> {
-  const admin = createAdminClient()
-  const { data, error } = await admin
+async function listTenantsForCurrentUser(): Promise<TenantRow[]> {
+  // RLS-scoped read. `byred_tenants` policies limit rows to tenants the
+  // current user is a member of, so this page never leaks other tenants'
+  // board bindings.
+  const supabase = await createClient()
+  const { data, error } = await supabase
     .from("byred_tenants")
     .select("id, name, active, monday_board_id, monday_group_id")
     .order("name", { ascending: true })
@@ -60,16 +63,16 @@ export default async function MondayIntegrationPage() {
   let tenants: TenantRow[] = []
   let tenantsError: string | null = null
   try {
-    tenants = await listAllTenants()
+    tenants = await listTenantsForCurrentUser()
   } catch (e) {
     tenantsError = e instanceof Error ? e.message : "Could not load tenants."
   }
 
   const bound = tenants.filter((t) => t.monday_board_id?.trim())
   const unbound = tenants.filter((t) => !t.monday_board_id?.trim())
-  const bindings = await getBoundTenantBoards({ activeOnly: false }).catch(
-    () => []
-  )
+  const bindings = await getBoundTenantBoardsForCurrentUser({
+    activeOnly: false,
+  }).catch(() => [])
 
   // Detect orphan bindings: tenant points at a board_id that's not visible to
   // the current Monday token (wrong workspace, archived, token scope, etc.).
