@@ -36,7 +36,6 @@ const SYSTEM_NAV = [
   { label: "Activities", href: "/activities", icon: Activity },
   { label: "Tenants", href: "/tenants", icon: Building2 },
   { label: "Monday", href: "/integrations/monday", icon: LayoutGrid },
-  { label: "Team", href: "/settings/team", icon: Users },
   { label: "Settings", href: "/settings", icon: Settings },
 ]
 
@@ -73,7 +72,6 @@ export function AppSidebar() {
   const currentUser = useUser()
 
   async function handleTenantSwitch(tenantId: string) {
-    if (tenantId === currentUser.activeTenantId) return
     try {
       await currentUser.setActiveTenantId(tenantId)
       router.refresh()
@@ -136,13 +134,18 @@ export function AppSidebar() {
           {currentUser.tenants.length > 1 && (
             <div className="px-3 mb-2">
               <Select
-                value={currentUser.activeTenantId ?? undefined}
+                value={currentUser.activeTenantId ?? "__all__"}
                 onValueChange={(value) => {
-                  void handleTenantSwitch(value)
+                  if (value === "__all__") {
+                    currentUser.setActiveTenantId(currentUser.tenants[0]?.id ?? "").catch(() => {})
+                    router.refresh()
+                  } else {
+                    void handleTenantSwitch(value)
+                  }
                 }}
               >
                 <SelectTrigger className="h-8 text-xs border-zinc-200 bg-white">
-                  <SelectValue placeholder="Switch tenant" />
+                  <SelectValue placeholder="All tenants" />
                 </SelectTrigger>
                 <SelectContent>
                   {currentUser.tenants.map((tenant) => (
