@@ -2,88 +2,130 @@ import "server-only"
 
 import { createAdminClient } from "@/lib/supabase/admin"
 import { mondayBoardId } from "@/lib/monday/board-id"
-import { fetchMondayItemNamesByIds } from "@/lib/monday/items"
+import { fetchAllBoardItems, type MondayBoardItem } from "@/lib/monday/items"
+import { mondaySyncTenantId } from "@/lib/monday/sync-tenant"
 
 export type MondayPullSyncResult = {
   boardId: string
-  linkedTasks: number
+  boardItems: number
+  linked: number
+  inserted: number
   updated: number
-  skipped: number
+  skippedNoTenant: number
+  unchanged: number
+  errors: number
 }
 
 /**
- * For every `byred_tasks` row with `monday_item_id`, pull the current item **name**
- * from Monday and update the task **title** when it differs (Monday → By Red).
+ * True board pull. Fetches every item on the configured Monday board and
+ * reconciles against `byred_tasks`:
+ *   - linked (match on `monday_item_id`) + title changed → UPDATE
+ *   - linked + title matches                              → unchanged
+ *   - unlinked + `MONDAY_SYNC_TENANT_ID` set              → INSERT new task
+ *   - unlinked + tenant unset                             → skip (counted)
+ *
+ * Idempotent: relies on the partial UNIQUE index
+ * `byred_tasks_monday_item_id_unique` from migration 20260422180000.
  */
-export async function pullMondayTitlesIntoTasks(): Promise<MondayPullSyncResult> {
+export async function pullMondayBoardIntoTasks(): Promise<MondayPullSyncResult> {
   const admin = createAdminClient()
   const boardId = mondayBoardId()
+  const tenantId = mondaySyncTenantId()
 
-  const { data: rows, error } = await admin
-    .from("byred_tasks")
-    .select("id, title, monday_item_id")
-    .not("monday_item_id", "is", null)
+  const boardItems: MondayBoardItem[] = await fetchAllBoardItems(boardId)
 
-  if (error) {
-    throw new Error(error.message)
+  if (boardItems.length === 0) {
+    return {
+      boardId,
+      boardItems: 0,
+      linked: 0,
+      inserted: 0,
+      updated: 0,
+      skippedNoTenant: 0,
+      unchanged: 0,
+      errors: 0,
+    }
   }
 
-  const tasks = (rows ?? []) as Array<{
+  const ids = boardItems.map((i) => String(i.id))
+
+  const { data: existingRows, error: fetchErr } = await admin
+    .from("byred_tasks")
+    .select("id, title, monday_item_id")
+    .in("monday_item_id", ids)
+
+  if (fetchErr) {
+    throw new Error(fetchErr.message)
+  }
+
+  const existing = new Map<string, { id: string; title: string }>()
+  for (const r of (existingRows ?? []) as Array<{
     id: string
     title: string
     monday_item_id: string | null
-  }>
-
-  const ids = tasks
-    .map((t) => t.monday_item_id)
-    .filter((id): id is string => id != null && id !== "")
-
-  if (ids.length === 0) {
-    return {
-      boardId,
-      linkedTasks: 0,
-      updated: 0,
-      skipped: 0,
+  }>) {
+    if (r.monday_item_id) {
+      existing.set(String(r.monday_item_id), { id: r.id, title: r.title })
     }
   }
 
-  const names = await fetchMondayItemNamesByIds(ids)
-  let updated = 0
-  let skipped = 0
   const now = new Date().toISOString()
+  let inserted = 0
+  let updated = 0
+  let skippedNoTenant = 0
+  let unchanged = 0
+  let errors = 0
 
-  for (const t of tasks) {
-    const mid = t.monday_item_id
-    if (!mid) continue
-    const mondayName = names.get(String(mid))
-    if (mondayName == null) {
-      skipped++
+  for (const item of boardItems) {
+    const mondayId = String(item.id)
+    const cleanName = item.name.trim() || "(untitled)"
+    const hit = existing.get(mondayId)
+
+    if (hit) {
+      if (hit.title.trim() === cleanName) {
+        unchanged += 1
+        continue
+      }
+      const { error: upErr } = await admin
+        .from("byred_tasks")
+        .update({ title: cleanName, updated_at: now } as never)
+        .eq("id", hit.id)
+      if (upErr) {
+        errors += 1
+      } else {
+        updated += 1
+      }
       continue
     }
-    if (mondayName.trim() === t.title.trim()) {
-      skipped++
+
+    if (!tenantId) {
+      skippedNoTenant += 1
       continue
     }
 
-    const { error: upErr } = await admin
+    const { error: insErr } = await admin
       .from("byred_tasks")
-      .update({
-        title: mondayName.trim(),
-        updated_at: now,
+      .insert({
+        tenant_id: tenantId,
+        title: cleanName,
+        monday_item_id: mondayId,
       } as never)
-      .eq("id", t.id)
 
-    if (!upErr) {
-      updated++
+    if (insErr) {
+      errors += 1
     } else {
-      skipped++
+      inserted += 1
     }
   }
 
   return {
     boardId,
-    linkedTasks: tasks.length,
+    boardItems: boardItems.length,
+    linked: existing.size,
+    inserted,
     updated,
-    skipped,
+    skippedNoTenant,
+    unchanged,
+    errors,
   }
 }

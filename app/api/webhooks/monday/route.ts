@@ -48,6 +48,7 @@ export async function POST(req: Request) {
   return NextResponse.json({
     ok: true,
     pulseId: result.pulseId,
+    action: result.action,
     updated: result.updated,
     detail: result.reason ?? null,
   })

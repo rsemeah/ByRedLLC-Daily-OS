@@ -72,7 +72,7 @@ interface AiActionResult {
 interface TaskDetailProps {
   task: Task
   activities: Activity[]
-  /** Server: true when `MONDAY_API_KEY` + `MONDAY_BOARD_ID` are set */
+  /** Server: true when a Monday GraphQL token is configured (board from `MONDAY_BOARD_ID` or default). */
   mondaySyncEnabled?: boolean
 }
 

@@ -11,6 +11,7 @@ import {
   Users,
   Activity,
   Building2,
+  LayoutGrid,
   Settings,
 } from "lucide-react"
 import { TENANT_COLORS, TENANT_NAMES } from "@/lib/tenant-colors"
@@ -33,6 +34,7 @@ const WORK_NAV = [
 const SYSTEM_NAV = [
   { label: "Activities", href: "/activities", icon: Activity },
   { label: "Tenants", href: "/tenants", icon: Building2 },
+  { label: "Monday", href: "/integrations/monday", icon: LayoutGrid },
   { label: "Settings", href: "/settings", icon: Settings },
 ]
 

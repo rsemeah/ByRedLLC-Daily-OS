@@ -1,9 +1,16 @@
 "use client"
 
+import Link from "next/link"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { CheckCircle, AlertTriangle, XCircle, LogOut } from "lucide-react"
+import {
+  CheckCircle,
+  AlertTriangle,
+  XCircle,
+  LogOut,
+  ChevronRight,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -27,7 +34,6 @@ import { createClient } from "@/lib/supabase/client"
 const AI_MODES = ["HUMAN_ONLY", "AI_ASSIST", "AI_DRAFT", "AI_EXECUTE"] as const
 
 const INTEGRATION_STATUS = [
-  { name: "Monday.com", connected: false },
   { name: "Zapier nightly", connected: false },
   { name: "AI provider", connected: true },
 ]
@@ -204,6 +210,18 @@ export default function SettingsPage() {
         </h2>
         <Card className="bg-white border-zinc-200 shadow-sm">
           <CardContent className="p-4 space-y-3">
+            <Link
+              href="/integrations/monday"
+              className="flex items-center justify-between rounded-md px-2 py-2 -mx-2 hover:bg-zinc-50 transition-colors group"
+            >
+              <span className="text-sm text-zinc-700 group-hover:text-zinc-900">
+                Monday.com
+              </span>
+              <span className="flex items-center gap-1 text-xs text-byred-red font-medium">
+                Boards & sync target
+                <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.75} />
+              </span>
+            </Link>
             {INTEGRATION_STATUS.map((int) => (
               <div key={int.name} className="flex items-center justify-between">
                 <span className="text-sm text-zinc-600">{int.name}</span>

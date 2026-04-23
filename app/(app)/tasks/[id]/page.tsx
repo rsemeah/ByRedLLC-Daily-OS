@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { getTaskById } from "@/lib/data/tasks"
 import { getActivitiesForObject } from "@/lib/data/activities"
 import { TaskDetail } from "@/components/byred/task-detail"
+import { mondayApiTokenConfigured } from "@/lib/monday/integration"
 
 interface TaskDetailPageProps {
   params: Promise<{ id: string }>
@@ -19,9 +20,8 @@ export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
     notFound()
   }
 
-  const mondaySyncEnabled = Boolean(
-    process.env.MONDAY_API_KEY?.trim() || process.env.MONDAY_TOKEN?.trim()
-  )
+  /** Push/pull use MONDAY_API_KEY; default board from MONDAY_BOARD_ID (see /integrations/monday). */
+  const mondaySyncEnabled = mondayApiTokenConfigured()
 
   return (
     <TaskDetail

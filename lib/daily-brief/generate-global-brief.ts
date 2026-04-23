@@ -28,28 +28,28 @@ type LeadRow = {
   revenue_potential: number | null
 }
 
+type GenerationOk = {
+  ok: true
+  date: string
+  candidates: number
+  leadsDue: number
+  top3Count: number
+}
+
+type GenerationErr = { ok: false; error: string }
+
+type GenerationResult = GenerationOk | GenerationErr
+
 const aiBriefSchema = z.object({
-  headline: z.string().max(400),
-  warnings: z.array(z.string()).max(12),
-  next_action: z.string().max(900),
+  headline: z.string().min(1).max(400),
+  warnings: z.array(z.string().min(1).max(280)).max(12),
+  next_action: z.string().min(1).max(900),
   priority_task_indices: z.array(z.number().int().min(0)).max(3),
 })
 
-function taskIsBriefRelevant(t: TaskRow, today: string): boolean {
-  const status = t.status ?? ""
-  if (status === "done" || status === "cancelled") return false
-  if (t.blocker_flag || status === "blocked") return true
-  if (status === "overdue") return true
-  if (!t.due_date) return false
-  const d = t.due_date.slice(0, 10)
-  return d <= today
-}
-
-function leadFollowUpDue(l: LeadRow, today: string): boolean {
-  if (!l.next_follow_up_at) return false
-  const d = l.next_follow_up_at.slice(0, 10)
-  return d <= today
-}
+const MAX_CANDIDATES = 24
+const GROQ_MODEL = "llama-3.3-70b-versatile"
+const GROQ_MAX_ATTEMPTS = 3
 
 function sortCandidates(a: TaskRow, b: TaskRow): number {
   const rr = (b.revenue_impact_score ?? 0) - (a.revenue_impact_score ?? 0)
@@ -110,9 +110,38 @@ function indicesToTop3(
   return out
 }
 
-export async function runGlobalDailyBriefGeneration(): Promise<
-  { ok: true; date: string } | { ok: false; error: string }
+async function generateWithRetry(prompt: string): Promise<
+  z.infer<typeof aiBriefSchema>
 > {
+  let lastErr: unknown
+  for (let attempt = 1; attempt <= GROQ_MAX_ATTEMPTS; attempt++) {
+    try {
+      const { object } = await generateObject({
+        model: groq(GROQ_MODEL),
+        schema: aiBriefSchema,
+        temperature: 0.35,
+        system:
+          "You produce strict structured output for By Red OS operations software. " +
+          "Focus on revenue, deadlines, blockers, and follow-ups. No preamble.",
+        prompt,
+      })
+      return object
+    } catch (e) {
+      lastErr = e
+      if (attempt < GROQ_MAX_ATTEMPTS) {
+        const backoff = 250 * 2 ** (attempt - 1)
+        await new Promise((r) => setTimeout(r, backoff))
+      }
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error("Groq generation failed.")
+}
+
+export async function runGlobalDailyBriefGeneration(
+  opts: { requestId?: string } = {}
+): Promise<GenerationResult> {
+  const requestId = opts.requestId ?? "local"
+
   if (!process.env.GROQ_API_KEY?.trim()) {
     return { ok: false, error: "GROQ_API_KEY is not configured." }
   }
@@ -134,82 +163,96 @@ export async function runGlobalDailyBriefGeneration(): Promise<
     .select(
       "id, title, tenant_id, due_date, priority, status, blocker_flag, revenue_impact_score, urgency_score"
     )
+    .not("status", "in", "(done,cancelled)")
+    .or(
+      `blocker_flag.eq.true,status.eq.blocked,status.eq.overdue,due_date.lte.${today}`
+    )
+    .order("revenue_impact_score", { ascending: false, nullsFirst: false })
+    .order("urgency_score", { ascending: false, nullsFirst: false })
+    .limit(200)
 
   if (taskErr) {
-    return { ok: false, error: taskErr.message }
+    return { ok: false, error: `tasks query: ${taskErr.message}` }
   }
 
-  const tasks = (taskRows ?? []) as TaskRow[]
-  const relevant = tasks
-    .filter((t) => taskIsBriefRelevant(t, today))
+  const candidates = ((taskRows ?? []) as TaskRow[])
     .sort(sortCandidates)
+    .slice(0, MAX_CANDIDATES)
 
   const { data: leadRows, error: leadErr } = await admin
     .from("byred_leads")
     .select("id, name, tenant_id, stage, next_follow_up_at, revenue_potential")
+    .not("stage", "in", "(WON,LOST)")
+    .not("next_follow_up_at", "is", null)
+    .lte("next_follow_up_at", `${today}T23:59:59Z`)
+    .limit(50)
 
   if (leadErr) {
-    return { ok: false, error: leadErr.message }
+    return { ok: false, error: `leads query: ${leadErr.message}` }
   }
 
-  const leads = ((leadRows ?? []) as LeadRow[]).filter(
-    (l) =>
-      l.stage !== "WON" &&
-      l.stage !== "LOST" &&
-      leadFollowUpDue(l, today)
+  const leads = (leadRows ?? []) as LeadRow[]
+
+  console.info(
+    JSON.stringify({
+      event: "daily_brief.inputs",
+      request_id: requestId,
+      date: today,
+      candidates: candidates.length,
+      leads_due: leads.length,
+    })
   )
 
-  const candidates = relevant.slice(0, 24)
-
+  let aiObject: z.infer<typeof aiBriefSchema>
   try {
-    const { object } = await generateObject({
-      model: groq("llama-3.3-70b-versatile"),
-      schema: aiBriefSchema,
-      temperature: 0.35,
-      system:
-        "You produce strict structured output for By Red OS operations software. " +
-        "Focus on revenue, deadlines, blockers, and follow-ups. No preamble.",
-      prompt: buildPrompt({ today, candidates, leadsDue: leads }),
-    })
-
-    const summary: DailyBriefSummary = {
-      headline: object.headline.trim(),
-      warnings: object.warnings.map((w) => w.trim()).filter(Boolean),
-      next_action: object.next_action.trim(),
-      top_3: indicesToTop3(object.priority_task_indices, candidates),
-    }
-
-    const { data: existing } = await admin
-      .from("byred_daily_briefs")
-      .select("id")
-      .eq("date", today)
-      .is("user_id", null)
-      .maybeSingle()
-
-    const payload = summary as unknown as Json
-
-    if (existing?.id) {
-      const { error: upErr } = await admin
-        .from("byred_daily_briefs")
-        .update({ summary: payload })
-        .eq("id", existing.id)
-
-      if (upErr) return { ok: false, error: upErr.message }
-    } else {
-      const { error: insErr } = await admin.from("byred_daily_briefs").insert({
-        date: today,
-        user_id: null,
-        summary: payload,
-      })
-
-      if (insErr) return { ok: false, error: insErr.message }
-    }
-
-    return { ok: true, date: today }
+    aiObject = await generateWithRetry(
+      buildPrompt({ today, candidates, leadsDue: leads })
+    )
   } catch (e) {
     return {
       ok: false,
-      error: e instanceof Error ? e.message : "Generation failed.",
+      error: `groq: ${e instanceof Error ? e.message : "generation failed"}`,
     }
+  }
+
+  const summary: DailyBriefSummary = {
+    headline: aiObject.headline.trim(),
+    warnings: aiObject.warnings.map((w) => w.trim()).filter(Boolean),
+    next_action: aiObject.next_action.trim(),
+    top_3: indicesToTop3(aiObject.priority_task_indices, candidates),
+  }
+
+  const payload = summary as unknown as Json
+
+  const { data: existing, error: selErr } = await admin
+    .from("byred_daily_briefs")
+    .select("id")
+    .eq("date", today)
+    .is("user_id", null)
+    .maybeSingle()
+
+  if (selErr) {
+    return { ok: false, error: `read: ${selErr.message}` }
+  }
+
+  if (existing?.id) {
+    const { error: upErr } = await admin
+      .from("byred_daily_briefs")
+      .update({ summary: payload })
+      .eq("id", existing.id)
+    if (upErr) return { ok: false, error: `update: ${upErr.message}` }
+  } else {
+    const { error: insErr } = await admin
+      .from("byred_daily_briefs")
+      .insert({ date: today, user_id: null, summary: payload })
+    if (insErr) return { ok: false, error: `insert: ${insErr.message}` }
+  }
+
+  return {
+    ok: true,
+    date: today,
+    candidates: candidates.length,
+    leadsDue: leads.length,
+    top3Count: summary.top_3.length,
   }
 }

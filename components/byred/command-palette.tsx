@@ -8,6 +8,7 @@ import {
   CalendarDays,
   CheckSquare,
   LayoutDashboard,
+  LayoutGrid,
   Plus,
   Settings,
   UserPlus,
@@ -39,6 +40,7 @@ const WORK: NavCmd[] = [
 const SYSTEM: NavCmd[] = [
   { label: "Activities", href: "/activities", icon: Activity },
   { label: "Tenants", href: "/tenants", icon: Building2 },
+  { label: "Monday.com", href: "/integrations/monday", icon: LayoutGrid },
   { label: "Settings", href: "/settings", icon: Settings },
 ]
 
