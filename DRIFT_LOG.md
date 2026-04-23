@@ -1,29 +1,23 @@
 # Schema Drift Log
 
-Date: 2026-04-21
+Date: 2026-04-23
 
-## Priority 0 Discovery Status
+## Status: RESOLVED
 
-Live schema discovery is currently blocked by authentication configuration:
+All blockers from the 2026-04-21 assessment have been cleared.
 
-- `supabase gen types` failed because `SUPABASE_ACCESS_TOKEN` is not configured and `supabase login` has not been completed on this machine.
-- `information_schema` inspection through Supabase PostgREST failed because the configured `SUPABASE_SERVICE_ROLE_KEY` is not a secret key accepted by admin-only endpoints.
+## What was resolved
 
-## Current Source of Truth Used
+1. **Supabase CLI authentication** — Working. `supabase db push --dry-run` confirms all 24 migrations are applied.
+2. **Live type generation** — `supabase gen types typescript --linked` succeeded. `types/database.ts` now contains the live-generated `Database` type with custom convenience exports appended.
+3. **TypeScript compilation** — `tsc --noEmit` passes with zero errors against the live-generated types.
+4. **Monday board bindings** — All 8 active tenants cross-checked against Monday API. Every `monday_board_id` resolves to a visible, active board.
+5. **Pull sync pipeline** — Delta sync runs successfully across all 8 boards with zero errors. 337 tasks linked, sync cursors and timestamps populated.
 
-Until live schema access is unblocked, `types/db.generated.ts` is a temporary fallback that re-exports from local `types/database.ts`.
+## Current state
 
-## Drift Assessment (Provisional)
-
-A true live-vs-local drift comparison cannot be completed yet without successful live schema introspection.
-
-Potential drift risk already detected:
-
-- Environment variable `MONDAY_BOARD_ID` in local `.env.local` does not match the required board reference in the implementation plan.
-
-## Required Follow-up
-
-1. Provide a valid `SUPABASE_SERVICE_ROLE_KEY` secret key in `.env.local`.
-2. Authenticate Supabase CLI (`supabase login`) or set `SUPABASE_ACCESS_TOKEN`.
-3. Re-run `scripts/discover-schema.ts` and `supabase gen types`.
-4. Replace temporary fallback content in `types/db.generated.ts` with true live-generated types.
+- 24 migrations applied (13 from 2026-04-21/22, 11 from 2026-04-23)
+- 9 tenants (8 with Monday board bindings, 1 parent "By Red LLC" with no board)
+- 337 Monday-linked tasks, 191 with due dates, 87 with non-default statuses
+- Delta sync cursors active for all 8 boards
+- `next build` clean, `tsc --noEmit` clean

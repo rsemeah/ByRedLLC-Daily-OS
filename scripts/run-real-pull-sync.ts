@@ -1,8 +1,18 @@
 // Exercises the real production path: lib/monday/pull-sync.ts
 // Verifies advisory lock, composite unique upsert, retry wrapper all compose.
 
+import { createRequire } from "node:module"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
+
+// Stub out server-only so it doesn't throw outside Next.js
+const _require = createRequire(import.meta.url)
+_require.cache[_require.resolve("server-only")] = {
+  id: "server-only",
+  filename: _require.resolve("server-only"),
+  loaded: true,
+  exports: {},
+} as NodeModule
 
 try {
   const raw = readFileSync(resolve(process.cwd(), ".env.local"), "utf8")
