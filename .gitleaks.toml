@@ -1,0 +1,38 @@
+# Gitleaks configuration for the By Red LLC repo.
+# Extends the default ruleset (recommended upstream defaults) with a
+# project-specific allowlist so safe placeholders in templates and docs
+# do not trigger false positives.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Project-wide allowlist for known-safe files and placeholder values."
+
+# Files that are templates / docs — they intentionally contain
+# variable names or obvious placeholders, not real secrets.
+paths = [
+  '''(^|/)\.env\.example$''',
+  '''(^|/)README(\..*)?$''',
+  '''(^|/)NOTION_REVIEW_.*\.md$''',
+  '''(^|/)DRIFT_LOG\.md$''',
+  '''(^|/)supabase/config\.toml$''',
+  '''(^|/)pnpm-lock\.yaml$''',
+  '''(^|/)package-lock\.json$''',
+  '''(^|/)\.next/''',
+  '''(^|/)node_modules/''',
+]
+
+# Regexes matched against a finding's value. Anything matching here is
+# treated as not-a-secret.
+regexes = [
+  # Supabase/dotenv placeholder style: your_*, YOUR_*, <YOUR_...>
+  '''(?i)your[_-][a-z0-9_-]+''',
+  '''(?i)YOUR_[A-Z0-9_]+''',
+  '''<[A-Z0-9_]+>''',
+  # env(NAME) substitution syntax used in supabase/config.toml
+  '''env\([A-Z0-9_]+\)''',
+  # Obvious dummy values
+  '''(?i)example[_-]?(key|secret|token)''',
+  '''(?i)change[_-]?me''',
+]

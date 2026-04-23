@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Pre-commit hook: block commits that contain secrets.
+# Runs `gitleaks protect --staged` against what you are about to commit.
+#
+# Setup (one-time, per clone):
+#   pnpm run hooks:install     # or: git config core.hooksPath .githooks
+#
+# Bypass (only when you are SURE the match is a false positive):
+#   SKIP_GITLEAKS=1 git commit ...
+# Prefer adding a proper allowlist entry to .gitleaks.toml instead.
+
+set -euo pipefail
+
+if [[ "${SKIP_GITLEAKS:-0}" == "1" ]]; then
+  echo "gitleaks: skipped via SKIP_GITLEAKS=1"
+  exit 0
+fi
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "gitleaks: not installed on PATH." >&2
+  echo "  Install with:  brew install gitleaks" >&2
+  echo "  Or bypass this check once with:  SKIP_GITLEAKS=1 git commit ..." >&2
+  exit 1
+fi
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+CONFIG_ARG=()
+if [[ -f "$REPO_ROOT/.gitleaks.toml" ]]; then
+  CONFIG_ARG=(--config "$REPO_ROOT/.gitleaks.toml")
+fi
+
+if ! gitleaks git --staged --redact --verbose --no-banner "${CONFIG_ARG[@]}"; then
+  echo "" >&2
+  echo "gitleaks: BLOCKED — a staged change looks like a secret." >&2
+  echo "  Review the finding above. If it is real, unstage the file and move the value into .env.local." >&2
+  echo "  If it is a false positive, add an allowlist rule to .gitleaks.toml." >&2
+  echo "  Emergency bypass (not recommended):  SKIP_GITLEAKS=1 git commit ..." >&2
+  exit 1
+fi
