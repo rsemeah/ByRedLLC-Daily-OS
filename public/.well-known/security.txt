@@ -1,0 +1,4 @@
+Contact: mailto:security@byredllc.com
+Preferred-Languages: en
+Canonical: https://byredllc.com/.well-known/security.txt
+Policy: https://byredllc.com/security
