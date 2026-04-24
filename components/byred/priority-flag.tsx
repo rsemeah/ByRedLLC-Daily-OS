@@ -1,10 +1,8 @@
-import { cn } from '@/lib/utils'
-
-const PRIORITY_CONFIG: Record<string, { label: string; dotClass: string; textClass: string }> = {
-  critical: { label: 'Critical', dotClass: 'bg-byred-red',    textClass: 'text-byred-red' },
-  high:     { label: 'High',     dotClass: 'bg-amber-500',    textClass: 'text-amber-400' },
-  medium:   { label: 'Medium',   dotClass: 'bg-sky-500',      textClass: 'text-sky-400' },
-  low:      { label: 'Low',      dotClass: 'bg-zinc-500',     textClass: 'text-zinc-500' },
+const PRIORITY_DOT: Record<string, string> = {
+  critical: "#D02C2A",
+  high: "#D02C2A",
+  medium: "#dddddd",
+  low: "#eeeeee",
 }
 
 interface PriorityFlagProps {
@@ -13,15 +11,43 @@ interface PriorityFlagProps {
   showLabel?: boolean
 }
 
-export function PriorityFlag({ priority, className, showLabel = false }: PriorityFlagProps) {
-  const key = priority?.toLowerCase() ?? 'medium'
-  const config = PRIORITY_CONFIG[key] ?? PRIORITY_CONFIG['medium']
+export function PriorityFlag({
+  priority,
+  className,
+  showLabel = false,
+}: PriorityFlagProps) {
+  const key = priority?.toLowerCase() ?? "medium"
+  const dot = PRIORITY_DOT[key] ?? PRIORITY_DOT.medium
 
   return (
-    <span className={cn('inline-flex items-center gap-1.5', className)}>
-      <span className={cn('w-2 h-2 rounded-full shrink-0', config.dotClass)} />
+    <span
+      className={className}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+      }}
+      title={priority ?? "medium"}
+    >
+      <span
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: "50%",
+          background: dot,
+          flexShrink: 0,
+        }}
+      />
       {showLabel && (
-        <span className={cn('text-xs font-medium', config.textClass)}>{config.label}</span>
+        <span
+          style={{
+            fontSize: 10,
+            color: "#bbbbbb",
+            textTransform: "capitalize",
+          }}
+        >
+          {priority ?? "Medium"}
+        </span>
       )}
     </span>
   )

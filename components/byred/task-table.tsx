@@ -4,15 +4,13 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
-import { cn } from "@/lib/utils"
-import { MoreHorizontal, ExternalLink, Copy, Archive, Edit } from "lucide-react"
+import { ExternalLink, Copy, Archive, Edit } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
 import { TenantPill } from "./tenant-pill"
 import { StatusBadge } from "./status-badge"
 import { PriorityFlag } from "./priority-flag"
@@ -24,7 +22,12 @@ import { syncActiveTenantForMutation } from "@/lib/client/sync-active-tenant"
 import { updateTaskFieldsAction } from "@/lib/actions/tasks"
 import type { Task } from "@/types/db"
 
-function formatMinutes(minutes: number): string {
+// Column grid — must match between header and every row.
+// Status | Title | Tenant | Due | Pri | Est | Owner | Mode | Menu
+const GRID_COLUMNS = "108px minmax(0, 1fr) 130px 58px 32px 40px 80px 66px 28px"
+
+function formatMinutes(minutes: number | null): string {
+  if (!minutes) return "—"
   if (minutes < 60) return `${minutes}m`
   const h = Math.floor(minutes / 60)
   const m = minutes % 60
@@ -69,178 +72,315 @@ export function TaskTable({ tasks }: TaskTableProps) {
 
   if (tasks.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <p className="text-sm font-medium text-zinc-500">No tasks.</p>
-        <p className="text-xs text-zinc-400 mt-1">Create one to start.</p>
+      <div
+        className="flex flex-col items-center justify-center"
+        style={{ padding: "64px 24px", textAlign: "center" }}
+      >
+        <p
+          style={{ fontSize: 13, fontWeight: 500, color: "#aaaaaa" }}
+        >
+          No tasks.
+        </p>
+        <p style={{ fontSize: 11, color: "#cccccc", marginTop: 4 }}>
+          Create one to start.
+        </p>
       </div>
     )
   }
 
   return (
-    <div className="rounded-md border border-zinc-200 overflow-hidden bg-white">
-      <table className="w-full text-sm" role="grid">
-        <thead>
-          <tr className="border-b border-zinc-200 bg-zinc-50">
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400 w-8" />
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400">
-              Title
-            </th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400 hidden md:table-cell">
-              Tenant
-            </th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400">
-              Due
-            </th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400 hidden lg:table-cell">
-              Pri
-            </th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400 hidden lg:table-cell">
-              Est
-            </th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400 hidden xl:table-cell">
-              Owner
-            </th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400 hidden xl:table-cell">
-              AI
-            </th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400">
-              Status
-            </th>
-            <th className="px-2 py-2.5 w-10" />
-          </tr>
-        </thead>
-        <tbody>
-          {tasks.map((task) => (
-            <tr
-              key={task.id}
-              className={cn(
-                "border-b border-zinc-100 hover:bg-zinc-50 transition-colors h-12 relative",
-                task.blocker_flag && "border-l-2 border-byred-red"
-              )}
-              style={{ height: "48px" }}
+    <div
+      style={{
+        flex: 1,
+        overflowY: "auto",
+        padding: "14px 24px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+        background: "#f7f7f7",
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: GRID_COLUMNS,
+          alignItems: "center",
+          height: 32,
+          padding: "0 14px",
+          fontSize: 9,
+          fontWeight: 700,
+          color: "#cccccc",
+          textTransform: "uppercase",
+          letterSpacing: 1,
+          position: "sticky",
+          top: 0,
+          background: "#f7f7f7",
+          zIndex: 1,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          Status
+        </div>
+        <div style={{ display: "flex", alignItems: "center", paddingRight: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>
+          Title
+        </div>
+        <div style={{ display: "flex", alignItems: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          Tenant
+        </div>
+        <div style={{ display: "flex", alignItems: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          Due
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Pri
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            paddingRight: 6,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Est
+        </div>
+        <div style={{ display: "flex", alignItems: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          Owner
+        </div>
+        <div style={{ display: "flex", alignItems: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          Mode
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        />
+      </div>
+
+      {/* Rows */}
+      {tasks.map((task) => {
+        const isDone = task.status === "done"
+        const urgent =
+          task.blocker_flag ||
+          task.status === "overdue" ||
+          task.status === "blocked"
+
+        return (
+          <div
+            key={task.id}
+            style={{
+              display: "grid",
+              gridTemplateColumns: GRID_COLUMNS,
+              alignItems: "center",
+              height: 46,
+              padding: urgent ? "0 14px 0 11px" : "0 14px",
+              background: "#ffffff",
+              border: "1px solid #ebebeb",
+              borderLeft: urgent ? "3px solid #D02C2A" : "1px solid #ebebeb",
+              borderRadius: 3,
+              overflow: "hidden",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "#dddddd"
+              if (urgent) e.currentTarget.style.borderLeftColor = "#D02C2A"
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "#ebebeb"
+              if (urgent) e.currentTarget.style.borderLeftColor = "#D02C2A"
+            }}
+          >
+            {/* Status */}
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <StatusBadge status={task.status} />
+            </div>
+
+            {/* Title */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                paddingRight: 8,
+                minWidth: 0,
+                overflow: "hidden",
+              }}
             >
-              {/* Status dot */}
-              <td className="px-4 py-2">
-                <StatusBadge status={task.status} />
-              </td>
+              <Link
+                href={`/tasks/${task.id}`}
+                style={{
+                  display: "block",
+                  fontSize: 12,
+                  color: isDone ? "#bbbbbb" : "#111111",
+                  textDecoration: isDone ? "line-through" : "none",
+                  textDecorationColor: "#dddddd",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  width: "100%",
+                }}
+              >
+                {task.title}
+              </Link>
+            </div>
 
-              {/* Title */}
-              <td className="px-4 py-2 max-w-xs">
-                <Link
-                  href={`/tasks/${task.id}`}
-                  className="text-zinc-700 hover:text-zinc-900 font-medium truncate block focus-visible:ring-2 focus-visible:ring-byred-red focus-visible:outline-none rounded"
-                >
-                  {task.title}
-                </Link>
-              </td>
+            {/* Tenant */}
+            <div className="cell-tenant" style={{ display: "flex", alignItems: "center", overflow: "hidden", minWidth: 0 }}>
+              <TenantPill tenantId={task.tenant_id} />
+            </div>
 
-              {/* Tenant */}
-              <td className="px-4 py-2 hidden md:table-cell">
-                <TenantPill tenantId={task.tenant_id} />
-              </td>
+            {/* Due */}
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <DueDateCell dueDate={task.due_date} />
+            </div>
 
-              {/* Due date */}
-              <td className="px-4 py-2">
-                <DueDateCell dueDate={task.due_date} />
-              </td>
+            {/* Priority */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <PriorityFlag priority={task.priority} />
+            </div>
 
-              {/* Priority */}
-              <td className="px-4 py-2 hidden lg:table-cell">
-                <PriorityFlag priority={task.priority} showLabel />
-              </td>
+            {/* Est */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                paddingRight: 6,
+                fontSize: 10,
+                color: "#cccccc",
+              }}
+            >
+              {formatMinutes(task.estimated_minutes)}
+            </div>
 
-              {/* Estimated minutes */}
-              <td className="px-4 py-2 hidden lg:table-cell">
-                <span className="text-xs text-zinc-400 font-mono">
-                  {formatMinutes(task.estimated_minutes)}
-                </span>
-              </td>
+            {/* Owner */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+                minWidth: 0,
+                overflow: "hidden",
+              }}
+            >
+              <OwnerAvatar ownerId={task.owner_user_id} size="sm" showName />
+            </div>
 
-              {/* Owner */}
-              <td className="px-4 py-2 hidden xl:table-cell">
-                <OwnerAvatar ownerId={task.owner_user_id} size="xs" showName />
-              </td>
+            {/* Mode */}
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <AiModeChip mode={task.ai_mode} />
+            </div>
 
-              {/* AI mode */}
-              <td className="px-4 py-2 hidden xl:table-cell">
-                <AiModeChip mode={task.ai_mode} />
-              </td>
-
-              {/* Status */}
-              <td className="px-4 py-2">
-                <StatusBadge status={task.status} />
-              </td>
-
-              {/* Actions */}
-              <td className="px-2 py-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="w-7 h-7 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
-                      aria-label="Task actions"
-                    >
-                      <MoreHorizontal
-                        className="w-3.5 h-3.5"
-                        strokeWidth={1.75}
-                      />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="bg-white border-zinc-200 shadow-md"
+            {/* Menu */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 28,
+                flexShrink: 0,
+              }}
+            >
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Task actions"
+                    style={{
+                      width: 28,
+                      height: 24,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderRadius: 2,
+                      border: "none",
+                      background: "transparent",
+                      color: "#dddddd",
+                      cursor: "pointer",
+                      fontSize: 16,
+                      lineHeight: 1,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = "#888888"
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = "#dddddd"
+                    }}
                   >
-                    <DropdownMenuItem
-                      asChild
-                      className="text-zinc-600 focus:text-zinc-900 focus:bg-zinc-100 gap-2 text-xs cursor-pointer"
-                    >
-                      <Link href={`/tasks/${task.id}`}>
-                        <Edit className="w-3.5 h-3.5" strokeWidth={1.75} />
-                        Edit
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      asChild
-                      className="text-zinc-600 focus:text-zinc-900 focus:bg-zinc-100 gap-2 text-xs cursor-pointer"
-                    >
-                      <Link href={`/tasks/${task.id}`}>
-                        <ExternalLink
-                          className="w-3.5 h-3.5"
-                          strokeWidth={1.75}
-                        />
-                        Open
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-zinc-600 focus:text-zinc-900 focus:bg-zinc-100 gap-2 text-xs cursor-pointer"
-                      onClick={() =>
-                        navigator.clipboard.writeText(
-                          `${window.location.origin}/tasks/${task.id}`
-                        )
-                      }
-                    >
-                      <Copy className="w-3.5 h-3.5" strokeWidth={1.75} />
-                      Copy link
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-zinc-600 focus:text-zinc-900 focus:bg-zinc-100 gap-2 text-xs cursor-pointer"
-                      disabled={archivingId === task.id || task.status === "cancelled"}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        void handleArchive(task)
-                      }}
-                    >
-                      <Archive className="w-3.5 h-3.5" strokeWidth={1.75} />
-                      {archivingId === task.id ? "Archiving…" : "Archive"}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                    ⋯
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid #e8e8e8",
+                    borderRadius: 2,
+                  }}
+                >
+                  <DropdownMenuItem asChild style={{ fontSize: 11 }}>
+                    <Link href={`/tasks/${task.id}`}>
+                      <Edit size={12} strokeWidth={1.75} />
+                      Edit
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild style={{ fontSize: 11 }}>
+                    <Link href={`/tasks/${task.id}`}>
+                      <ExternalLink size={12} strokeWidth={1.75} />
+                      Open
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    style={{ fontSize: 11 }}
+                    onClick={() =>
+                      navigator.clipboard.writeText(
+                        `${window.location.origin}/tasks/${task.id}`
+                      )
+                    }
+                  >
+                    <Copy size={12} strokeWidth={1.75} />
+                    Copy link
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    style={{ fontSize: 11 }}
+                    disabled={
+                      archivingId === task.id || task.status === "cancelled"
+                    }
+                    onClick={(e) => {
+                      e.preventDefault()
+                      void handleArchive(task)
+                    }}
+                  >
+                    <Archive size={12} strokeWidth={1.75} />
+                    {archivingId === task.id ? "Archiving…" : "Archive"}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }

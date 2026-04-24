@@ -3,42 +3,52 @@
 import { useState } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { Bell, ChevronRight, FileText, AlertTriangle } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Bell, Settings, FileText, AlertTriangle } from "lucide-react"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { useUser } from "@/lib/context/user-context"
 import type { DailyBriefSummary } from "@/types/database"
 
-const ROUTE_LABELS: Record<string, string> = {
-  "/": "Command Center",
-  "/today": "Today",
-  "/tasks": "Tasks",
-  "/leads": "Leads",
-  "/activities": "Activities",
-  "/tenants": "Tenants",
-  "/settings": "Settings",
+const ROUTE_META: Record<
+  string,
+  { title: string; subtitle: string; createHref?: string; createLabel?: string }
+> = {
+  "/": {
+    title: "Command Center",
+    subtitle: "Ops overview",
+  },
+  "/today": {
+    title: "Today",
+    subtitle: "Tasks due today",
+  },
+  "/tasks": {
+    title: "Tasks",
+    subtitle: "All team tasks across tenants",
+    createHref: "/tasks/new",
+    createLabel: "+ Create Task",
+  },
+  "/leads": {
+    title: "Leads",
+    subtitle: "Pipeline and follow-ups",
+    createHref: "/leads/new",
+    createLabel: "+ New Lead",
+  },
+  "/activities": {
+    title: "Activities",
+    subtitle: "System event log",
+  },
+  "/tenants": {
+    title: "Tenants",
+    subtitle: "Workspace roster",
+  },
+  "/settings": {
+    title: "Settings",
+    subtitle: "Account + workspace",
+  },
 }
 
-function getBreadcrumbs(pathname: string): { label: string; href: string }[] {
-  const segments = pathname.split("/").filter(Boolean)
-  if (segments.length === 0) return [{ label: "Command Center", href: "/" }]
-
-  const crumbs: { label: string; href: string }[] = []
-  let path = ""
-  for (const seg of segments) {
-    path += `/${seg}`
-    const label =
-      ROUTE_LABELS[path] ?? (seg.length > 12 ? `${seg.slice(0, 10)}...` : seg)
-    crumbs.push({ label, href: path })
-  }
-  return crumbs
-}
-
-// Default brief when none exists
 const DEFAULT_BRIEF: DailyBriefSummary = {
   headline: "No brief generated yet",
   top_3: [],
@@ -56,21 +66,17 @@ export function AppTopbar({
   initialBriefDate = null,
 }: AppTopbarProps) {
   const pathname = usePathname()
-  const currentUser = useUser()
   const [briefOpen, setBriefOpen] = useState(false)
   const [brief] = useState<DailyBriefSummary>(initialBrief ?? DEFAULT_BRIEF)
   const [briefDate] = useState<string | null>(initialBriefDate)
-  const breadcrumbs = getBreadcrumbs(pathname)
 
-  // User display info
-  const displayName =
-    currentUser?.profile?.name ?? currentUser?.authUser?.email ?? "User"
-  const initials = displayName
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2)
+  // Pick the most specific known route meta for the current path.
+  const meta =
+    Object.entries(ROUTE_META)
+      .sort((a, b) => b[0].length - a[0].length)
+      .find(([path]) =>
+        path === "/" ? pathname === "/" : pathname.startsWith(path)
+      )?.[1] ?? { title: "ByRed OS", subtitle: "" }
 
   const formattedDate = briefDate
     ? new Date(briefDate).toLocaleDateString("en-US", {
@@ -80,73 +86,143 @@ export function AppTopbar({
     : "Today"
 
   return (
-    <header className="fixed top-0 left-60 right-0 h-14 z-30 bg-white border-b border-zinc-200 flex items-center justify-between px-6">
-      {/* Breadcrumb */}
-      <nav
-        className="flex items-center gap-1.5 text-sm"
-        aria-label="Breadcrumb"
-      >
-        {breadcrumbs.map((crumb, i) => (
-          <span key={crumb.href} className="flex items-center gap-1.5">
-            {i > 0 && (
-              <ChevronRight
-                className="w-3 h-3 text-zinc-400"
-                strokeWidth={1.75}
-              />
-            )}
-            {i === breadcrumbs.length - 1 ? (
-              <span className="text-zinc-800 font-medium">{crumb.label}</span>
-            ) : (
-              <Link
-                href={crumb.href}
-                className="text-zinc-400 hover:text-zinc-700 transition-colors"
-              >
-                {crumb.label}
-              </Link>
-            )}
-          </span>
-        ))}
-      </nav>
+    <header
+      className="fixed top-0 right-0 z-30 flex items-center justify-between"
+      style={{
+        left: 210,
+        height: 60,
+        padding: "0 24px",
+        background: "#ffffff",
+        borderBottom: "1px solid #e8e8e8",
+      }}
+    >
+      {/* Left: title + subtitle */}
+      <div>
+        <h1
+          style={{
+            fontSize: 15,
+            fontWeight: 700,
+            color: "#000000",
+            letterSpacing: "-0.3px",
+            lineHeight: 1,
+          }}
+        >
+          {meta.title}
+        </h1>
+        {meta.subtitle && (
+          <p
+            style={{
+              fontSize: 10,
+              color: "#bbbbbb",
+              marginTop: 2,
+              lineHeight: 1,
+            }}
+          >
+            {meta.subtitle}
+          </p>
+        )}
+      </div>
 
-      {/* Right actions */}
-      <div className="flex items-center gap-2">
-        {/* Daily Brief */}
+      {/* Right: icon buttons + create */}
+      <div className="flex items-center" style={{ gap: 10 }}>
+        {/* Brief popover lives on the Bell */}
         <Popover open={briefOpen} onOpenChange={setBriefOpen}>
           <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 gap-2 text-xs"
+            <button
+              type="button"
+              aria-label="Daily Brief"
+              className="inline-flex items-center justify-center transition-colors"
+              style={{
+                width: 30,
+                height: 30,
+                background: "#f7f7f7",
+                border: "1px solid #e8e8e8",
+                borderRadius: 2,
+                color: "#bbbbbb",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = "#555555"
+                e.currentTarget.style.borderColor = "#cccccc"
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = "#bbbbbb"
+                e.currentTarget.style.borderColor = "#e8e8e8"
+              }}
             >
-              <FileText className="w-4 h-4" strokeWidth={1.75} />
-              Brief
-            </Button>
+              <Bell size={14} strokeWidth={1.75} />
+            </button>
           </PopoverTrigger>
           <PopoverContent
-            className="w-80 bg-white border-zinc-200 p-0 shadow-md"
+            className="w-80 p-0"
             align="end"
+            style={{
+              background: "#ffffff",
+              border: "1px solid #e8e8e8",
+              borderRadius: 2,
+            }}
           >
-            <div className="p-4 border-b border-zinc-100">
-              <p className="text-xs text-zinc-400 mb-1">
+            <div
+              style={{
+                padding: 16,
+                borderBottom: "1px solid #ebebeb",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 10,
+                  color: "#bbbbbb",
+                  marginBottom: 4,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.8,
+                }}
+              >
                 Daily Brief · {formattedDate}
               </p>
-              <p className="text-sm font-medium text-zinc-800 leading-snug">
+              <p
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#111111",
+                  lineHeight: 1.4,
+                }}
+              >
                 {brief.headline}
               </p>
             </div>
-            <div className="p-4 space-y-3">
+            <div style={{ padding: 16 }}>
               {brief.top_3.length > 0 && (
-                <div>
-                  <p className="text-[10px] text-zinc-400 uppercase tracking-widest mb-2">
+                <div style={{ marginBottom: 12 }}>
+                  <p
+                    style={{
+                      fontSize: 9,
+                      color: "#bbbbbb",
+                      textTransform: "uppercase",
+                      letterSpacing: 2,
+                      marginBottom: 8,
+                      fontWeight: 700,
+                    }}
+                  >
                     Top 3
                   </p>
-                  <ol className="space-y-1">
+                  <ol style={{ listStyle: "none", padding: 0 }}>
                     {brief.top_3.map((item, i) => (
                       <li
                         key={i}
-                        className="flex items-start gap-2 text-xs text-zinc-600"
+                        style={{
+                          display: "flex",
+                          gap: 8,
+                          fontSize: 11,
+                          color: "#111111",
+                          marginBottom: 4,
+                        }}
                       >
-                        <span className="text-byred-red font-mono font-medium shrink-0">
+                        <span
+                          style={{
+                            color: "#D02C2A",
+                            fontWeight: 700,
+                            flexShrink: 0,
+                          }}
+                        >
                           {i + 1}.
                         </span>
                         {typeof item === "string" ? item : item.title}
@@ -156,29 +232,55 @@ export function AppTopbar({
                 </div>
               )}
               {brief.warnings.length > 0 && (
-                <div>
-                  <p className="text-[10px] text-zinc-400 uppercase tracking-widest mb-2">
+                <div style={{ marginBottom: 12 }}>
+                  <p
+                    style={{
+                      fontSize: 9,
+                      color: "#bbbbbb",
+                      textTransform: "uppercase",
+                      letterSpacing: 2,
+                      marginBottom: 8,
+                      fontWeight: 700,
+                    }}
+                  >
                     Warnings
                   </p>
                   {brief.warnings.map((w, i) => (
                     <div
                       key={i}
-                      className="flex items-start gap-2 text-xs text-amber-600"
+                      style={{
+                        display: "flex",
+                        gap: 6,
+                        fontSize: 11,
+                        color: "#aa5500",
+                        marginBottom: 4,
+                      }}
                     >
-                      <AlertTriangle
-                        className="w-3 h-3 shrink-0 mt-0.5"
-                        strokeWidth={1.75}
-                      />
+                      <AlertTriangle size={12} strokeWidth={1.75} />
                       {w}
                     </div>
                   ))}
                 </div>
               )}
-              <div className="pt-2 border-t border-zinc-100">
-                <p className="text-[10px] text-zinc-400 uppercase tracking-widest mb-1">
+              <div
+                style={{
+                  paddingTop: 8,
+                  borderTop: "1px solid #ebebeb",
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: 9,
+                    color: "#bbbbbb",
+                    textTransform: "uppercase",
+                    letterSpacing: 2,
+                    marginBottom: 4,
+                    fontWeight: 700,
+                  }}
+                >
                   Next Action
                 </p>
-                <p className="text-sm font-medium text-zinc-800">
+                <p style={{ fontSize: 12, fontWeight: 600, color: "#111111" }}>
                   {brief.next_action}
                 </p>
               </div>
@@ -186,25 +288,64 @@ export function AppTopbar({
           </PopoverContent>
         </Popover>
 
-        {/* Notifications */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 w-8 h-8"
-          aria-label="Notifications"
+        <Link
+          href="/settings"
+          aria-label="Settings"
+          className="inline-flex items-center justify-center transition-colors"
+          style={{
+            width: 30,
+            height: 30,
+            background: "#f7f7f7",
+            border: "1px solid #e8e8e8",
+            borderRadius: 2,
+            color: "#bbbbbb",
+          }}
         >
-          <Bell className="w-4 h-4" strokeWidth={1.75} />
-        </Button>
+          <Settings size={14} strokeWidth={1.75} />
+        </Link>
 
-        {/* Avatar */}
-        <div
-          className="w-7 h-7 rounded-full bg-byred-red/10 border border-byred-red/20 flex items-center justify-center cursor-pointer"
-          aria-label="User menu"
+        {meta.createHref && (
+          <Link
+            href={meta.createHref}
+            className="inline-flex items-center justify-center uppercase transition-colors"
+            style={{
+              height: 32,
+              padding: "0 16px",
+              background: "#D02C2A",
+              color: "#ffffff",
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: 0.5,
+              borderRadius: 2,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "#A02220"
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "#D02C2A"
+            }}
+          >
+            {meta.createLabel ?? "+ Create"}
+          </Link>
+        )}
+
+        {/* Brief shortcut (kept inline so Daily Brief stays reachable from topbar) */}
+        <button
+          type="button"
+          onClick={() => setBriefOpen((o) => !o)}
+          aria-label="Toggle Daily Brief"
+          className="inline-flex items-center justify-center"
+          style={{
+            width: 30,
+            height: 30,
+            background: "#f7f7f7",
+            border: "1px solid #e8e8e8",
+            borderRadius: 2,
+            color: "#bbbbbb",
+          }}
         >
-          <span className="text-xs font-semibold text-byred-red font-condensed">
-            {initials}
-          </span>
-        </div>
+          <FileText size={14} strokeWidth={1.75} />
+        </button>
       </div>
     </header>
   )

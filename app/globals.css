@@ -5,13 +5,13 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #f7f6f4;
-  --foreground: #18181b;
+  --background: #f7f7f7;
+  --foreground: #000000;
   --card: #ffffff;
-  --card-foreground: #18181b;
+  --card-foreground: #000000;
   --popover: #ffffff;
-  --popover-foreground: #18181b;
-  --primary: #d90009;
+  --popover-foreground: #000000;
+  --primary: #D02C2A;
   --primary-foreground: #ffffff;
   --secondary: #f4f4f5;
   --secondary-foreground: #18181b;
@@ -19,20 +19,20 @@
   --muted-foreground: #71717a;
   --accent: #f4f4f5;
   --accent-foreground: #18181b;
-  --destructive: #d90009;
+  --destructive: #D02C2A;
   --destructive-foreground: #ffffff;
-  --border: #e4e4e7;
-  --input: #e4e4e7;
-  --ring: #d90009;
-  --radius: 0.375rem;
+  --border: #e8e8e8;
+  --input: #e8e8e8;
+  --ring: #D02C2A;
+  --radius: 0.125rem;
   --sidebar: #ffffff;
-  --sidebar-foreground: #18181b;
-  --sidebar-primary: #d90009;
+  --sidebar-foreground: #000000;
+  --sidebar-primary: #D02C2A;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f4f4f5;
-  --sidebar-accent-foreground: #18181b;
-  --sidebar-border: #e4e4e7;
-  --sidebar-ring: #d90009;
+  --sidebar-accent: #fff8f8;
+  --sidebar-accent-foreground: #000000;
+  --sidebar-border: #e8e8e8;
+  --sidebar-ring: #D02C2A;
 }
 
 @theme inline {
@@ -70,11 +70,35 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --color-byred-red: #d90009;
-  --color-byred-red-hot: #ff1a22;
-  --color-byred-red-deep: #a60007;
-  --color-byred-ink: #0a0a0b;
-  --color-byred-bone: #f5f5f4;
+  --color-byred-red: #D02C2A;
+  --color-byred-red-hot: #E0413F;
+  --color-byred-red-deep: #A02220;
+  --color-byred-red-light: #fde8e8;
+  --color-byred-red-border: #f5c0c0;
+  --color-byred-red-subtle: #fff8f8;
+  --color-byred-ink: #000000;
+  --color-byred-bone: #f7f7f7;
+  --color-byred-surface: #ffffff;
+  --color-byred-hover: #fafafa;
+  --color-byred-border: #e8e8e8;
+  --color-byred-border-subtle: #ebebeb;
+  --color-byred-border-strong: #dddddd;
+  --color-byred-text-primary: #000000;
+  --color-byred-text-secondary: #111111;
+  --color-byred-text-muted: #aaaaaa;
+  --color-byred-text-faint: #cccccc;
+  --color-byred-done-text: #2a7a3a;
+  --color-byred-done-bg: #f0faf4;
+  --color-byred-done-border: #c8e6d0;
+  --color-byred-hirewire-text: #3355bb;
+  --color-byred-hirewire-bg: #f0f4ff;
+  --color-byred-hirewire-border: #d0d8f5;
+  --color-byred-paradise-text: #2a7a3a;
+  --color-byred-paradise-bg: #f0faf4;
+  --color-byred-paradise-border: #c8e6d0;
+  --color-byred-hadith-text: #aa5500;
+  --color-byred-hadith-bg: #fff8f0;
+  --color-byred-hadith-border: #f0d5b0;
 }
 
 @layer base {

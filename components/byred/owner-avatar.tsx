@@ -2,22 +2,14 @@
 
 import Image from "next/image"
 import { useUser } from "@/lib/context/user-context"
-import { cn } from "@/lib/utils"
 
 type Size = "xs" | "sm" | "md" | "lg"
 
 const SIZE_PX: Record<Size, number> = {
   xs: 20,
-  sm: 24,
+  sm: 22,
   md: 28,
   lg: 36,
-}
-
-const SIZE_TEXT: Record<Size, string> = {
-  xs: "text-[9px]",
-  sm: "text-[10px]",
-  md: "text-xs",
-  lg: "text-sm",
 }
 
 function computeInitials(name: string): string {
@@ -36,7 +28,6 @@ type Props = {
   size?: Size
   showName?: boolean
   className?: string
-  /** Optional override — useful on settings screens where we know the row. */
   user?: {
     id: string
     name: string | null
@@ -44,13 +35,6 @@ type Props = {
   }
 }
 
-/**
- * Small assignee chip — avatar image when we have one, initials bubble
- * when we don't. Mirrors Monday's per-task owner indicator.
- *
- * Looks owner info up from the directory shipped via TenantProvider so
- * each row doesn't trigger a network fetch.
- */
 export function OwnerAvatar({
   ownerId,
   size = "sm",
@@ -59,43 +43,81 @@ export function OwnerAvatar({
   user,
 }: Props) {
   const { directoryById } = useUser()
-  const resolved =
-    user ??
-    (ownerId ? directoryById.get(ownerId) : undefined) ??
-    null
+  const resolved = user ?? (ownerId ? directoryById.get(ownerId) : undefined) ?? null
+
+  const px = SIZE_PX[size]
 
   if (!resolved) {
     return (
-      <span className={cn("text-xs text-zinc-400", className)}>—</span>
+      <span
+        className={className}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+        }}
+      >
+        <span
+          style={{
+            width: px,
+            height: px,
+            borderRadius: "50%",
+            background: "#f0f0f0",
+            border: "1px solid #e8e8e8",
+            color: "#999999",
+            fontSize: 10,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          —
+        </span>
+      </span>
     )
   }
 
-  const px = SIZE_PX[size]
   const displayName = resolved.name?.trim() || "User"
   const initials = computeInitials(displayName)
   const firstName = displayName.split(" ")[0] ?? displayName
 
   const bubble = resolved.avatar_url ? (
     <span
-      className="relative inline-block rounded-full overflow-hidden bg-zinc-100 shrink-0"
-      style={{ width: px, height: px }}
+      style={{
+        width: px,
+        height: px,
+        borderRadius: "50%",
+        overflow: "hidden",
+        display: "inline-block",
+        background: "#f0f0f0",
+        flexShrink: 0,
+      }}
     >
       <Image
         src={resolved.avatar_url}
         alt={displayName}
         width={px}
         height={px}
-        className="object-cover"
+        style={{ objectFit: "cover" }}
         unoptimized
       />
     </span>
   ) : (
     <span
-      className={cn(
-        "inline-flex items-center justify-center rounded-full bg-byred-red/10 border border-byred-red/20 shrink-0 font-semibold font-condensed text-byred-red",
-        SIZE_TEXT[size]
-      )}
-      style={{ width: px, height: px }}
+      style={{
+        width: px,
+        height: px,
+        borderRadius: "50%",
+        background: "#fde8e8",
+        border: "1px solid #f5c0c0",
+        color: "#D02C2A",
+        fontSize: 8,
+        fontWeight: 700,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+      }}
       aria-label={displayName}
     >
       {initials}
@@ -105,7 +127,8 @@ export function OwnerAvatar({
   if (!showName) {
     return (
       <span
-        className={cn("inline-flex items-center", className)}
+        className={className}
+        style={{ display: "inline-flex", alignItems: "center" }}
         title={displayName}
       >
         {bubble}
@@ -114,9 +137,21 @@ export function OwnerAvatar({
   }
 
   return (
-    <span className={cn("inline-flex items-center gap-1.5", className)}>
+    <span
+      className={className}
+      style={{ display: "inline-flex", alignItems: "center", gap: 5, minWidth: 0 }}
+    >
       {bubble}
-      <span className="text-xs text-zinc-600 truncate max-w-[6.5rem]">
+      <span
+        style={{
+          fontSize: 10,
+          color: "#bbbbbb",
+          maxWidth: 44,
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
         {firstName}
       </span>
     </span>

@@ -4,6 +4,7 @@ import { CommandPalette } from "@/components/byred/command-palette"
 import { getDailyBriefForSession } from "@/lib/data/daily-briefs"
 import { TenantProvider } from "@/lib/context/user-context"
 import { createClient } from "@/lib/supabase/server"
+import { isInternalMember } from "@/lib/auth/allowlist"
 import { redirect } from "next/navigation"
 import type { ByredTenant, ByredUser, ByredUserTenant } from "@/types/database"
 
@@ -20,6 +21,13 @@ export default async function AppLayout({
 
   if (authError || !authUser) {
     redirect("/login")
+  }
+
+  // Defense-in-depth: middleware.ts already enforces this, but if that matcher
+  // ever misses a path, the layout still refuses to render dashboard chrome
+  // for a non-allowlisted session.
+  if (!isInternalMember(authUser.email)) {
+    redirect("/auth/error?code=not_authorized")
   }
 
   const { data: profile, error: profileError } = await supabase
@@ -139,14 +147,23 @@ export default async function AppLayout({
       }}
     >
       <CommandPalette />
-      <div className="flex min-h-screen bg-background">
+      <div
+        className="flex min-h-screen"
+        style={{ background: "#f7f7f7" }}
+      >
         <AppSidebar />
-        <div className="flex-1 flex flex-col ml-60">
+        <div
+          className="flex-1 flex flex-col min-w-0"
+          style={{ marginLeft: 210 }}
+        >
           <AppTopbar
             initialBrief={dailyBrief.summary}
             initialBriefDate={dailyBrief.date}
           />
-          <main className="flex-1 pt-14 px-8 py-6 overflow-y-auto">
+          <main
+            className="flex-1 overflow-y-auto"
+            style={{ paddingTop: 60 }}
+          >
             {children}
           </main>
         </div>

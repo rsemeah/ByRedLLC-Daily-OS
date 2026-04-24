@@ -1,10 +1,31 @@
-import { cn } from '@/lib/utils'
-
-const AI_MODE_CONFIG: Record<string, { label: string; classes: string }> = {
-  HUMAN_ONLY: { label: 'Human',   classes: 'bg-zinc-800 text-zinc-400' },
-  AI_ASSIST:  { label: 'Assist',  classes: 'bg-sky-500/10 text-sky-400' },
-  AI_DRAFT:   { label: 'Draft',   classes: 'bg-amber-500/10 text-amber-400' },
-  AI_EXECUTE: { label: 'Execute', classes: 'bg-emerald-500/10 text-emerald-400' },
+const MODE_CONFIG: Record<
+  string,
+  { label: string; bg: string; color: string; border: string }
+> = {
+  HUMAN_ONLY: {
+    label: "Human",
+    bg: "#f7f7f7",
+    color: "#cccccc",
+    border: "#e8e8e8",
+  },
+  AI_ASSIST: {
+    label: "AI · Assist",
+    bg: "#f0f4ff",
+    color: "#3355bb",
+    border: "#d0d8f5",
+  },
+  AI_DRAFT: {
+    label: "AI · Draft",
+    bg: "#f0f4ff",
+    color: "#3355bb",
+    border: "#d0d8f5",
+  },
+  AI_EXECUTE: {
+    label: "AI · Exec",
+    bg: "#f0f4ff",
+    color: "#3355bb",
+    border: "#d0d8f5",
+  },
 }
 
 interface AiModeChipProps {
@@ -14,15 +35,24 @@ interface AiModeChipProps {
 
 export function AiModeChip({ mode, className }: AiModeChipProps) {
   if (!mode) return null
-  const config = AI_MODE_CONFIG[mode] ?? { label: mode, classes: 'bg-zinc-800 text-zinc-400' }
+  const config = MODE_CONFIG[mode] ?? MODE_CONFIG.HUMAN_ONLY
 
   return (
     <span
-      className={cn(
-        'inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium font-mono',
-        config.classes,
-        className
-      )}
+      className={className}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        height: 20,
+        padding: "0 7px",
+        borderRadius: 2,
+        fontSize: 9,
+        fontWeight: 600,
+        whiteSpace: "nowrap",
+        background: config.bg,
+        color: config.color,
+        border: `1px solid ${config.border}`,
+      }}
     >
       {config.label}
     </span>

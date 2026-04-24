@@ -1,5 +1,7 @@
-import { cn } from '@/lib/utils'
-import { TENANT_COLORS, TENANT_NAMES } from '@/lib/tenant-colors'
+"use client"
+
+import { useUser } from "@/lib/context/user-context"
+import { getTenantColors } from "@/lib/tenant-colors"
 
 interface TenantPillProps {
   tenantId: string
@@ -7,24 +9,60 @@ interface TenantPillProps {
 }
 
 export function TenantPill({ tenantId, className }: TenantPillProps) {
-  const colors = TENANT_COLORS[tenantId] ?? {
-    bg: 'bg-zinc-800',
-    text: 'text-zinc-400',
-    dot: 'bg-zinc-400',
+  const { tenants } = useUser()
+  const tenant = tenants.find((t) => t.id === tenantId)
+  const name = tenant?.name ?? "Unknown tenant"
+  const colors = getTenantColors(tenantId)
+  const boardId = tenant?.monday_board_id ?? null
+
+  const pillStyle: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 5,
+    height: 20,
+    padding: "0 8px",
+    borderRadius: 2,
+    fontSize: 9,
+    fontWeight: 600,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    maxWidth: "100%",
+    background: colors.chipBg,
+    color: colors.chipText,
+    border: `1px solid ${colors.chipBorder}`,
   }
-  const name = TENANT_NAMES[tenantId] ?? tenantId
+
+  if (!boardId) {
+    return (
+      <span className={className} style={pillStyle} title={name}>
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>
+          {name}
+        </span>
+      </span>
+    )
+  }
 
   return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs font-medium',
-        colors.bg,
-        colors.text,
-        className
-      )}
+    <a
+      href={`https://monday.com/boards/${boardId}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={className}
+      style={pillStyle}
+      title={`${name} — open Monday board ${boardId}`}
+      onClick={(e) => e.stopPropagation()}
     >
-      <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', colors.dot)} />
-      {name}
-    </span>
+      <span
+        style={{
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          flex: 1,
+          minWidth: 0,
+        }}
+      >
+        {name}
+      </span>
+    </a>
   )
 }

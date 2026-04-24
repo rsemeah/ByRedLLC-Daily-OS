@@ -24,9 +24,10 @@ export default async function TenantsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {tenants.map((tenant) => {
           const colors = TENANT_COLORS[tenant.id] ?? {
-            bg: "bg-zinc-100",
-            text: "text-zinc-600",
-            dot: "bg-zinc-400",
+            dot: "#aaaaaa",
+            chipBg: "#f4f4f5",
+            chipText: "#71717a",
+            chipBorder: "#e4e4e7",
           }
 
           return (
@@ -38,19 +39,20 @@ export default async function TenantsPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <h2
-                      className={cn(
-                        "text-xl font-condensed font-bold",
-                        colors.text
-                      )}
+                      className="text-xl font-condensed font-bold"
+                      style={{ color: colors.chipText }}
                     >
                       {tenant.name}
                     </h2>
                     <span
                       className={cn(
-                        "inline-block mt-1 text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-sm",
-                        colors.bg,
-                        colors.text
+                        "inline-block mt-1 text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-sm border"
                       )}
+                      style={{
+                        backgroundColor: colors.chipBg,
+                        color: colors.chipText,
+                        borderColor: colors.chipBorder,
+                      }}
                     >
                       {tenant.type}
                     </span>
