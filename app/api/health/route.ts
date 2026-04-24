@@ -35,13 +35,11 @@ async function checkDatabase(): Promise<CheckResult> {
 }
 
 function requiredEnvStatus(): { ok: boolean; missing: string[] } {
-  const required = [
-    "NEXT_PUBLIC_SUPABASE_URL",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-    "SUPABASE_SERVICE_ROLE_KEY",
-    "CRON_SECRET",
-  ]
-  const missing = required.filter((k) => !(process.env[k]?.trim()))
+  const missing: string[] = []
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()) missing.push("NEXT_PUBLIC_SUPABASE_URL")
+  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()) missing.push("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) missing.push("SUPABASE_SERVICE_ROLE_KEY")
+  if (!process.env.CRON_SECRET?.trim()) missing.push("CRON_SECRET")
   return { ok: missing.length === 0, missing }
 }
 

@@ -2,11 +2,10 @@ import { updateSession } from "@/lib/supabase/middleware"
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 import type { Database } from "@/types/database"
+import { isInternalMember } from "@/lib/auth/allowlist"
 
 function isProtectedPath(pathname: string): boolean {
-  if (pathname === "/") {
-    return true
-  }
+  if (pathname === "/") return true
 
   const protectedPrefixes = [
     "/today",
@@ -17,7 +16,9 @@ function isProtectedPath(pathname: string): boolean {
     "/settings",
     "/integrations",
   ]
-  return protectedPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+  return protectedPrefixes.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  )
 }
 
 function cloneCookies(from: NextResponse, to: NextResponse): void {
@@ -26,15 +27,23 @@ function cloneCookies(from: NextResponse, to: NextResponse): void {
   })
 }
 
+/**
+ * Edge gate for the internal OS at app.byredllc.com.
+ *
+ * Three checks run on every protected route before React mounts:
+ *   1) Env vars present? If not, redirect to /login gracefully.
+ *   2) Session present? If not, redirect to /login with ?next=.
+ *   3) Session email in BYRED_INTERNAL_EMAILS? If not, redirect to
+ *      /auth/error?code=not_authorized.
+ *
+ * Public auth paths are excluded via the matcher below.
+ */
 export async function proxy(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  if (!url) {
-    throw new Error("Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL")
-  }
-  if (!anonKey) {
-    throw new Error("Missing required environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY")
+  if (!url || !anonKey) {
+    return NextResponse.redirect(new URL("/login", request.url))
   }
 
   const sessionResponse = await updateSession(request)
@@ -45,9 +54,7 @@ export async function proxy(request: NextRequest) {
       getAll() {
         return request.cookies.getAll()
       },
-      setAll() {
-        // Middleware cookie updates are handled inside updateSession.
-      },
+      setAll() {},
     },
   })
 
@@ -58,6 +65,16 @@ export async function proxy(request: NextRequest) {
   if (!user && isProtectedPath(pathname)) {
     const redirectUrl = request.nextUrl.clone()
     redirectUrl.pathname = "/login"
+    redirectUrl.searchParams.set("next", pathname)
+    const redirectResponse = NextResponse.redirect(redirectUrl)
+    cloneCookies(sessionResponse, redirectResponse)
+    return redirectResponse
+  }
+
+  if (user && !isInternalMember(user.email) && isProtectedPath(pathname)) {
+    const redirectUrl = request.nextUrl.clone()
+    redirectUrl.pathname = "/auth/error"
+    redirectUrl.searchParams.set("code", "not_authorized")
     const redirectResponse = NextResponse.redirect(redirectUrl)
     cloneCookies(sessionResponse, redirectResponse)
     return redirectResponse
@@ -76,6 +93,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api/webhooks|api/cron|api/health|auth/callback|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!login|register|forgot-password|reset-password|onboarding|auth|api/auth|api/health|api/webhooks|api/cron|_next|favicon.ico|brand|.*\\..*).*)",
   ],
 }

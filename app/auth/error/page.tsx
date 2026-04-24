@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { AlertTriangle, ShieldOff } from "lucide-react"
@@ -39,13 +39,12 @@ function copyForCode(code: string | null): ErrorCopy {
   }
 }
 
-export default function AuthErrorPage() {
+function AuthErrorContent() {
   const params = useSearchParams()
   const code = params.get("code")
   const { icon, title, body } = copyForCode(code)
   const [signingOut, setSigningOut] = useState(false)
 
-  // Drop the stale session so "try a different account" actually works.
   useEffect(() => {
     if (code !== "not_authorized") return
     const supabase = createClient()
@@ -60,33 +59,41 @@ export default function AuthErrorPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-6 px-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
-          {icon === "shield" ? (
-            <ShieldOff className="h-8 w-8 text-destructive" />
-          ) : (
-            <AlertTriangle className="h-8 w-8 text-destructive" />
-          )}
-        </div>
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-          <p className="mt-2 text-muted-foreground">{body}</p>
-        </div>
-        {code === "not_authorized" ? (
-          <Button
-            className="w-full"
-            onClick={handleSignOutAndRetry}
-            disabled={signingOut}
-          >
-            {signingOut ? "Signing out…" : "Sign in with a different account"}
-          </Button>
+    <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-6 px-4">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+        {icon === "shield" ? (
+          <ShieldOff className="h-8 w-8 text-destructive" />
         ) : (
-          <Button asChild className="w-full">
-            <Link href="/login">Back to Login</Link>
-          </Button>
+          <AlertTriangle className="h-8 w-8 text-destructive" />
         )}
       </div>
+      <div className="text-center">
+        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+        <p className="mt-2 text-muted-foreground">{body}</p>
+      </div>
+      {code === "not_authorized" ? (
+        <Button
+          className="w-full"
+          onClick={handleSignOutAndRetry}
+          disabled={signingOut}
+        >
+          {signingOut ? "Signing out…" : "Sign in with a different account"}
+        </Button>
+      ) : (
+        <Button asChild className="w-full">
+          <Link href="/login">Back to Login</Link>
+        </Button>
+      )}
+    </div>
+  )
+}
+
+export default function AuthErrorPage() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <Suspense>
+        <AuthErrorContent />
+      </Suspense>
     </div>
   )
 }
