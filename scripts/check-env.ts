@@ -43,6 +43,10 @@ type Group = {
 
 const GROUPS: Group[] = [
   {
+    title: "Access control (required — internal OS allowlist)",
+    vars: [{ name: "BYRED_INTERNAL_EMAILS" }],
+  },
+  {
     title: "Supabase (required for dev server + login)",
     vars: [
       { name: "NEXT_PUBLIC_SUPABASE_URL" },
@@ -76,6 +80,17 @@ const GROUPS: Group[] = [
     vars: [
       { name: "BYRED_KP_EMAIL", optional: true },
       { name: "BYRED_RORY_EMAIL", optional: true },
+    ],
+  },
+  {
+    title: "Transactional email (password reset, invites)",
+    vars: [
+      { name: "RESEND_API_KEY", optional: true },
+      { name: "RESEND_FROM_EMAIL", optional: true },
+      { name: "GMAIL_USER", optional: true },
+      { name: "GMAIL_APP_PASSWORD", optional: true },
+      { name: "GMAIL_FROM", optional: true },
+      { name: "NEXT_PUBLIC_APP_URL", optional: true },
     ],
   },
 ]

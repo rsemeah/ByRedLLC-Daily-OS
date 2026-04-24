@@ -3,34 +3,42 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { AlertOctagon, ArrowLeft, Mail } from "lucide-react"
+import { AlertOctagon, CheckCircle2 } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 import { z } from "zod"
 import { toast } from "sonner"
 
-const emailSchema = z.object({
-  email: z.string().trim().toLowerCase().email("Enter a valid email address"),
-})
+const passwordSchema = z
+  .object({
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirm: z.string(),
+  })
+  .refine((d) => d.password === d.confirm, {
+    message: "Passwords don't match",
+    path: ["confirm"],
+  })
 
-export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("")
+export function ResetPasswordForm() {
+  const router = useRouter()
+  const [password, setPassword] = useState("")
+  const [confirm, setConfirm] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [warning, setWarning] = useState<string | null>(null)
-  const [sent, setSent] = useState(false)
+  const [done, setDone] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-    setWarning(null)
     setLoading(true)
 
-    const validation = emailSchema.safeParse({ email })
+    const validation = passwordSchema.safeParse({ password, confirm })
     if (!validation.success) {
-      const message = validation.error.issues[0]?.message ?? "Invalid email"
+      const message = validation.error.issues[0]?.message ?? "Invalid password"
       setError(message)
       toast.error(message)
       setLoading(false)
@@ -38,38 +46,35 @@ export default function ForgotPasswordPage() {
     }
 
     try {
-      const res = await fetch("/api/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: validation.data.email }),
+      const supabase = createClient()
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: validation.data.password,
       })
 
-      const body = (await res.json().catch(() => null)) as
-        | { ok?: boolean; error?: string; warning?: string }
-        | null
-
-      if (res.status === 429) {
-        const retryAfter = res.headers.get("Retry-After")
-        const msg =
-          body?.error ??
-          `Too many reset attempts. Try again in ${retryAfter ?? "a few"} seconds.`
-        setError(msg)
-        toast.error(msg)
+      if (updateError) {
+        // "Auth session missing" or "invalid_grant" means the recovery
+        // session expired or was never established — push the user back
+        // to the forgot page instead of leaving them stuck.
+        const expired = /session|jwt|grant|token/i.test(updateError.message)
+        if (expired) {
+          toast.error("Reset link expired. Request a new one.")
+          router.push("/forgot-password?expired=1")
+          return
+        }
+        setError(updateError.message)
+        toast.error(updateError.message)
+        setLoading(false)
         return
       }
 
-      if (!res.ok) {
-        const msg = body?.error ?? "Could not send reset email."
-        setError(msg)
-        toast.error(msg)
-        return
-      }
-
-      if (body?.warning) setWarning(body.warning)
-      setSent(true)
-      toast.success("Check your email for the reset link")
+      setDone(true)
+      toast.success("Password updated successfully")
+      setTimeout(() => {
+        router.push("/")
+        router.refresh()
+      }, 2000)
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Network error — try again."
+      const message = err instanceof Error ? err.message : "Something went wrong"
       setError(message)
       toast.error(message)
     } finally {
@@ -79,29 +84,17 @@ export default function ForgotPasswordPage() {
 
   const year = new Date().getFullYear()
 
-  if (sent) {
+  if (done) {
     return (
       <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center px-4">
         <div className="w-full max-w-sm space-y-6 text-center">
-          <div className="mx-auto w-12 h-12 rounded-full bg-byred-red/10 flex items-center justify-center">
-            <Mail className="w-6 h-6 text-byred-red" strokeWidth={1.75} />
+          <div className="mx-auto w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center">
+            <CheckCircle2 className="w-6 h-6 text-emerald-600" strokeWidth={1.75} />
           </div>
-          <h1 className="text-lg font-medium text-zinc-900">Check your email</h1>
+          <h1 className="text-lg font-medium text-zinc-900">Password updated</h1>
           <p className="text-sm text-zinc-600">
-            If an account exists for <span className="font-medium text-zinc-800">{email.trim().toLowerCase()}</span>,
-            we sent a password reset link. It expires in 60 minutes.
+            Redirecting you to the dashboard...
           </p>
-          <p className="text-xs text-zinc-500">
-            Didn&apos;t get it? Check spam, or try again in a few minutes.
-          </p>
-          {warning && (
-            <div className="text-left text-xs rounded-md border border-amber-300 bg-amber-50 text-amber-900 px-3 py-2">
-              {warning}
-            </div>
-          )}
-          <Button asChild variant="outline" className="w-full">
-            <Link href="/login">Back to sign in</Link>
-          </Button>
         </div>
         <p className="mt-8 text-center text-xs text-zinc-400">By Red, LLC &middot; {year}</p>
       </div>
@@ -126,13 +119,13 @@ export default function ForgotPasswordPage() {
             byred_os
           </h1>
           <p className="mt-1 text-sm text-zinc-500">
-            Reset your password
+            Choose a new password
           </p>
         </div>
 
         <Card className="bg-white border-zinc-200 shadow-sm">
           <CardHeader className="pb-4">
-            <p className="text-sm font-medium text-zinc-700">Forgot password</p>
+            <p className="text-sm font-medium text-zinc-700">New password</p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -143,20 +136,30 @@ export default function ForgotPasswordPage() {
                 </div>
               )}
 
-              <p className="text-xs text-zinc-500">
-                Enter your email and we&apos;ll send a link to reset your password.
-              </p>
+              <div className="space-y-1.5">
+                <Label htmlFor="password" className="text-zinc-600 text-xs">New password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-white border-zinc-300 text-zinc-800 placeholder:text-zinc-400 focus-visible:ring-byred-red"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-zinc-600 text-xs">Email</Label>
+                <Label htmlFor="confirm" className="text-zinc-600 text-xs">Confirm password</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="confirm"
+                  type="password"
+                  autoComplete="new-password"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
                   className="bg-white border-zinc-300 text-zinc-800 placeholder:text-zinc-400 focus-visible:ring-byred-red"
-                  placeholder="you@byred.co"
+                  placeholder="••••••••"
                   required
                 />
               </div>
@@ -166,15 +169,14 @@ export default function ForgotPasswordPage() {
                 disabled={loading}
                 className="w-full bg-byred-red hover:bg-byred-red-hot active:bg-byred-red-deep text-white font-medium focus-visible:ring-byred-red"
               >
-                {loading ? "Sending..." : "Send reset link"}
+                {loading ? "Updating..." : "Update password"}
               </Button>
 
               <div className="text-center">
                 <Link
                   href="/login"
-                  className="inline-flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-600 transition-colors"
+                  className="text-xs text-zinc-400 hover:text-zinc-600 transition-colors"
                 >
-                  <ArrowLeft className="w-3 h-3" />
                   Back to sign in
                 </Link>
               </div>
