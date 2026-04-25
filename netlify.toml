@@ -1,0 +1,21 @@
+# netlify.toml — Penn Enterprises LLC
+# Docs: https://docs.netlify.com/configure-builds/file-based-configuration/
+
+[build]
+  publish   = "."
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# Clean URL for the function (must come BEFORE the SPA catch-all)
+[[redirects]]
+  from   = "/api/summarize-metrics"
+  to     = "/.netlify/functions/summarize-metrics"
+  status = 200
+
+# SPA fallback
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
