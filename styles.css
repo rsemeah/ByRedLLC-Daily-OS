@@ -508,6 +508,12 @@ meter {
   margin-bottom: 14px;
 }
 
+.sync-note {
+  margin: -2px 0 14px;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
 .pipeline-board article {
   display: flex;
   flex-direction: column;
@@ -545,6 +551,17 @@ meter {
   color: var(--muted);
   line-height: 1.4;
   margin-top: 5px;
+}
+
+.sync-pill {
+  justify-self: end;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 5px 8px;
+  white-space: nowrap;
 }
 
 .playbook-grid {

@@ -14,6 +14,11 @@
   to     = "/.netlify/functions/summarize-metrics"
   status = 200
 
+[[redirects]]
+  from   = "/api/create-monday-receipt"
+  to     = "/.netlify/functions/create-monday-receipt"
+  status = 200
+
 # SPA fallback
 [[redirects]]
   from   = "/*"

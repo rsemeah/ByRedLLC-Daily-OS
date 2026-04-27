@@ -1,0 +1,100 @@
+# PennOps Agent Configuration
+# Penn Enterprises LLC — Autonomous VPS Operations Agent
+
+agent:
+  name: PennOps
+  model: deepseek-chat
+  loop_interval_seconds: 300  # 5 minutes between cycles
+
+tasks:
+
+  # ── VPS Health ────────────────────────────────────────────
+
+  - name: vps-health-check
+    enabled: true
+    type: shell_then_ai
+    interval_minutes: 30
+    timeout: 15
+    command: |
+      echo "=== DISK ===" && df -h / &&
+      echo "=== MEMORY ===" && free -h &&
+      echo "=== LOAD ===" && uptime &&
+      echo "=== TOP PROCS ===" && ps aux --sort=-%mem | head -8
+    prompt: >
+      Analyze this VPS health snapshot. Flag anything above 80% usage.
+      Report disk, memory, load, and any process anomalies.
+
+  # ── Website Uptime ────────────────────────────────────────
+
+  - name: website-uptime-check
+    enabled: true
+    type: http_then_ai
+    interval_minutes: 15
+    url: https://pennenterprisesllc.com
+    prompt: >
+      Check this website uptime result. Report status, response time,
+      and flag if anything looks slow or broken.
+
+  # ── Security Audit ────────────────────────────────────────
+
+  - name: security-audit
+    enabled: true
+    type: shell_then_ai
+    interval_minutes: 360  # every 6 hours
+    timeout: 20
+    command: |
+      echo "=== FAILED SSH (last 50) ===" &&
+      grep -i "failed\|invalid" /var/log/auth.log 2>/dev/null | tail -20 &&
+      echo "=== LISTENING PORTS ===" &&
+      ss -tlnp &&
+      echo "=== PENDING UPDATES ===" &&
+      apt list --upgradable 2>/dev/null | head -15 &&
+      echo "=== LAST LOGINS ===" &&
+      last -10
+    prompt: >
+      Analyze this security snapshot. Flag brute force patterns,
+      unexpected open ports, critical pending updates, or suspicious logins.
+
+  # ── SSL Certificate Check ─────────────────────────────────
+
+  - name: ssl-cert-check
+    enabled: true
+    type: shell_then_ai
+    interval_minutes: 720  # every 12 hours
+    timeout: 15
+    command: |
+      echo | openssl s_client -connect pennenterprisesllc.com:443 -servername pennenterprisesllc.com 2>/dev/null |
+      openssl x509 -noout -dates -subject -issuer 2>/dev/null || echo "SSL CHECK FAILED"
+    prompt: >
+      Check this SSL certificate data. Report expiry date, days remaining,
+      and flag if renewal is needed within 14 days.
+
+  # ── Daily Ops Summary ─────────────────────────────────────
+
+  - name: daily-ops-summary
+    enabled: true
+    type: shell_then_ai
+    interval_minutes: 1440  # every 24 hours
+    timeout: 20
+    command: |
+      echo "=== UPTIME ===" && uptime &&
+      echo "=== DISK ===" && df -h / &&
+      echo "=== AGENT LOG TAIL ===" && tail -30 /root/agent/agent.log 2>/dev/null &&
+      echo "=== TASK RUNS TODAY ===" &&
+      sqlite3 /root/agent/agent.db "SELECT task_name, status, started_at FROM task_runs WHERE started_at > datetime('now', '-24 hours') ORDER BY started_at DESC LIMIT 20;" 2>/dev/null
+    prompt: >
+      Generate a daily operations summary for Penn Enterprises.
+      Include system health, task execution stats, any failures,
+      and one recommended action for tomorrow.
+
+  # ── Dashboard API Health ──────────────────────────────────
+
+  - name: dashboard-api-health
+    enabled: true
+    type: http_then_ai
+    interval_minutes: 60
+    url: https://pennenterprisesllc.com/.netlify/functions/summarize-metrics
+    prompt: >
+      This is a health check on the Penn Enterprises dashboard API.
+      A non-200 response or timeout means the Netlify function may be down.
+      Report the status and recommend action if broken.

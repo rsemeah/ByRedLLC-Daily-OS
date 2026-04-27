@@ -17,6 +17,7 @@ const proofForm = document.querySelector("#proof-form");
 const proofStatus = document.querySelector("#proof-status");
 const proofText = document.querySelector("#proof-text");
 const proofList = document.querySelector("#proof-list");
+const mondaySyncStatus = document.querySelector("#monday-sync-status");
 const metricWebsite = document.querySelector("#metric-website");
 const metricTasks = document.querySelector("#metric-tasks");
 const metricLeads = document.querySelector("#metric-leads");
@@ -152,11 +153,19 @@ function renderProofs() {
   state.proofs.forEach((proof) => {
     const row = document.createElement("div");
     row.className = `proof-row ${proof.status.toLowerCase()}`;
-    row.innerHTML = `<b></b><span></span>`;
+    row.innerHTML = `<b></b><span></span><small class="sync-pill"></small>`;
     row.querySelector("b").textContent = proof.status;
     row.querySelector("span").textContent = proof.text;
+    row.querySelector(".sync-pill").textContent = syncLabel(proof);
     proofList.append(row);
   });
+}
+
+function syncLabel(proof) {
+  if (proof.mondayItemId) return `monday #${proof.mondayItemId}`;
+  if (proof.syncStatus === "pending") return "syncing";
+  if (proof.syncStatus === "failed") return "local only";
+  return "local";
 }
 
 function renderCounts() {
@@ -233,7 +242,7 @@ leadForm.addEventListener("submit", (event) => {
   render();
 });
 
-proofForm.addEventListener("submit", (event) => {
+proofForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const text = proofText.value.trim();
 
@@ -242,8 +251,32 @@ proofForm.addEventListener("submit", (event) => {
     return;
   }
 
-  state.proofs.unshift({ id: crypto.randomUUID(), status: proofStatus.value, text });
+  const proof = {
+    id: crypto.randomUUID(),
+    status: proofStatus.value,
+    text,
+    syncStatus: "pending",
+    createdAt: new Date().toISOString(),
+  };
+
+  state.proofs.unshift(proof);
   proofText.value = "";
+  save();
+  render();
+
+  mondaySyncStatus.textContent = "Sending receipt to monday.com...";
+
+  try {
+    const result = await createMondayReceipt(proof);
+    proof.syncStatus = "synced";
+    proof.mondayItemId = result.itemId;
+    mondaySyncStatus.textContent = `Receipt synced to monday.com item #${result.itemId}.`;
+  } catch (err) {
+    proof.syncStatus = "failed";
+    proof.syncMessage = err.message;
+    mondaySyncStatus.textContent = `Receipt saved locally. monday.com sync failed: ${err.message}`;
+  }
+
   save();
   render();
 });
@@ -252,6 +285,28 @@ render();
 
 /* ── DeepSeek AI metric summaries ─────────────────────────── */
 const METRICS_ENDPOINT = "/api/summarize-metrics";
+const MONDAY_RECEIPT_ENDPOINT = "/api/create-monday-receipt";
+
+async function createMondayReceipt(proof) {
+  const res = await fetch(MONDAY_RECEIPT_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      status: proof.status,
+      text: proof.text,
+      createdAt: proof.createdAt,
+      source: "Penn Enterprises Workspace",
+    }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error(data.error || `HTTP ${res.status}`);
+  }
+
+  return data;
+}
 
 async function loadAISummaries() {
   const tasks  = state.tasks;
