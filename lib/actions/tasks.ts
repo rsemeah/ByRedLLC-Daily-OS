@@ -91,7 +91,11 @@ export async function updateTaskFieldsAction(input: {
     }
 
     if (input.title !== undefined) {
-      patch.title = input.title.trim()
+      const title = input.title.trim()
+      if (!title) {
+        return { ok: false, error: "Title is required." }
+      }
+      patch.title = title
     }
     if (input.status !== undefined) {
       patch.status = input.status
@@ -126,14 +130,19 @@ export async function updateTaskFieldsAction(input: {
       patch.blocker_reason = null
     }
 
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from("byred_tasks")
       .update(patch as TaskUpdate as never)
       .eq("id", input.taskId)
       .eq("tenant_id", input.tenantId)
+      .select("id")
+      .maybeSingle()
 
-    if (error) {
-      return { ok: false, error: error.message }
+    if (error || !updated) {
+      return {
+        ok: false,
+        error: error?.message ?? "Task not found in this workspace.",
+      }
     }
 
     return { ok: true }

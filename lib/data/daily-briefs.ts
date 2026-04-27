@@ -8,32 +8,7 @@ const DEFAULT_BRIEF: DailyBriefSummary = {
   top_3: [],
   warnings: [],
   next_action: "Check back later for your daily brief",
-}
-
-export async function getTodayBrief(): Promise<{
-  summary: DailyBriefSummary
-  date: string
-}> {
-  const supabase = await createClient()
-  const today = calendarDatePacific()
-
-  const { data, error } = await supabase
-    .from("byred_daily_briefs")
-    .select("summary, date")
-    .eq("date", today)
-    .is("user_id", null)
-    .maybeSingle()
-
-  if (error || !data) {
-    return { summary: DEFAULT_BRIEF, date: today }
-  }
-
-  const row = data as { summary: Json; date: string }
-
-  return {
-    summary: row.summary as DailyBriefSummary,
-    date: row.date,
-  }
+  verification_notes: ["MISSING: No generated brief is stored for today."],
 }
 
 export async function getUserBrief(
@@ -42,34 +17,38 @@ export async function getUserBrief(
   const supabase = await createClient()
   const today = calendarDatePacific()
 
-  const { data: userBrief, error: userErr } = await supabase
+  const { data, error } = await supabase
     .from("byred_daily_briefs")
     .select("summary, date")
     .eq("date", today)
     .eq("user_id", profileId)
     .maybeSingle()
 
-  if (!userErr && userBrief) {
-    const row = userBrief as { summary: Json; date: string }
-    return {
-      summary: row.summary as DailyBriefSummary,
-      date: row.date,
-    }
+  if (error || !data) {
+    return { summary: DEFAULT_BRIEF, date: today }
   }
 
-  return getTodayBrief()
+  const row = data as { summary: Json; date: string }
+  return {
+    summary: row.summary as DailyBriefSummary,
+    date: row.date,
+  }
 }
 
 /**
- * User-specific daily brief when present, otherwise the global brief (for the signed-in user).
+ * Per-user daily brief for the current session. Returns the placeholder when
+ * the user has no brief stored for today. Never falls back to a "global"
+ * brief: the cron-generated global row aggregates top tasks across every
+ * tenant, so exposing it to any signed-in user would leak other tenants'
+ * task titles and ids.
  */
 export async function getDailyBriefForSession(): Promise<{
   summary: DailyBriefSummary
   date: string
 }> {
   const { profileId } = await requireTenantScope()
-  if (profileId) {
-    return getUserBrief(profileId)
+  if (!profileId) {
+    return { summary: DEFAULT_BRIEF, date: calendarDatePacific() }
   }
-  return getTodayBrief()
+  return getUserBrief(profileId)
 }

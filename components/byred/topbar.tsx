@@ -54,6 +54,7 @@ const DEFAULT_BRIEF: DailyBriefSummary = {
   top_3: [],
   warnings: [],
   next_action: "Check back later for your daily brief",
+  verification_notes: ["MISSING: No generated brief is stored for today."],
 }
 
 export type AppTopbarProps = {

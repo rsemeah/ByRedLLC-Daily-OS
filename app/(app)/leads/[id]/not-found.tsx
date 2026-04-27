@@ -20,7 +20,7 @@ export default function LeadNotFound() {
           <Link href="/leads">Back to leads</Link>
         </Button>
         <Button asChild variant="outline" className="border-zinc-300">
-          <Link href="/">Command Center</Link>
+          <Link href="/dashboard">Command Center</Link>
         </Button>
       </div>
     </div>

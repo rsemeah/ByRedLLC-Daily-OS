@@ -181,6 +181,7 @@ export function LeadsKanban({ initialLeads }: LeadsKanbanProps) {
   const { activeTenantId, setActiveTenantId } = useUser()
   const [leads, setLeads] = useState(initialLeads)
   const [activeLead, setActiveLead] = useState<Lead | null>(null)
+  const [updatingLeadId, setUpdatingLeadId] = useState<string | null>(null)
 
   useEffect(() => {
     setLeads(initialLeads)
@@ -228,6 +229,7 @@ export function LeadsKanban({ initialLeads }: LeadsKanbanProps) {
     if (!activeId.startsWith("lead:")) return
 
     const leadId = activeId.slice(5)
+    if (updatingLeadId) return
     const lead = leads.find((l) => l.id === leadId)
     if (!lead) return
 
@@ -242,6 +244,7 @@ export function LeadsKanban({ initialLeads }: LeadsKanbanProps) {
         l.id === leadId ? { ...l, stage: targetStage } : l
       )
     )
+    setUpdatingLeadId(leadId)
 
     try {
       await syncActiveTenantForMutation(
@@ -265,6 +268,8 @@ export function LeadsKanban({ initialLeads }: LeadsKanbanProps) {
     } catch {
       setLeads(snapshot)
       toast.error("Could not update stage.")
+    } finally {
+      setUpdatingLeadId(null)
     }
   }
 
@@ -285,7 +290,7 @@ export function LeadsKanban({ initialLeads }: LeadsKanbanProps) {
         </Button>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-4 rounded-md bg-white border border-zinc-200 shadow-sm">
           <p className="text-2xl font-condensed font-bold text-emerald-600">
             {formatCurrency(totalPipeline)}

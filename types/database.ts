@@ -2964,6 +2964,7 @@ export type DailyBriefSummary = {
   }>
   warnings: string[]
   next_action: string
+  verification_notes: string[]
 }
 
 // Task status and priority enums

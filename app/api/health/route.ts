@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { assessEnv } from "@/lib/env"
 import { correlationId, logger } from "@/lib/observability/logger"
 
 export const runtime = "nodejs"
@@ -34,15 +35,6 @@ async function checkDatabase(): Promise<CheckResult> {
   }
 }
 
-function requiredEnvStatus(): { ok: boolean; missing: string[] } {
-  const missing: string[] = []
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()) missing.push("NEXT_PUBLIC_SUPABASE_URL")
-  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()) missing.push("NEXT_PUBLIC_SUPABASE_ANON_KEY")
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) missing.push("SUPABASE_SERVICE_ROLE_KEY")
-  if (!process.env.CRON_SECRET?.trim()) missing.push("CRON_SECRET")
-  return { ok: missing.length === 0, missing }
-}
-
 /**
  * Uptime + readiness endpoint.
  *
@@ -53,16 +45,21 @@ function requiredEnvStatus(): { ok: boolean; missing: string[] } {
 export async function GET(req: Request) {
   const log = logger.child({ component: "health", request_id: correlationId(req) })
 
-  const env = requiredEnvStatus()
+  const envReport = assessEnv()
   const db = await checkDatabase()
-  const ok = env.ok && db.ok
+  const ok = envReport.ok && db.ok
 
   const body = {
     status: ok ? "ok" : "degraded",
     version: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local",
     region: process.env.VERCEL_REGION ?? "local",
     checks: {
-      env: env.ok ? { ok: true } : { ok: false, missing: env.missing },
+      env: envReport.ok
+        ? { ok: true }
+        : {
+            ok: false,
+            missing: envReport.missing.map((item) => item.name),
+          },
       database: db,
     },
   }

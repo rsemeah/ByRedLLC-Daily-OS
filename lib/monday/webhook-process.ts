@@ -116,11 +116,16 @@ export async function processMondayWebhookPayload(
   const now = new Date().toISOString()
   const cleanName = item.name.trim()
 
-  const { data: rows, error: findErr } = await admin
+  let existingQuery = admin
     .from("byred_tasks")
     .select("id, title, tenant_id")
     .eq("monday_item_id", pulseId)
-    .limit(2)
+
+  if (resolvedTenantId) {
+    existingQuery = existingQuery.eq("tenant_id", resolvedTenantId)
+  }
+
+  const { data: rows, error: findErr } = await existingQuery.limit(2)
 
   if (findErr) {
     return {
@@ -137,19 +142,30 @@ export async function processMondayWebhookPayload(
     | { id: string; title: string; tenant_id: string }
     | undefined
 
-  if (hit) {
-    const targetTenant = resolvedTenantId ?? hit.tenant_id
-    const titleSame = hit.title.trim() === cleanName
-    const tenantSame = hit.tenant_id === targetTenant
+  if (!resolvedTenantId && (rows?.length ?? 0) > 1) {
+    return {
+      pulseId,
+      boardId,
+      tenantId: null,
+      action: "skipped",
+      updated: false,
+      reason:
+        "Multiple tasks share this Monday item id and no board-to-tenant binding was resolved.",
+    }
+  }
 
-    if (titleSame && tenantSame) {
+  if (hit) {
+    const targetTenant = hit.tenant_id
+    const titleSame = hit.title.trim() === cleanName
+
+    if (titleSame) {
       return {
         pulseId,
         boardId,
         tenantId: hit.tenant_id,
         action: "skipped",
         updated: false,
-        reason: "Title and tenant already match Monday.",
+        reason: "Title already matches Monday.",
       }
     }
 
@@ -157,7 +173,6 @@ export async function processMondayWebhookPayload(
       .from("byred_tasks")
       .update({
         title: cleanName,
-        tenant_id: targetTenant,
         updated_at: now,
       } as never)
       .eq("id", hit.id)

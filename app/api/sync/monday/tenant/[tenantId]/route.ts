@@ -56,6 +56,21 @@ export async function POST(
       )
     }
 
+    if (result.skipped) {
+      log.warn("skipped_locked", {
+        duration_ms: durationMs,
+        reason: result.skippedReason,
+      })
+      return NextResponse.json(
+        {
+          ok: false,
+          error: result.skippedReason ?? "Sync already in progress.",
+          duration_ms: durationMs,
+        },
+        { status: 409 }
+      )
+    }
+
     log.info("ok", { duration_ms: durationMs, force_full: forceFull, result })
     return NextResponse.json({ ok: true, duration_ms: durationMs, ...result })
   } catch (e) {

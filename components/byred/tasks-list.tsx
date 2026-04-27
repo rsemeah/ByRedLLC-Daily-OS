@@ -6,14 +6,13 @@ import { TaskTable } from "@/components/byred/task-table"
 import { useUser } from "@/lib/context/user-context"
 import type { Task } from "@/types/db"
 
-type ChipKey = "my" | "overdue" | "week" | "blocked" | "not_started"
+type ChipKey = "my" | "overdue" | "week" | "blocked"
 
-const CHIPS: { key: ChipKey; label: string; alert: boolean }[] = [
-  { key: "my", label: "My Tasks", alert: false },
-  { key: "overdue", label: "Overdue", alert: true },
-  { key: "week", label: "This Week", alert: false },
-  { key: "blocked", label: "Blocked", alert: true },
-  { key: "not_started", label: "Not Started", alert: false },
+const CHIPS: { key: ChipKey; label: string }[] = [
+  { key: "my", label: "Mine" },
+  { key: "overdue", label: "Overdue" },
+  { key: "week", label: "This Week" },
+  { key: "blocked", label: "Blocked" },
 ]
 
 interface TasksListProps {
@@ -45,8 +44,6 @@ export function TasksList({ initialTasks, lockedTenantId = null }: TasksListProp
       tasks = tasks.filter((t) => t.status === "overdue")
     } else if (activeChip === "blocked") {
       tasks = tasks.filter((t) => t.status === "blocked" || t.blocker_flag)
-    } else if (activeChip === "not_started") {
-      tasks = tasks.filter((t) => t.status === "not_started")
     } else if (activeChip === "week") {
       const now = new Date()
       const inOneWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
@@ -88,11 +85,11 @@ export function TasksList({ initialTasks, lockedTenantId = null }: TasksListProp
       <div
         className="flex items-center"
         style={{
-          height: 50,
+          height: 60,
           padding: "0 24px",
-          gap: 7,
+          gap: 10,
           background: "#ffffff",
-          borderBottom: "1px solid #e8e8e8",
+          borderBottom: "1px solid #ebebeb",
           overflow: "hidden",
           flexWrap: "nowrap",
         }}
@@ -100,29 +97,29 @@ export function TasksList({ initialTasks, lockedTenantId = null }: TasksListProp
         <label
           className="flex items-center"
           style={{
-            width: 160,
-            height: 32,
+            width: 280,
+            height: 36,
             flexShrink: 0,
             padding: "0 12px",
-            gap: 7,
-            background: "#f7f7f7",
-            border: "1px solid #e8e8e8",
-            borderRadius: 2,
+            gap: 8,
+            background: "#fafafa",
+            border: "1px solid #ececec",
+            borderRadius: 4,
           }}
         >
-          <Search size={14} strokeWidth={1.75} color="#cccccc" />
+          <Search size={14} strokeWidth={1.75} color="#bbbbbb" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search tasks..."
+            placeholder="Search tasks"
             style={{
               flex: 1,
               background: "transparent",
               border: "none",
               outline: "none",
-              fontSize: 11,
-              color: "#000000",
+              fontSize: 12,
+              color: "#111111",
             }}
           />
         </label>
@@ -131,7 +128,7 @@ export function TasksList({ initialTasks, lockedTenantId = null }: TasksListProp
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 7,
+            gap: 6,
             flex: 1,
             minWidth: 0,
             overflow: "hidden",
@@ -139,42 +136,36 @@ export function TasksList({ initialTasks, lockedTenantId = null }: TasksListProp
         >
           {CHIPS.map((chip) => {
             const active = activeChip === chip.key
-            const alertResting = chip.alert && !active
             return (
               <button
                 key={chip.key}
                 type="button"
                 onClick={() => toggleChip(chip.key)}
                 style={{
-                  height: 28,
-                  padding: "0 11px",
+                  height: 32,
+                  padding: "0 14px",
                   display: "inline-flex",
                   alignItems: "center",
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: 600,
-                  borderRadius: 2,
+                  borderRadius: 4,
                   flexShrink: 0,
-                  background: alertResting
-                    ? "#fff8f8"
-                    : active
-                      ? "#fde8e8"
-                      : "#ffffff",
-                  border: `1px solid ${
-                    alertResting || active ? "#f5c0c0" : "#e8e8e8"
-                  }`,
-                  color: alertResting || active ? "#D02C2A" : "#aaaaaa",
+                  background: active ? "#111111" : "#ffffff",
+                  border: `1px solid ${active ? "#111111" : "#ececec"}`,
+                  color: active ? "#ffffff" : "#666666",
                   cursor: "pointer",
+                  transition: "background 120ms, border-color 120ms, color 120ms",
                 }}
                 onMouseEnter={(e) => {
-                  if (!active && !chip.alert) {
+                  if (!active) {
                     e.currentTarget.style.borderColor = "#cccccc"
-                    e.currentTarget.style.color = "#555555"
+                    e.currentTarget.style.color = "#111111"
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (!active && !chip.alert) {
-                    e.currentTarget.style.borderColor = "#e8e8e8"
-                    e.currentTarget.style.color = "#aaaaaa"
+                  if (!active) {
+                    e.currentTarget.style.borderColor = "#ececec"
+                    e.currentTarget.style.color = "#666666"
                   }
                 }}
               >
@@ -189,11 +180,11 @@ export function TasksList({ initialTasks, lockedTenantId = null }: TasksListProp
             marginLeft: "auto",
             flexShrink: 0,
             whiteSpace: "nowrap",
-            fontSize: 10,
-            color: "#bbbbbb",
+            fontSize: 11,
+            color: "#999999",
           }}
         >
-          More filters ▾
+          {filtered.length} of {initialTasks.length}
         </span>
       </div>
 
@@ -204,14 +195,14 @@ export function TasksList({ initialTasks, lockedTenantId = null }: TasksListProp
       <div
         className="flex items-center"
         style={{
-          height: 52,
+          height: 60,
           padding: "0 24px",
           background: "#ffffff",
-          borderTop: "1px solid #e8e8e8",
+          borderTop: "1px solid #ebebeb",
           gap: 0,
         }}
       >
-        <Stat label="Total Tasks" value={stats.total} first />
+        <Stat label="Total" value={stats.total} first />
         <Divider />
         <Stat label="Overdue" value={stats.overdue} tone="overdue" />
         <Divider />
@@ -237,19 +228,20 @@ function Stat({
   first?: boolean
 }) {
   const color =
-    tone === "overdue" ? "#D02C2A" : tone === "done" ? "#2a7a3a" : "#000000"
+    tone === "overdue" ? "#D02C2A" : tone === "done" ? "#2a7a3a" : "#111111"
   return (
-    <div style={{ padding: first ? "0 20px 0 0" : "0 20px" }}>
-      <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1, color }}>
+    <div style={{ padding: first ? "0 28px 0 0" : "0 28px" }}>
+      <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1, color, letterSpacing: "-0.5px" }}>
         {value}
       </div>
       <div
         style={{
-          fontSize: 9,
-          color: "#bbbbbb",
+          fontSize: 10,
+          color: "#999999",
           textTransform: "uppercase",
-          letterSpacing: 0.8,
-          marginTop: 3,
+          letterSpacing: 1,
+          marginTop: 5,
+          fontWeight: 600,
         }}
       >
         {label}
@@ -263,8 +255,8 @@ function Divider() {
     <span
       style={{
         width: 1,
-        height: 30,
-        background: "#e8e8e8",
+        height: 32,
+        background: "#ececec",
         display: "inline-block",
       }}
     />

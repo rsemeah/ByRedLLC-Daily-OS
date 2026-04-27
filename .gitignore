@@ -33,3 +33,6 @@ next-env.d.ts
 .vscode/
 .idea/
 .DS_Store
+
+# local cleanup quarantine — not committed
+_archive/

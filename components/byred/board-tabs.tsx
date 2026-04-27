@@ -126,37 +126,24 @@ export function BoardTabs({ tabs, activeTenantId, totalCount }: BoardTabsProps) 
         <div
           className="flex items-center justify-between gap-4"
           style={{
-            padding: "8px 24px",
-            background: "#ffffff",
+            padding: "6px 24px",
+            background: "#fafafa",
             borderBottom: "1px solid #ebebeb",
           }}
         >
           <div
             className="flex items-center min-w-0"
-            style={{ gap: 10, fontSize: 10, color: "#aaaaaa" }}
+            style={{ gap: 10, fontSize: 10, color: "#999999" }}
           >
-            <span>Monday board</span>
-            <code
-              style={{
-                padding: "2px 6px",
-                background: "#f7f7f7",
-                border: "1px solid #e8e8e8",
-                borderRadius: 2,
-                color: "#111111",
-                fontSize: 10,
-              }}
-            >
-              {activeTab.boardId}
-            </code>
             <a
               href={`https://monday.com/boards/${activeTab.boardId}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center"
-              style={{ gap: 3, color: "#D02C2A", fontWeight: 600 }}
+              style={{ gap: 4, color: "#666666", fontWeight: 500 }}
             >
-              Open in Monday
-              <ExternalLink size={11} strokeWidth={2} />
+              Monday board · {activeTab.boardId}
+              <ExternalLink size={10} strokeWidth={2} />
             </a>
           </div>
           <div className="flex items-center" style={{ gap: 10 }}>

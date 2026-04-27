@@ -11,6 +11,22 @@ type LeadInsert = Database["public"]["Tables"]["byred_leads"]["Insert"]
 type LeadUpdate = Database["public"]["Tables"]["byred_leads"]["Update"]
 type TaskInsert = Database["public"]["Tables"]["byred_tasks"]["Insert"]
 
+async function findLeadInTenant(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  leadId: string,
+  tenantId: string
+): Promise<{ id: string; name: string } | null> {
+  const { data, error } = await supabase
+    .from("byred_leads")
+    .select("id, name")
+    .eq("id", leadId)
+    .eq("tenant_id", tenantId)
+    .maybeSingle()
+
+  if (error) throw new Error(error.message)
+  return (data as { id: string; name: string } | null) ?? null
+}
+
 export async function createLeadAction(input: {
   tenantId: string
   name: string
@@ -25,10 +41,15 @@ export async function createLeadAction(input: {
   try {
     const { profileId } = await requireTenantAccess(input.tenantId)
     const supabase = await createClient()
+    const name = input.name.trim()
+
+    if (!name) {
+      return { ok: false, error: "Lead name is required." }
+    }
 
     const row: LeadInsert = {
       tenant_id: input.tenantId,
-      name: input.name.trim(),
+      name,
       phone: input.phone?.trim() || null,
       email: input.email?.trim() || null,
       source: input.source?.trim() || null,
@@ -76,14 +97,19 @@ export async function updateLeadStageAction(input: {
       updated_at: now,
     }
 
-    const { error: updErr } = await supabase
+    const { data: updated, error: updErr } = await supabase
       .from("byred_leads")
       .update(patch as never)
       .eq("id", input.leadId)
       .eq("tenant_id", input.tenantId)
+      .select("id")
+      .maybeSingle()
 
-    if (updErr) {
-      return { ok: false, error: updErr.message }
+    if (updErr || !updated) {
+      return {
+        ok: false,
+        error: updErr?.message ?? "Lead not found in this workspace.",
+      }
     }
 
     const { error: actErr } = await insertActivityRow({
@@ -116,6 +142,11 @@ export async function logLeadContactNoteAction(input: {
     const summary = input.note.trim()
     if (!summary) {
       return { ok: false, error: "Note is empty." }
+    }
+    const supabase = await createClient()
+    const lead = await findLeadInTenant(supabase, input.leadId, input.tenantId)
+    if (!lead) {
+      return { ok: false, error: "Lead not found in this workspace." }
     }
 
     const { error } = await insertActivityRow({
@@ -152,14 +183,19 @@ export async function markLeadContactedAction(input: {
       updated_at: now,
     }
 
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from("byred_leads")
       .update(patch as never)
       .eq("id", input.leadId)
       .eq("tenant_id", input.tenantId)
+      .select("id")
+      .maybeSingle()
 
-    if (error) {
-      return { ok: false, error: error.message }
+    if (error || !updated) {
+      return {
+        ok: false,
+        error: error?.message ?? "Lead not found in this workspace.",
+      }
     }
 
     return { ok: true }
@@ -183,14 +219,19 @@ export async function setLeadFollowUpAction(input: {
       updated_at: now,
     }
 
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from("byred_leads")
       .update(patch as never)
       .eq("id", input.leadId)
       .eq("tenant_id", input.tenantId)
+      .select("id")
+      .maybeSingle()
 
-    if (error) {
-      return { ok: false, error: error.message }
+    if (error || !updated) {
+      return {
+        ok: false,
+        error: error?.message ?? "Lead not found in this workspace.",
+      }
     }
 
     return { ok: true }
@@ -222,10 +263,14 @@ export async function createTaskFromLeadAction(input: {
   try {
     const { profileId } = await requireTenantAccess(input.tenantId)
     const supabase = await createClient()
+    const lead = await findLeadInTenant(supabase, input.leadId, input.tenantId)
+    if (!lead) {
+      return { ok: false, error: "Lead not found in this workspace." }
+    }
 
     const row: TaskInsert = {
       tenant_id: input.tenantId,
-      title: `Follow up: ${input.leadName}`,
+      title: `Follow up: ${lead.name}`,
       description: `Created from lead.\n\nLead ID: \`${input.leadId}\``,
       status: "not_started",
       priority: "medium",

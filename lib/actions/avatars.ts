@@ -80,11 +80,60 @@ export async function uploadAvatarAction(input: {
       return { ok: false, error: "Only admins can change other users' avatars." }
     }
 
+    const admin = createAdminClient()
+
+    if (!isSelf) {
+      const { data: actorMemberships, error: actorMembershipErr } = await supabase
+        .from("byred_user_tenants")
+        .select("tenant_id")
+        .eq("user_id", actor.id)
+
+      if (actorMembershipErr) {
+        return { ok: false, error: actorMembershipErr.message }
+      }
+
+      const { data: targetRow, error: targetErr } = await admin
+        .from("byred_users")
+        .select("id")
+        .eq("id", input.targetByredUserId)
+        .maybeSingle()
+
+      if (targetErr || !targetRow) {
+        return {
+          ok: false,
+          error: targetErr?.message ?? "Target user was not found.",
+        }
+      }
+
+      const { data: targetMemberships, error: targetMembershipErr } = await admin
+        .from("byred_user_tenants")
+        .select("tenant_id")
+        .eq("user_id", input.targetByredUserId)
+
+      if (targetMembershipErr) {
+        return { ok: false, error: targetMembershipErr.message }
+      }
+
+      const actorTenantIds = new Set(
+        ((actorMemberships ?? []) as Array<{ tenant_id: string | null }>)
+          .map((row) => row.tenant_id)
+          .filter((tenantId): tenantId is string => Boolean(tenantId))
+      )
+      const sharesTenant = (
+        (targetMemberships ?? []) as Array<{ tenant_id: string | null }>
+      ).some((row) => row.tenant_id && actorTenantIds.has(row.tenant_id))
+
+      if (!sharesTenant) {
+        return {
+          ok: false,
+          error: "Admins can only change avatars for users in their tenant scope.",
+        }
+      }
+    }
+
     // Use the admin client for the actual upload so we can bypass RLS on the
     // `byred_users.update` path when an admin is acting on a Monday-imported
     // row (no peer tenant, so the RLS UPDATE policy would otherwise deny).
-    const admin = createAdminClient()
-
     const ext = extFromMime(input.contentType)
     const objectPath = `${input.targetByredUserId}/${Date.now()}.${ext}`
 

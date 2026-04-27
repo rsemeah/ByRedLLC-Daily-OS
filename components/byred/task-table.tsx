@@ -15,7 +15,6 @@ import { TenantPill } from "./tenant-pill"
 import { StatusBadge } from "./status-badge"
 import { PriorityFlag } from "./priority-flag"
 import { DueDateCell } from "./due-date-cell"
-import { AiModeChip } from "./ai-mode-chip"
 import { OwnerAvatar } from "./owner-avatar"
 import { useUser } from "@/lib/context/user-context"
 import { syncActiveTenantForMutation } from "@/lib/client/sync-active-tenant"
@@ -23,16 +22,8 @@ import { updateTaskFieldsAction } from "@/lib/actions/tasks"
 import type { Task } from "@/types/db"
 
 // Column grid — must match between header and every row.
-// Status | Title | Tenant | Due | Pri | Est | Owner | Mode | Menu
-const GRID_COLUMNS = "108px minmax(0, 1fr) 130px 58px 32px 40px 80px 66px 28px"
-
-function formatMinutes(minutes: number | null): string {
-  if (!minutes) return "—"
-  if (minutes < 60) return `${minutes}m`
-  const h = Math.floor(minutes / 60)
-  const m = minutes % 60
-  return m > 0 ? `${h}h ${m}m` : `${h}h`
-}
+// Status | Title | Tenant | Due | Pri | Owner | Menu
+const GRID_COLUMNS = "120px minmax(0, 1fr) 150px 80px 36px 110px 32px"
 
 interface TaskTableProps {
   tasks: Task[]
@@ -93,11 +84,11 @@ export function TaskTable({ tasks }: TaskTableProps) {
       style={{
         flex: 1,
         overflowY: "auto",
-        padding: "14px 24px",
+        padding: "16px 24px 24px",
         display: "flex",
         flexDirection: "column",
-        gap: 2,
-        background: "#f7f7f7",
+        gap: 4,
+        background: "#fafafa",
       }}
     >
       {/* Header */}
@@ -106,16 +97,16 @@ export function TaskTable({ tasks }: TaskTableProps) {
           display: "grid",
           gridTemplateColumns: GRID_COLUMNS,
           alignItems: "center",
-          height: 32,
-          padding: "0 14px",
-          fontSize: 9,
+          height: 36,
+          padding: "0 16px",
+          fontSize: 10,
           fontWeight: 700,
-          color: "#cccccc",
+          color: "#999999",
           textTransform: "uppercase",
-          letterSpacing: 1,
+          letterSpacing: 1.2,
           position: "sticky",
           top: 0,
-          background: "#f7f7f7",
+          background: "#fafafa",
           zIndex: 1,
         }}
       >
@@ -143,24 +134,8 @@ export function TaskTable({ tasks }: TaskTableProps) {
         >
           Pri
         </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-end",
-            paddingRight: 6,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          Est
-        </div>
         <div style={{ display: "flex", alignItems: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           Owner
-        </div>
-        <div style={{ display: "flex", alignItems: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          Mode
         </div>
         <div
           style={{
@@ -189,20 +164,22 @@ export function TaskTable({ tasks }: TaskTableProps) {
               display: "grid",
               gridTemplateColumns: GRID_COLUMNS,
               alignItems: "center",
-              height: 46,
-              padding: urgent ? "0 14px 0 11px" : "0 14px",
+              height: 56,
+              padding: urgent ? "0 16px 0 13px" : "0 16px",
               background: "#ffffff",
-              border: "1px solid #ebebeb",
-              borderLeft: urgent ? "3px solid #D02C2A" : "1px solid #ebebeb",
-              borderRadius: 3,
+              border: "1px solid #ececec",
+              borderLeft: urgent ? "3px solid #D02C2A" : "1px solid #ececec",
+              borderRadius: 6,
               overflow: "hidden",
+              opacity: isDone ? 0.55 : 1,
+              transition: "border-color 120ms",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "#dddddd"
+              e.currentTarget.style.borderColor = "#d0d0d0"
               if (urgent) e.currentTarget.style.borderLeftColor = "#D02C2A"
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "#ebebeb"
+              e.currentTarget.style.borderColor = "#ececec"
               if (urgent) e.currentTarget.style.borderLeftColor = "#D02C2A"
             }}
           >
@@ -225,14 +202,15 @@ export function TaskTable({ tasks }: TaskTableProps) {
                 href={`/tasks/${task.id}`}
                 style={{
                   display: "block",
-                  fontSize: 12,
-                  color: isDone ? "#bbbbbb" : "#111111",
-                  textDecoration: isDone ? "line-through" : "none",
-                  textDecorationColor: "#dddddd",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "#111111",
+                  textDecoration: "none",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   width: "100%",
+                  letterSpacing: "-0.1px",
                 }}
               >
                 {task.title}
@@ -260,36 +238,17 @@ export function TaskTable({ tasks }: TaskTableProps) {
               <PriorityFlag priority={task.priority} />
             </div>
 
-            {/* Est */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "flex-end",
-                paddingRight: 6,
-                fontSize: 10,
-                color: "#cccccc",
-              }}
-            >
-              {formatMinutes(task.estimated_minutes)}
-            </div>
-
             {/* Owner */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 5,
+                gap: 6,
                 minWidth: 0,
                 overflow: "hidden",
               }}
             >
               <OwnerAvatar ownerId={task.owner_user_id} size="sm" showName />
-            </div>
-
-            {/* Mode */}
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <AiModeChip mode={task.ai_mode} />
             </div>
 
             {/* Menu */}

@@ -43,7 +43,7 @@ export default function ErrorBoundary({
           Try again
         </Button>
         <Button type="button" variant="outline" className="border-zinc-300" asChild>
-          <Link href="/">Command Center</Link>
+          <Link href="/dashboard">Command Center</Link>
         </Button>
       </div>
     </div>

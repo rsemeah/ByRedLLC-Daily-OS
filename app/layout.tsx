@@ -1,6 +1,6 @@
 import { Suspense } from "react"
 import type { Metadata, Viewport } from "next"
-import { Barlow_Condensed, DM_Sans, JetBrains_Mono } from "next/font/google"
+import { Barlow_Condensed, Inter, JetBrains_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/sonner"
 import { NavigationProgress } from "@/components/byred/navigation-progress"
@@ -13,11 +13,11 @@ const barlowCondensed = Barlow_Condensed({
   variable: "--font-barlow-condensed",
 })
 
-const dmSans = DM_Sans({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
-  variable: "--font-dm-sans",
+  variable: "--font-inter",
 })
 
 const jetbrainsMono = JetBrains_Mono({
@@ -52,7 +52,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${barlowCondensed.variable} ${dmSans.variable} ${jetbrainsMono.variable} bg-background`}
+      className={`${barlowCondensed.variable} ${inter.variable} ${jetbrainsMono.variable} bg-background`}
       suppressHydrationWarning
     >
       <body className="font-sans antialiased">

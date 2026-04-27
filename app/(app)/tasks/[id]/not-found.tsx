@@ -20,7 +20,7 @@ export default function TaskNotFound() {
           <Link href="/tasks">Back to tasks</Link>
         </Button>
         <Button asChild variant="outline" className="border-zinc-300">
-          <Link href="/">Command Center</Link>
+          <Link href="/dashboard">Command Center</Link>
         </Button>
       </div>
     </div>

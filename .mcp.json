@@ -1,0 +1,62 @@
+{
+  "mcpServers": {
+    "notion": {
+      "command": "npx",
+      "args": ["-y", "@notionhq/notion-mcp-server"],
+      "env": {
+        "NOTION_API_KEY": "${NOTION_API_KEY}"
+      }
+    },
+    "google-drive": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-gdrive"],
+      "env": {
+        "GDRIVE_OAUTH_PATH": "${GDRIVE_OAUTH_PATH}"
+      }
+    },
+    "gmail": {
+      "command": "npx",
+      "args": ["-y", "@gongrzhe/server-gmail-autoauth-mcp"],
+      "env": {
+        "GMAIL_CREDENTIALS_PATH": "${GMAIL_CREDENTIALS_PATH}"
+      }
+    },
+    "google-calendar": {
+      "command": "npx",
+      "args": ["-y", "@cocal/google-calendar-mcp"],
+      "env": {
+        "GOOGLE_CALENDAR_CREDENTIALS": "${GOOGLE_CALENDAR_CREDENTIALS}"
+      }
+    },
+    "monday": {
+      "command": "npx",
+      "args": ["-y", "@mondaydotcomorg/monday-api-mcp"],
+      "env": {
+        "MONDAY_API_KEY": "${MONDAY_API_KEY}"
+      }
+    },
+    "slack": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-slack"],
+      "env": {
+        "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
+        "SLACK_TEAM_ID": "${SLACK_TEAM_ID}"
+      }
+    },
+    "microsoft365": {
+      "command": "npx",
+      "args": ["-y", "@softeria/ms-365-mcp-server"],
+      "env": {
+        "MS365_CLIENT_ID": "${MS365_CLIENT_ID}",
+        "MS365_TENANT_ID": "${MS365_TENANT_ID}"
+      }
+    },
+    "supabase": {
+      "command": "npx",
+      "args": ["-y", "@supabase/mcp-server-supabase"],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}"
+      }
+    }
+  }
+}

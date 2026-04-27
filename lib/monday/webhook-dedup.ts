@@ -10,8 +10,8 @@ type SupabaseAdmin = ReturnType<typeof createAdminClient>
  *
  * Preference order:
  *   1. `event.id` if Monday supplied one (rare in practice)
- *   2. Composite of `(pulseId, columnId?, event type, updated_at?)` — the
- *      natural key for "this specific state change on this item".
+ *   2. Composite of `(boardId?, pulseId, columnId?, event type, updated_at?)`
+ *      — the natural key for "this specific state change on this item".
  *   3. Hash of the raw payload as a last resort.
  */
 export function buildEventKey(body: Record<string, unknown>): string {
@@ -20,11 +20,13 @@ export function buildEventKey(body: Record<string, unknown>): string {
   if (typeof eid === "string" && eid.trim()) return `event:${eid.trim()}`
 
   const pulseId = ev.pulseId ?? ev.itemId ?? body.pulseId ?? body.itemId
+  const boardId = ev.boardId ?? ev.board_id ?? body.boardId ?? body.board_id
   const columnId = ev.columnId
   const type = ev.type
   const updatedAt = ev.updatedAt ?? ev.changedAt
 
   const parts = [
+    `b:${String(boardId ?? "")}`,
     `p:${String(pulseId ?? "")}`,
     `c:${String(columnId ?? "")}`,
     `t:${String(type ?? "")}`,
@@ -32,7 +34,7 @@ export function buildEventKey(body: Record<string, unknown>): string {
   ]
   const composite = parts.join("|")
 
-  if (composite.replace(/[pct:u|]/g, "").length > 0) {
+  if ([boardId, pulseId, columnId, type, updatedAt].some((value) => value != null && String(value).trim())) {
     return `composite:${composite}`
   }
 

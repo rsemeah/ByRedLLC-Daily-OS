@@ -4,50 +4,148 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================================
+ * byred_os design tokens — CSS custom properties
+ * Mirror of lib/config/design-tokens.ts so non-Tailwind contexts (raw style,
+ * inline SVG, third-party widgets) can reference the same primitives.
+ * ============================================================================ */
 :root {
-  --background: #f7f7f7;
-  --foreground: #000000;
-  --card: #ffffff;
-  --card-foreground: #000000;
-  --popover: #ffffff;
-  --popover-foreground: #000000;
-  --primary: #D02C2A;
-  --primary-foreground: #ffffff;
-  --secondary: #f4f4f5;
-  --secondary-foreground: #18181b;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --accent: #f4f4f5;
-  --accent-foreground: #18181b;
-  --destructive: #D02C2A;
-  --destructive-foreground: #ffffff;
-  --border: #e8e8e8;
-  --input: #e8e8e8;
-  --ring: #D02C2A;
-  --radius: 0.125rem;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #000000;
-  --sidebar-primary: #D02C2A;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #fff8f8;
-  --sidebar-accent-foreground: #000000;
-  --sidebar-border: #e8e8e8;
-  --sidebar-ring: #D02C2A;
+  /* Brand */
+  --brand-red: #D7261E;
+  --brand-red-hover: #B51E18;
+  --brand-red-subtle: #FDF2F1;
+  --brand-red-muted: rgba(215, 38, 30, 0.08);
+
+  /* Neutral surfaces */
+  --canvas: #FAFAFA;
+  --surface: #FFFFFF;
+  --elevated: #FFFFFF;
+  --overlay: rgba(10, 10, 10, 0.6);
+
+  /* Borders */
+  --border-subtle: #EEEEEE;
+  --border-default: #E4E4E7;
+  --border-focus: #D7261E;
+
+  /* Text */
+  --text-primary: #0A0A0A;
+  --text-secondary: #52525B;
+  --text-tertiary: #A1A1AA;
+  --text-disabled: #D4D4D8;
+  --text-inverse: #FFFFFF;
+
+  /* Semantic */
+  --success: #16A34A;
+  --success-subtle: #F0FDF4;
+  --warning: #CA8A04;
+  --warning-subtle: #FEFCE8;
+  --danger: #DC2626;
+  --danger-subtle: #FEF2F2;
+  --info: #2563EB;
+  --info-subtle: #EFF6FF;
+  --neutral-fg: #71717A;
+  --neutral-subtle: #F4F4F5;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.12);
+
+  /* Motion */
+  --duration-micro: 150ms;
+  --duration-normal: 220ms;
+  --duration-slow: 350ms;
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* shadcn compatibility — keep names, point at new tokens */
+  --background: var(--canvas);
+  --foreground: var(--text-primary);
+  --card: var(--surface);
+  --card-foreground: var(--text-primary);
+  --popover: var(--surface);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--brand-red);
+  --primary-foreground: var(--text-inverse);
+  --secondary: var(--neutral-subtle);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--neutral-subtle);
+  --muted-foreground: var(--text-secondary);
+  --accent: var(--neutral-subtle);
+  --accent-foreground: var(--text-primary);
+  --destructive: var(--danger);
+  --destructive-foreground: var(--text-inverse);
+  --border: var(--border-default);
+  --input: var(--border-default);
+  --ring: var(--brand-red);
+  --radius: 6px;
+
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--text-primary);
+  --sidebar-primary: var(--brand-red);
+  --sidebar-primary-foreground: var(--text-inverse);
+  --sidebar-accent: var(--brand-red-subtle);
+  --sidebar-accent-foreground: var(--text-primary);
+  --sidebar-border: var(--border-default);
+  --sidebar-ring: var(--brand-red);
 }
 
+/* ============================================================================
+ * Tailwind v4 theme — utility class generators
+ * Every token above is mapped to a Tailwind utility here.
+ * ============================================================================ */
 @theme inline {
-  --font-sans: var(--font-dm-sans);
+  /* Fonts */
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-jetbrains-mono);
   --font-condensed: var(--font-barlow-condensed);
+
+  /* Surfaces — bg-canvas, bg-surface, bg-elevated, bg-overlay */
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-elevated: var(--elevated);
+  --color-overlay: var(--overlay);
+
+  /* Brand — bg-brand-red, hover:bg-brand-red-hover, bg-brand-red-subtle, bg-brand-red-muted */
+  --color-brand-red: var(--brand-red);
+  --color-brand-red-hover: var(--brand-red-hover);
+  --color-brand-red-subtle: var(--brand-red-subtle);
+  --color-brand-red-muted: var(--brand-red-muted);
+
+  /* Text — text-primary, text-secondary, text-tertiary, text-disabled, text-inverse */
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-tertiary: var(--text-tertiary);
+  --color-disabled: var(--text-disabled);
+  --color-inverse: var(--text-inverse);
+
+  /* Borders — border-subtle, border-default, border-focus */
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-focus: var(--border-focus);
+
+  /* Semantic — bg-success, text-success, bg-success-subtle, etc. */
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-danger: var(--danger);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-info: var(--info);
+  --color-info-subtle: var(--info-subtle);
+  --color-neutral-fg: var(--neutral-fg);
+  --color-neutral-subtle: var(--neutral-subtle);
+
+  /* shadcn compatibility tokens (preserved so existing components don't break) */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
@@ -58,10 +156,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) + 4px);
-  --radius-xl: calc(var(--radius) + 8px);
+
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -70,23 +165,25 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --color-byred-red: #D02C2A;
+
+  /* Legacy ByRed brand aliases — preserved for components/byred/* compatibility */
+  --color-byred-red: var(--brand-red);
   --color-byred-red-hot: #E0413F;
-  --color-byred-red-deep: #A02220;
-  --color-byred-red-light: #fde8e8;
+  --color-byred-red-deep: var(--brand-red-hover);
+  --color-byred-red-light: var(--brand-red-subtle);
   --color-byred-red-border: #f5c0c0;
-  --color-byred-red-subtle: #fff8f8;
-  --color-byred-ink: #000000;
-  --color-byred-bone: #f7f7f7;
-  --color-byred-surface: #ffffff;
+  --color-byred-red-subtle: var(--brand-red-subtle);
+  --color-byred-ink: var(--text-primary);
+  --color-byred-bone: var(--canvas);
+  --color-byred-surface: var(--surface);
   --color-byred-hover: #fafafa;
-  --color-byred-border: #e8e8e8;
-  --color-byred-border-subtle: #ebebeb;
+  --color-byred-border: var(--border-default);
+  --color-byred-border-subtle: var(--border-subtle);
   --color-byred-border-strong: #dddddd;
-  --color-byred-text-primary: #000000;
-  --color-byred-text-secondary: #111111;
-  --color-byred-text-muted: #aaaaaa;
-  --color-byred-text-faint: #cccccc;
+  --color-byred-text-primary: var(--text-primary);
+  --color-byred-text-secondary: var(--text-secondary);
+  --color-byred-text-muted: var(--text-tertiary);
+  --color-byred-text-faint: var(--text-disabled);
   --color-byred-done-text: #2a7a3a;
   --color-byred-done-bg: #f0faf4;
   --color-byred-done-border: #c8e6d0;
@@ -99,19 +196,122 @@
   --color-byred-hadith-text: #aa5500;
   --color-byred-hadith-bg: #fff8f0;
   --color-byred-hadith-border: #f0d5b0;
+
+  /* Radii — rounded-sm, rounded-md, rounded-lg, rounded-xl, rounded-full */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  /* Shadows — shadow-sm, shadow-md, shadow-lg, shadow-xl */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.12);
+
+  /* Motion — duration-micro, duration-normal, duration-slow */
+  --duration-micro: 150ms;
+  --duration-normal: 220ms;
+  --duration-slow: 350ms;
+
+  /* Z-index — z-dropdown, z-sticky, z-overlay, z-modal, z-toast, z-tooltip */
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-overlay: 30;
+  --z-modal: 40;
+  --z-toast: 50;
+  --z-tooltip: 60;
 }
 
+/* ============================================================================
+ * Base styles
+ * ============================================================================ */
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    box-sizing: border-box;
   }
+
+  html {
+    scroll-behavior: smooth;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    margin: 0;
+  }
+
+  /* Selection — brand-red-subtle highlight, primary text */
+  ::selection {
+    background-color: var(--brand-red-subtle);
+    color: var(--text-primary);
+  }
+
+  /* Focus-visible ring — 2px brand-red, 2px offset */
+  :focus-visible {
+    outline: 2px solid var(--brand-red);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Scrollbar — thin, subtle, neutral */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-default) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--border-default);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-tertiary);
+    background-clip: padding-box;
   }
 }
 
+/* ============================================================================
+ * Utility extensions
+ * ============================================================================ */
 @layer utilities {
   .font-condensed {
     font-family: var(--font-barlow-condensed), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* Shimmer animation for skeleton loaders */
+  @keyframes byred-shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--neutral-subtle) 0%,
+      #EAEAEC 50%,
+      var(--neutral-subtle) 100%
+    );
+    background-size: 200% 100%;
+    animation: byred-shimmer 1.6s ease-in-out infinite;
   }
 }

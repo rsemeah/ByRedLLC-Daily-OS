@@ -83,7 +83,7 @@ if (isProd) {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    unoptimized: true,
+    formats: ["image/avif", "image/webp"],
   },
   // Do not leak the framework in response headers. Version disclosure is a
   // free reconnaissance signal for attackers.

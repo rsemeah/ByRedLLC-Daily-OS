@@ -7,7 +7,7 @@ import { getTenantColors } from "@/lib/tenant-colors"
 import { useUser } from "@/lib/context/user-context"
 
 const WORK_NAV = [
-  { label: "Command Center", href: "/" },
+  { label: "Command Center", href: "/dashboard" },
   { label: "Today", href: "/today" },
   { label: "Tasks", href: "/tasks" },
   { label: "Leads", href: "/leads" },
@@ -127,7 +127,7 @@ export function AppSidebar() {
           borderBottom: "1px solid #e8e8e8",
         }}
       >
-        <Link href="/" className="inline-flex">
+        <Link href="/dashboard" className="inline-flex">
           <span
             style={{
               background: "#D02C2A",

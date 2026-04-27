@@ -90,7 +90,7 @@ export default function GlobalError({
           </button>
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- intentional: global-error renders outside the router */}
           <a
-            href="/"
+            href="/dashboard"
             style={{
               display: "inline-block",
               fontSize: 14,

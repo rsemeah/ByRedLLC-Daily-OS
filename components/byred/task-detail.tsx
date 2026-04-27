@@ -506,18 +506,20 @@ export function TaskDetail({
                   <Button
                     variant="destructive"
                     className="w-full bg-byred-red hover:bg-byred-red-hot text-white text-sm gap-2"
+                    disabled={aiLoading}
                   >
                     <Zap className="w-4 h-4" strokeWidth={1.75} />
-                    Auto-execute
+                    Build runbook
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent className="bg-white border-zinc-200">
                   <AlertDialogHeader>
                     <AlertDialogTitle className="text-zinc-800">
-                      Auto-execute this task?
+                      Build an execution runbook?
                     </AlertDialogTitle>
                     <AlertDialogDescription className="text-zinc-500">
-                      This will run without further confirmation. Continue?
+                      AI will produce a forward-looking plan only. No external
+                      systems will be changed by this action.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -530,8 +532,9 @@ export function TaskDetail({
                         e.preventDefault()
                         void handleAiAction("execute")
                       }}
+                      disabled={aiLoading}
                     >
-                      Execute
+                      Build runbook
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -554,9 +557,12 @@ export function TaskDetail({
                     size="icon"
                     className="w-6 h-6 text-zinc-400 hover:text-zinc-700"
                     onClick={() => {
-                      navigator.clipboard.writeText(aiResult.content)
-                      toast.success("Copied.")
+                      void navigator.clipboard
+                        .writeText(aiResult.content)
+                        .then(() => toast.success("Copied."))
+                        .catch(() => toast.error("Copy failed."))
                     }}
+                    aria-label="Copy AI result"
                   >
                     <Copy className="w-3 h-3" strokeWidth={1.75} />
                   </Button>

@@ -18,6 +18,8 @@ export type MondayPullSyncResult = {
   tenantId: string
   tenantName: string
   boardId: string
+  skipped?: boolean
+  skippedReason?: string
   boardItems: number
   linked: number
   inserted: number
@@ -259,6 +261,7 @@ async function pullOneBoard(
         "id, title, monday_item_id, monday_updated_at, tenant_id, status, priority, due_date, owner_user_id, archived_at"
       )
       .in("monday_item_id", ids)
+      .eq("tenant_id", binding.tenantId)
 
     if (fetchErr) throw new Error(`tasks lookup: ${fetchErr.message}`)
 
@@ -324,8 +327,9 @@ async function pullOneBoard(
     }
   }
 
-  // UPDATES: by primary key. This naturally handles tenant_id reassignment
-  // without wrestling with ON CONFLICT on a composite key.
+  // UPDATES: by primary key after a tenant-scoped lookup. A Monday item ID
+  // observed in another tenant is not re-homed here; each tenant-board binding
+  // owns its own task mirror.
   for (const row of updates) {
     const { id, ...patch } = row
     const { error } = await admin
@@ -445,8 +449,8 @@ async function pullOneBoard(
  * Pull a single tenant's Monday board into `byred_tasks`. Used by the
  * per-tenant sync route (tab "sync now" button). Same reconciliation logic
  * as the cron path but scoped to one board, so it returns quickly and does
- * not need the cross-process sync lock — the composite unique index is
- * enough to keep concurrent runs safe at the DB layer.
+ * use a per-tenant cross-process sync lock so two manual refreshes cannot
+ * race the same board mirror.
  */
 export async function pullMondayBoardForTenant(
   tenantId: string,
@@ -456,7 +460,37 @@ export async function pullMondayBoardForTenant(
   const bindings = await getBoundTenantBoards({ activeOnly: true })
   const binding = bindings.find((b) => b.tenantId === tenantId)
   if (!binding) return null
-  return pullOneBoard(admin, binding, opts)
+
+  const lock = await tryAcquireSyncLock({
+    name: `monday_pull:${tenantId}`,
+    ttlSeconds: 180,
+    admin,
+  })
+
+  if (!lock) {
+    return {
+      tenantId: binding.tenantId,
+      tenantName: binding.tenantName,
+      boardId: binding.boardId,
+      skipped: true,
+      skippedReason: "Another sync run is already in progress for this tenant.",
+      boardItems: 0,
+      linked: 0,
+      inserted: 0,
+      updated: 0,
+      unchanged: 0,
+      reassigned: 0,
+      archived: 0,
+      delta: false,
+      errors: 0,
+    }
+  }
+
+  try {
+    return await pullOneBoard(admin, binding, opts)
+  } finally {
+    await lock.release()
+  }
 }
 
 /**

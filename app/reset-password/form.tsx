@@ -1,17 +1,13 @@
 "use client"
 
-import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { AlertOctagon, CheckCircle2 } from "lucide-react"
+import { AlertOctagon, ArrowRight, CheckCircle2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { z } from "zod"
 import { toast } from "sonner"
+import { AuthShell, Field } from "@/components/byred/auth-shell"
 
 const passwordSchema = z
   .object({
@@ -52,9 +48,6 @@ export function ResetPasswordForm() {
       })
 
       if (updateError) {
-        // "Auth session missing" or "invalid_grant" means the recovery
-        // session expired or was never established — push the user back
-        // to the forgot page instead of leaving them stuck.
         const expired = /session|jwt|grant|token/i.test(updateError.message)
         if (expired) {
           toast.error("Reset link expired. Request a new one.")
@@ -70,7 +63,7 @@ export function ResetPasswordForm() {
       setDone(true)
       toast.success("Password updated successfully")
       setTimeout(() => {
-        router.push("/")
+        router.push("/dashboard")
         router.refresh()
       }, 2000)
     } catch (err) {
@@ -82,112 +75,89 @@ export function ResetPasswordForm() {
     }
   }
 
-  const year = new Date().getFullYear()
-
-  if (done) {
-    return (
-      <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center px-4">
-        <div className="w-full max-w-sm space-y-6 text-center">
-          <div className="mx-auto w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center">
-            <CheckCircle2 className="w-6 h-6 text-emerald-600" strokeWidth={1.75} />
-          </div>
-          <h1 className="text-lg font-medium text-zinc-900">Password updated</h1>
-          <p className="text-sm text-zinc-600">
-            Redirecting you to the dashboard...
-          </p>
-        </div>
-        <p className="mt-8 text-center text-xs text-zinc-400">By Red, LLC &middot; {year}</p>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-8">
-        <div className="flex flex-col items-center">
-          <div className="rounded-2xl bg-zinc-950 px-10 py-6 shadow-md ring-1 ring-zinc-900/20">
-            <Image
-              src="/brand/byredllc.png"
-              alt="By Red, LLC."
-              width={288}
-              height={96}
-              className="object-contain"
-              priority
-            />
+    <AuthShell>
+      {done ? (
+        <div className="w-full rounded-xl border border-emerald-900/40 bg-black/60 backdrop-blur-xl px-6 py-6 shadow-[0_0_60px_rgba(16,185,129,0.15)] text-center">
+          <div className="mx-auto mb-4 w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center">
+            <CheckCircle2 className="w-5 h-5 text-emerald-400" strokeWidth={1.75} />
           </div>
-          <h1 className="mt-6 text-4xl font-condensed font-bold text-zinc-900 tracking-tight lowercase">
-            byred_os
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Choose a new password
+          <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-white">
+            Password updated
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-white/60">
+            Redirecting you to the dashboard&hellip;
           </p>
         </div>
+      ) : (
+        <div className="w-full rounded-xl border border-red-900/40 bg-black/60 backdrop-blur-xl px-6 py-5 shadow-[0_0_60px_rgba(200,16,46,0.15)]">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="block h-1.5 w-1.5 rounded-[1px] bg-[#c8102e]" />
+              <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-white">
+                New password
+              </span>
+            </div>
+            <span className="text-[9px] tracking-[0.12em] uppercase text-white/30">
+              Auth &middot; v1
+            </span>
+          </div>
 
-        <Card className="bg-white border-zinc-200 shadow-sm">
-          <CardHeader className="pb-4">
-            <p className="text-sm font-medium text-zinc-700">New password</p>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <div className="flex items-start gap-2 p-3 rounded-md border border-byred-red/30 bg-byred-red/5">
-                  <AlertOctagon className="w-4 h-4 text-byred-red shrink-0 mt-0.5" strokeWidth={1.75} />
-                  <p className="text-xs text-byred-red">{error}</p>
-                </div>
-              )}
+          {error && (
+            <div className="mb-4 flex items-start gap-2 rounded-md border border-red-800/50 bg-red-950/40 px-3 py-2.5">
+              <AlertOctagon
+                size={13}
+                strokeWidth={1.9}
+                className="mt-0.5 shrink-0 text-red-400"
+              />
+              <p className="text-[11px] leading-snug text-red-400">{error}</p>
+            </div>
+          )}
 
-              <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-zinc-600 text-xs">New password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-white border-zinc-300 text-zinc-800 placeholder:text-zinc-400 focus-visible:ring-byred-red"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
+          <form onSubmit={handleSubmit}>
+            <Field
+              id="password"
+              label="New password"
+              type="password"
+              autoComplete="new-password"
+              placeholder="••••••••"
+              value={password}
+              onChange={setPassword}
+            />
+            <Field
+              id="confirm"
+              label="Confirm password"
+              type="password"
+              autoComplete="new-password"
+              placeholder="••••••••"
+              value={confirm}
+              onChange={setConfirm}
+              topGap
+            />
 
-              <div className="space-y-1.5">
-                <Label htmlFor="confirm" className="text-zinc-600 text-xs">Confirm password</Label>
-                <Input
-                  id="confirm"
-                  type="password"
-                  autoComplete="new-password"
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  className="bg-white border-zinc-300 text-zinc-800 placeholder:text-zinc-400 focus-visible:ring-byred-red"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-[#c8102e] py-2.5 text-sm font-bold tracking-[0.3em] uppercase text-white transition hover:bg-[#a30d25] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? "Updating…" : "Update password"}
+              {!loading && <ArrowRight size={14} strokeWidth={2.25} />}
+            </button>
+          </form>
 
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-byred-red hover:bg-byred-red-hot active:bg-byred-red-deep text-white font-medium focus-visible:ring-byred-red"
-              >
-                {loading ? "Updating..." : "Update password"}
-              </Button>
-
-              <div className="text-center">
-                <Link
-                  href="/login"
-                  className="text-xs text-zinc-400 hover:text-zinc-600 transition-colors"
-                >
-                  Back to sign in
-                </Link>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-
-        <p className="text-center text-xs text-zinc-400">
-          By Red, LLC &middot; {year}
-        </p>
-      </div>
-    </div>
+          <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3">
+            <Link
+              href="/login"
+              className="text-[10px] font-bold tracking-[0.16em] uppercase text-white/60 hover:text-white transition"
+            >
+              &larr; Back to sign in
+            </Link>
+            <span className="text-[9px] tracking-[0.12em] uppercase text-white/25">
+              Encrypted
+            </span>
+          </div>
+        </div>
+      )}
+    </AuthShell>
   )
 }
