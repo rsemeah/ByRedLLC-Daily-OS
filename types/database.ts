@@ -266,6 +266,45 @@ export type Database = {
           },
         ]
       }
+      byred_task_comments: {
+        Row: {
+          id: string
+          task_id: string
+          user_id: string
+          comment: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          task_id: string
+          user_id: string
+          comment: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          task_id?: string
+          user_id?: string
+          comment?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "byred_task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "byred_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "byred_task_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "byred_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       byred_tenants: {
         Row: {
           active: boolean | null
@@ -404,6 +443,9 @@ export type ByredUserTenantUpdate = Database["public"]["Tables"]["byred_user_ten
 export type ByredTask = Database["public"]["Tables"]["byred_tasks"]["Row"]
 export type ByredTaskInsert = Database["public"]["Tables"]["byred_tasks"]["Insert"]
 export type ByredTaskUpdate = Database["public"]["Tables"]["byred_tasks"]["Update"]
+
+export type ByredTaskComment = Database["public"]["Tables"]["byred_task_comments"]["Row"]
+export type ByredTaskCommentInsert = Database["public"]["Tables"]["byred_task_comments"]["Insert"]
 
 export type ByredLead = Database["public"]["Tables"]["byred_leads"]["Row"]
 export type ByredLeadInsert = Database["public"]["Tables"]["byred_leads"]["Insert"]

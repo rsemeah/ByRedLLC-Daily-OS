@@ -43,6 +43,7 @@ import { DueDateCell } from "@/components/byred/due-date-cell"
 import { AiModeChip } from "@/components/byred/ai-mode-chip"
 import { BlockerBanner } from "@/components/byred/blocker-banner"
 import { ActivityItem } from "@/components/byred/activity-item"
+import { TaskComments } from "@/components/byred/task-comments"
 import { useUser } from "@/lib/context/user-context"
 import type { Task, Activity } from "@/types/db"
 
@@ -86,6 +87,11 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
   const [blockerFlag, setBlockerFlag] = useState(task.blocker_flag)
   const [aiResult, setAiResult] = useState<AiActionResult | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
+  const [status, setStatus] = useState(task.status ?? "not_started")
+  const [priority, setPriority] = useState(task.priority ?? "medium")
+  const [aiMode, setAiMode] = useState<string>(task.ai_mode ?? "HUMAN_ONLY")
+  const [blockerReason, setBlockerReason] = useState(task.blocker_reason ?? "")
+  const [saving, setSaving] = useState(false)
 
   async function handleAiAction(type: "assist" | "draft" | "execute") {
     setAiLoading(true)
@@ -105,8 +111,31 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
     toast.success("AI response generated.")
   }
 
-  function handleSave() {
-    toast.success("Task updated.")
+  async function handleSave() {
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/tasks/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          status,
+          priority,
+          ai_mode: aiMode,
+          blocker_flag: blockerFlag,
+          blocker_reason: blockerFlag ? blockerReason : null,
+        }),
+      })
+      if (!res.ok) {
+        toast.error("Failed to save changes.")
+        return
+      }
+      toast.success("Task updated.")
+    } catch {
+      toast.error("Failed to save changes.")
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -135,9 +164,15 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
               autoFocus
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              onBlur={() => {
+              onBlur={async () => {
                 setEditingTitle(false)
-                toast.success("Task updated.")
+                const res = await fetch(`/api/tasks/${task.id}`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ title }),
+                })
+                if (res.ok) toast.success("Title updated.")
+                else toast.error("Failed to update title.")
               }}
               className="w-full text-2xl font-condensed font-bold text-zinc-800 tracking-tight bg-transparent border-b border-byred-red outline-none pb-1"
             />
@@ -277,6 +312,9 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
           </Card>
         </div>
 
+        {/* Comments */}
+        <TaskComments taskId={task.id} />
+
         {/* Activity */}
         <div>
           <h3 className="text-sm font-medium text-zinc-500 mb-2">Activity</h3>
@@ -302,15 +340,15 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
             </h3>
           </CardHeader>
           <CardContent className="space-y-3">
-            {task.ai_mode === "HUMAN_ONLY" && (
+            {aiMode === "HUMAN_ONLY" && (
               <p className="text-xs text-zinc-400">
                 This task is marked human-only.
               </p>
             )}
 
-            {(task.ai_mode === "AI_ASSIST" ||
-              task.ai_mode === "AI_DRAFT" ||
-              task.ai_mode === "AI_EXECUTE") && (
+            {(aiMode === "AI_ASSIST" ||
+              aiMode === "AI_DRAFT" ||
+              aiMode === "AI_EXECUTE") && (
               <Button
                 className="w-full bg-byred-red hover:bg-byred-red-hot text-white text-sm gap-2"
                 onClick={() => handleAiAction("assist")}
@@ -321,8 +359,8 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
               </Button>
             )}
 
-            {(task.ai_mode === "AI_DRAFT" ||
-              task.ai_mode === "AI_EXECUTE") && (
+            {(aiMode === "AI_DRAFT" ||
+              aiMode === "AI_EXECUTE") && (
               <Button
                 variant="outline"
                 className="w-full border-zinc-300 text-zinc-600 hover:text-zinc-800 hover:bg-zinc-50 text-sm gap-2"
@@ -334,7 +372,7 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
               </Button>
             )}
 
-            {task.ai_mode === "AI_EXECUTE" && (
+            {aiMode === "AI_EXECUTE" && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
@@ -426,7 +464,7 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
             {/* Status */}
             <div className="space-y-1.5">
               <Label className="text-xs text-zinc-400">Status</Label>
-              <Select defaultValue={task.status ?? "not_started"}>
+              <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger className="h-8 bg-white border-zinc-300 text-xs text-zinc-600">
                   <SelectValue />
                 </SelectTrigger>
@@ -453,7 +491,7 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
             {/* Priority */}
             <div className="space-y-1.5">
               <Label className="text-xs text-zinc-400">Priority</Label>
-              <Select defaultValue={task.priority ?? "medium"}>
+              <Select value={priority} onValueChange={setPriority}>
                 <SelectTrigger className="h-8 bg-white border-zinc-300 text-xs text-zinc-600">
                   <SelectValue />
                 </SelectTrigger>
@@ -474,7 +512,7 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
             {/* AI Mode */}
             <div className="space-y-1.5">
               <Label className="text-xs text-zinc-400">AI Mode</Label>
-              <Select defaultValue={task.ai_mode ?? "HUMAN_ONLY"}>
+              <Select value={aiMode} onValueChange={setAiMode}>
                 <SelectTrigger className="h-8 bg-white border-zinc-300 text-xs text-zinc-600">
                   <SelectValue />
                 </SelectTrigger>
@@ -499,7 +537,8 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
               <div className="space-y-1.5">
                 <Label className="text-xs text-zinc-400">Blocker reason</Label>
                 <Textarea
-                  defaultValue={task.blocker_reason ?? ""}
+                  value={blockerReason}
+                  onChange={(e) => setBlockerReason(e.target.value)}
                   className="text-xs bg-white border-zinc-300 text-zinc-600 focus-visible:ring-byred-red min-h-[60px]"
                   placeholder="Describe what is blocking this task..."
                 />
@@ -509,9 +548,10 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
             <Button
               className="w-full bg-byred-red hover:bg-byred-red-hot text-white text-sm gap-2"
               onClick={handleSave}
+              disabled={saving}
             >
               <CheckCircle className="w-4 h-4" strokeWidth={1.75} />
-              Save
+              {saving ? "Saving…" : "Save"}
             </Button>
           </CardContent>
         </Card>
