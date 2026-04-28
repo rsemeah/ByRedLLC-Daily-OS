@@ -8,6 +8,7 @@ function isProtectedPath(pathname: string): boolean {
   if (pathname === "/") return true
 
   const protectedPrefixes = [
+    "/dashboard",
     "/today",
     "/tasks",
     "/leads",
@@ -82,7 +83,7 @@ export async function proxy(request: NextRequest) {
 
   if (user && (pathname === "/login" || pathname === "/register")) {
     const redirectUrl = request.nextUrl.clone()
-    redirectUrl.pathname = "/"
+    redirectUrl.pathname = "/dashboard"
     const redirectResponse = NextResponse.redirect(redirectUrl)
     cloneCookies(sessionResponse, redirectResponse)
     return redirectResponse

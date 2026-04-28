@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "predev": "tsx scripts/check-env.ts",
+    "predev": "npx tsx scripts/check-env.ts",
     "dev": "next dev",
-    "prebuild": "tsx scripts/check-env.ts",
+    "prebuild": "npx tsx scripts/check-env.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -82,7 +82,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.2.0",
+    "@tailwindcss/postcss": "^4.2.4",
     "@tailwindcss/typography": "^0.5.19",
     "@types/node": "^22",
     "@types/nodemailer": "^8.0.0",
@@ -92,7 +92,7 @@
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.4",
     "postcss": "^8.5",
-    "tailwindcss": "^4.2.0",
+    "tailwindcss": "^4.2.4",
     "tsx": "^4.21.0",
     "tw-animate-css": "1.3.3",
     "typescript": "5.7.3",

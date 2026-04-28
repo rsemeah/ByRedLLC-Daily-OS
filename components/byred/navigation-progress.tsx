@@ -64,23 +64,17 @@ export function NavigationProgress() {
   if (!visible && progress === 0) return null
 
   return (
-    <div
-      aria-hidden
-      className="pointer-events-none fixed inset-x-0 top-0 z-[9999] h-[3px]"
-    >
+    <div className="fixed top-0 left-0 right-0 z-50 h-[2px] pointer-events-none">
       <div
-        className="h-full origin-left bg-byred-red transition-transform ease-out"
+        className="h-full bg-brand-red transition-all ease-out"
         style={{
-          transform: `scaleX(${progress})`,
+          width: `${progress * 100}%`,
           transitionDuration: progress === 1 ? `${FINISH_DURATION}ms` : "300ms",
           opacity: visible ? 1 : 0,
         }}
       />
       {visible && progress < 1 && (
-        <div
-          className="absolute right-0 top-0 h-full w-24 -translate-x-px bg-gradient-to-l from-byred-red/60 to-transparent"
-          style={{ transform: `translateX(${progress * 100}%)` }}
-        />
+        <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-brand-red/0 to-brand-red" />
       )}
     </div>
   )

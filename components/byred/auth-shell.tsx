@@ -1,3 +1,7 @@
+"use client"
+
+import React from "react"
+
 type FieldProps = {
   id: string
   label: string
@@ -24,11 +28,11 @@ export function Field({
   rightLabel,
 }: FieldProps) {
   return (
-    <div className={topGap ? "mt-3" : ""}>
-      <div className="mb-1.5 flex items-center justify-between">
+    <div className={topGap ? "mt-4" : ""} suppressHydrationWarning>
+      <div className="flex items-center justify-between mb-1.5">
         <label
           htmlFor={id}
-          className="text-[9px] font-bold tracking-[0.2em] uppercase text-white/50"
+          className="block text-xs font-medium text-white/50 uppercase tracking-widest"
         >
           {label}
         </label>
@@ -37,11 +41,11 @@ export function Field({
       <input
         id={id}
         type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
         autoComplete={autoComplete}
         placeholder={placeholder}
         required={required}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
         className="h-9 w-full rounded-md border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-white/25 outline-none transition focus:border-[#c8102e]/60 focus:ring-1 focus:ring-[#c8102e]/30"
       />
     </div>
@@ -52,35 +56,57 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
   const year = new Date().getFullYear()
   return (
     <main className="relative min-h-screen w-full overflow-hidden bg-black">
+      {/* Vault background image */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/hero/byred-hero.webp"
+        src="/vault-bg.jpg"
         alt=""
-        fetchPriority="high"
-        decoding="async"
-        className="absolute inset-0 h-full w-full object-cover object-center"
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full object-cover opacity-100 select-none pointer-events-none"
+        onError={(e) => {
+          // fallback — hide broken img so CSS gradient shows instead
+          ;(e.target as HTMLImageElement).style.display = "none"
+        }}
+      />
+
+      {/* Dark overlay — deepens the atmospheric black */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 70% at 50% 40%, rgba(140,0,0,0.35) 0%, rgba(60,0,0,0.18) 45%, transparent 70%), linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.55) 100%)",
+        }}
+      />
+
+      {/* Side vignette */}
+      <div
+        className="absolute inset-y-0 left-0 w-40 pointer-events-none"
+        style={{ background: "linear-gradient(to right, rgba(0,0,0,0.9) 0%, transparent 100%)" }}
       />
       <div
-        aria-hidden
-        className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/20 to-black/80 pointer-events-none"
+        className="absolute inset-y-0 right-0 w-40 pointer-events-none"
+        style={{ background: "linear-gradient(to left, rgba(0,0,0,0.9) 0%, transparent 100%)" }}
       />
-      <div className="relative z-10 flex min-h-screen items-end justify-center pb-10 px-4">
-        <div className="w-full max-w-sm">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/brand/by-red-logo-transparent.png"
-            alt="By Red, LLC"
-            className="mx-auto mb-4 w-36 drop-shadow-[0_2px_24px_rgba(200,16,46,0.45)]"
-          />
-          <p className="mb-3 text-center text-[10px] tracking-[0.4em] uppercase text-white/60">
-            Internal operations &middot; execution only
-          </p>
-          {children}
-          <div className="mt-3 flex items-center justify-between text-[9px] tracking-[0.14em] uppercase text-white/40">
-            <span>By Red, LLC</span>
-            <span>{year} &middot; Build stable</span>
-          </div>
-        </div>
+
+      {/* Content */}
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-12">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/by-red-logo.png"
+          alt="By Red, LLC."
+          width={240}
+          height={96}
+          className="object-contain mb-1 select-none drop-shadow-[0_0_40px_rgba(200,16,46,0.6)]"
+        />
+        <p className="text-[10px] font-semibold tracking-[0.35em] text-white/30 uppercase mb-8">
+          Internal operations · execution only
+        </p>
+
+        {children}
+
+        <p className="mt-8 text-[11px] text-white/20 text-center">
+          By Red, LLC&nbsp;&nbsp;·&nbsp;&nbsp;{year}&nbsp;&nbsp;·&nbsp;&nbsp;Build stable
+        </p>
       </div>
     </main>
   )
