@@ -60,7 +60,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
         src="/vault-bg.jpg"
         alt=""
         aria-hidden="true"
-        className="absolute inset-0 h-full w-full object-cover opacity-60 select-none pointer-events-none"
+        className="absolute inset-0 h-full w-full object-cover opacity-100 select-none pointer-events-none"
         onError={(e) => {
           // fallback — hide broken img so CSS gradient shows instead
           ;(e.target as HTMLImageElement).style.display = "none"
