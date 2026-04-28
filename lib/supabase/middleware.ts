@@ -41,12 +41,9 @@ export async function updateSession(request: NextRequest) {
   // Protected routes: redirect to login if not authenticated
   // The (app) group contains all protected routes
   const isAppRoute = request.nextUrl.pathname.match(/^\/(dashboard|today|tasks|leads|activities|tenants|settings)/) ||
-    (request.nextUrl.pathname === "/" && !request.nextUrl.pathname.startsWith("/login"))
-  
-  // Allow the root "/" to be accessed without auth for redirect purposes
-  const isRootPath = request.nextUrl.pathname === "/"
+    request.nextUrl.pathname === "/"
 
-  if (!user && isAppRoute && !isRootPath) {
+  if (!user && isAppRoute) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     return NextResponse.redirect(url)

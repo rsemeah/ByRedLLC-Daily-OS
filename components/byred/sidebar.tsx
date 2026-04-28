@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/tooltip"
 
 const WORK_NAV = [
-  { label: "Command Center", href: "/", icon: LayoutDashboard },
+  { label: "Command Center", href: "/dashboard", icon: LayoutDashboard },
   { label: "Today", href: "/today", icon: CalendarDays },
   { label: "Tasks", href: "/tasks", icon: CheckSquare },
   { label: "Leads", href: "/leads", icon: Users },
@@ -159,7 +159,7 @@ function SidebarContent({
   const isMobile = useIsMobile()
 
   function isActive(href: string) {
-    if (href === "/") return pathname === "/"
+    if (href === "/dashboard") return pathname === "/dashboard" || pathname === "/"
     return pathname.startsWith(href)
   }
 
@@ -184,7 +184,7 @@ function SidebarContent({
             collapsed ? "p-3 justify-center" : "px-4 py-3"
           )}
         >
-          <Link href="/" className="flex flex-col items-center" onClick={onNavClick}>
+          <Link href="/dashboard" className="flex flex-col items-center" onClick={onNavClick}>
             {collapsed ? (
               <span className="font-condensed font-bold text-byred-red text-sm tracking-widest">
                 BR
@@ -192,7 +192,7 @@ function SidebarContent({
             ) : (
               <>
                 <Image
-                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%20Apr%2020%2C%202026%2C%2012_29_20%20PM-ATivvvRJFjDMpelGYEfLYkYncVvkIr.png"
+                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%20Apr%2028%2C%202026%2C%2009_32_39%20AM-x3FJDIpEVCK0sy9RmbGiMlhyKPNdec.png"
                   alt="By Red, LLC."
                   width={120}
                   height={50}
