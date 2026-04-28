@@ -1,3 +1,5 @@
+import React from "react"
+
 type FieldProps = {
   id: string
   label: string
@@ -51,39 +53,48 @@ export function Field({
 export function AuthShell({ children }: { children: React.ReactNode }) {
   const year = new Date().getFullYear()
   return (
-    <div
-      className="fixed inset-0 flex flex-col items-center justify-center px-4 py-12 overflow-y-auto"
-      style={{
-        backgroundColor: "#050507",
-        backgroundImage: `
-          radial-gradient(ellipse 70% 55% at 50% 50%, rgba(160, 0, 0, 0.28) 0%, rgba(100, 0, 0, 0.12) 40%, transparent 70%),
-          linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.6) 100%)
-        `,
-      }}
-    >
-      {/* Side vignette panels */}
-      <div
-        className="fixed inset-y-0 left-0 w-32 pointer-events-none"
-        style={{
-          background: "linear-gradient(to right, rgba(0,0,0,0.85) 0%, transparent 100%)",
-        }}
-      />
-      <div
-        className="fixed inset-y-0 right-0 w-32 pointer-events-none"
-        style={{
-          background: "linear-gradient(to left, rgba(0,0,0,0.85) 0%, transparent 100%)",
+    <main className="relative min-h-screen w-full overflow-hidden bg-black">
+      {/* Vault background image */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/vault-bg.jpg"
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full object-cover opacity-60 select-none pointer-events-none"
+        onError={(e) => {
+          // fallback — hide broken img so CSS gradient shows instead
+          ;(e.target as HTMLImageElement).style.display = "none"
         }}
       />
 
+      {/* Dark overlay — deepens the atmospheric black */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 70% at 50% 40%, rgba(140,0,0,0.35) 0%, rgba(60,0,0,0.18) 45%, transparent 70%), linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.55) 100%)",
+        }}
+      />
+
+      {/* Side vignette */}
+      <div
+        className="absolute inset-y-0 left-0 w-40 pointer-events-none"
+        style={{ background: "linear-gradient(to right, rgba(0,0,0,0.9) 0%, transparent 100%)" }}
+      />
+      <div
+        className="absolute inset-y-0 right-0 w-40 pointer-events-none"
+        style={{ background: "linear-gradient(to left, rgba(0,0,0,0.9) 0%, transparent 100%)" }}
+      />
+
       {/* Content */}
-      <div className="relative flex flex-col items-center w-full">
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-12">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%20Apr%2020%2C%202026%2C%2012_29_20%20PM-ATivvvRJFjDMpelGYEfLYkYncVvkIr.png"
           alt="By Red, LLC."
           width={200}
           height={80}
-          className="object-contain mb-1 select-none drop-shadow-[0_0_32px_rgba(200,16,46,0.5)]"
+          className="object-contain mb-1 select-none drop-shadow-[0_0_40px_rgba(200,16,46,0.6)]"
         />
         <p className="text-[10px] font-semibold tracking-[0.35em] text-white/30 uppercase mb-8">
           Internal operations · execution only
@@ -95,6 +106,6 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
           By Red, LLC&nbsp;&nbsp;·&nbsp;&nbsp;{year}&nbsp;&nbsp;·&nbsp;&nbsp;Build stable
         </p>
       </div>
-    </div>
+    </main>
   )
 }
