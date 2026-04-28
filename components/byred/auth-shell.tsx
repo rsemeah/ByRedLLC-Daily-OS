@@ -52,29 +52,49 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
   const year = new Date().getFullYear()
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
+      className="fixed inset-0 flex flex-col items-center justify-center px-4 py-12 overflow-y-auto"
       style={{
-        background:
-          "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(180,0,0,0.18) 0%, transparent 70%), #09090b",
+        backgroundColor: "#050507",
+        backgroundImage: `
+          radial-gradient(ellipse 70% 55% at 50% 50%, rgba(160, 0, 0, 0.28) 0%, rgba(100, 0, 0, 0.12) 40%, transparent 70%),
+          linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.6) 100%)
+        `,
       }}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%20Apr%2020%2C%202026%2C%2012_29_20%20PM-ATivvvRJFjDMpelGYEfLYkYncVvkIr.png"
-        alt="By Red, LLC."
-        width={180}
-        height={72}
-        className="object-contain mb-1 select-none"
+      {/* Side vignette panels */}
+      <div
+        className="fixed inset-y-0 left-0 w-32 pointer-events-none"
+        style={{
+          background: "linear-gradient(to right, rgba(0,0,0,0.85) 0%, transparent 100%)",
+        }}
       />
-      <p className="text-[10px] font-semibold tracking-[0.35em] text-white/30 uppercase mb-8">
-        Internal operations · execution only
-      </p>
+      <div
+        className="fixed inset-y-0 right-0 w-32 pointer-events-none"
+        style={{
+          background: "linear-gradient(to left, rgba(0,0,0,0.85) 0%, transparent 100%)",
+        }}
+      />
 
-      {children}
+      {/* Content */}
+      <div className="relative flex flex-col items-center w-full">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%20Apr%2020%2C%202026%2C%2012_29_20%20PM-ATivvvRJFjDMpelGYEfLYkYncVvkIr.png"
+          alt="By Red, LLC."
+          width={200}
+          height={80}
+          className="object-contain mb-1 select-none drop-shadow-[0_0_32px_rgba(200,16,46,0.5)]"
+        />
+        <p className="text-[10px] font-semibold tracking-[0.35em] text-white/30 uppercase mb-8">
+          Internal operations · execution only
+        </p>
 
-      <p className="mt-8 text-[11px] text-white/20 text-center">
-        By Red, LLC&nbsp;&nbsp;·&nbsp;&nbsp;{year}&nbsp;&nbsp;·&nbsp;&nbsp;Build stable
-      </p>
+        {children}
+
+        <p className="mt-8 text-[11px] text-white/20 text-center">
+          By Red, LLC&nbsp;&nbsp;·&nbsp;&nbsp;{year}&nbsp;&nbsp;·&nbsp;&nbsp;Build stable
+        </p>
+      </div>
     </div>
   )
 }
