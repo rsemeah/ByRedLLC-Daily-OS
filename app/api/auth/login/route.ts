@@ -63,22 +63,6 @@ export async function POST(req: Request) {
     )
   }
 
-  // Allowlist gate — BYRED_INTERNAL_EMAILS env var (comma-separated)
-  const allowlist = process.env.BYRED_INTERNAL_EMAILS
-  if (allowlist) {
-    const allowed = allowlist
-      .split(",")
-      .map((e) => e.trim().toLowerCase())
-      .filter(Boolean)
-    if (allowed.length > 0 && !allowed.includes(parsed.data.email)) {
-      log.warn("allowlist_rejected", { email_len: parsed.data.email.length })
-      return NextResponse.json(
-        { error: "Access restricted. Contact your administrator." },
-        { status: 403 }
-      )
-    }
-  }
-
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithPassword({
     email: parsed.data.email,
