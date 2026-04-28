@@ -94,7 +94,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-12">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/by-red-logo.png"
+          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%20Apr%2028%2C%202026%2C%2009_32_39%20AM-x3FJDIpEVCK0sy9RmbGiMlhyKPNdec.png"
           alt="By Red, LLC."
           width={240}
           height={96}
