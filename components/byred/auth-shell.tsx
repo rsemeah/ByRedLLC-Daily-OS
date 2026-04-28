@@ -66,6 +66,12 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
       />
       <div className="relative z-10 flex min-h-screen items-end justify-center pb-10 px-4">
         <div className="w-full max-w-sm">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/by-red-logo-transparent.png"
+            alt="By Red, LLC"
+            className="mx-auto mb-4 w-36 drop-shadow-[0_2px_24px_rgba(200,16,46,0.45)]"
+          />
           <p className="mb-3 text-center text-[10px] tracking-[0.4em] uppercase text-white/60">
             Internal operations &middot; execution only
           </p>
