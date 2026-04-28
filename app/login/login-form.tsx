@@ -157,7 +157,7 @@ export function LoginForm() {
           <p className="text-[11px] text-white/25">
             No account?{" "}
             <Link
-              href="/request-access"
+              href="/register"
               className="text-white/40 hover:text-white/70 underline underline-offset-2 transition-colors"
             >
               Request access
