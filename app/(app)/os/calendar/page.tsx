@@ -148,6 +148,47 @@ function toLocalInputDate(iso: string): string {
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
+// Expand a recurring event into all occurrences within [rangeFrom, rangeTo]
+function expandRecurring(evt: CalendarEventRow, rangeFrom: Date, rangeTo: Date): CalendarEventRow[] {
+  if (!evt.recurrence_rule) return [evt]
+
+  const results: CalendarEventRow[] = []
+  const durationMs = new Date(evt.ends_at).getTime() - new Date(evt.starts_at).getTime()
+  const recEnd = evt.recurrence_end ? new Date(evt.recurrence_end) : rangeTo
+
+  let cursor = new Date(evt.starts_at)
+
+  // Step function by recurrence rule
+  function advance(d: Date): Date {
+    const next = new Date(d)
+    switch (evt.recurrence_rule) {
+      case "daily":    next.setDate(next.getDate() + 1); break
+      case "weekly":   next.setDate(next.getDate() + 7); break
+      case "biweekly": next.setDate(next.getDate() + 14); break
+      case "monthly":  next.setMonth(next.getMonth() + 1); break
+    }
+    return next
+  }
+
+  while (cursor <= recEnd && cursor <= rangeTo) {
+    if (cursor >= rangeFrom) {
+      const occStart = cursor.toISOString()
+      const occEnd = new Date(cursor.getTime() + durationMs).toISOString()
+      results.push({
+        ...evt,
+        // Give each occurrence a stable unique ID based on the base ID + date
+        id: `${evt.id}::${cursor.toISOString().split("T")[0]}`,
+        starts_at: occStart,
+        ends_at: occEnd,
+      })
+    }
+    cursor = advance(cursor)
+  }
+
+  // Always include original if it fell before rangeFrom
+  return results.length === 0 ? [] : results
+}
+
 // ─── EventPill ────────────────────────────────────────────────────────────────
 
 function EventPill({ evt, onClick }: { evt: CalendarEventRow; onClick: () => void }) {
@@ -253,6 +294,14 @@ function EventFormModal({
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Fetch live projects for entity linking
+  const { data: projectsData } = useSWR<{ data: { id: string; name: string }[] }>(
+    tenantId ? `/api/os/calendar/projects?tenant_id=${tenantId}` : null,
+    fetcher,
+    { revalidateOnFocus: false }
+  )
+  const projects = projectsData?.data ?? []
 
   const set = (k: keyof EventFormData, v: unknown) =>
     setForm((f) => ({ ...f, [k]: v }))
@@ -471,6 +520,25 @@ function EventFormModal({
                 className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600"
               />
             </div>
+
+            {/* Entity linking */}
+            {projects.length > 0 && (
+              <div>
+                <label className="block text-[11px] text-zinc-500 font-medium uppercase tracking-widest mb-1.5">
+                  Link to Project
+                </label>
+                <select
+                  value={form.project_id}
+                  onChange={(e) => set("project_id", e.target.value)}
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-zinc-600"
+                >
+                  <option value="">No project</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Description */}
             <div>
@@ -973,6 +1041,7 @@ export default function OSCalendarPage() {
   const [showForm, setShowForm]   = useState(false)
   const [editingEvent, setEditingEvent] = useState<CalendarEventRow | null>(null)
   const [defaultDate, setDefaultDate] = useState<string | null>(null)
+  const [dayPopover, setDayPopover] = useState<{ iso: string; events: CalendarEventRow[] } | null>(null)
   const [filters, setFilters]     = useState<FilterState>({
     eventTypes: [], userIds: [], hasProject: null, search: "",
   })
@@ -989,10 +1058,16 @@ export default function OSCalendarPage() {
 
   const allItems = useMemo(() => {
     if (!data) return []
-    return [...(data.events ?? []), ...(data.taskEvents ?? [])].sort(
+    const rangeFrom = new Date(from)
+    const rangeTo = new Date(to)
+    // Expand recurring events; non-recurring pass through as-is
+    const expanded = (data.events ?? []).flatMap((e) =>
+      e.recurrence_rule ? expandRecurring(e, rangeFrom, rangeTo) : [e]
+    )
+    return [...expanded, ...(data.taskEvents ?? [])].sort(
       (a, b) => a.starts_at.localeCompare(b.starts_at)
     )
-  }, [data])
+  }, [data, from, to])
 
   // Apply filters
   const filteredItems = useMemo(() => {
@@ -1070,7 +1145,8 @@ export default function OSCalendarPage() {
     return [...self, ...others]
   }, [profile, directory])
 
-  const canEdit = currentUser.isAdmin
+  // All authenticated users can create/edit their own events; admins can edit any
+  const canEdit = true
 
   return (
     <div className="space-y-5 max-w-5xl">
@@ -1183,9 +1259,17 @@ export default function OSCalendarPage() {
                 >
                   <ChevronLeft className="w-3.5 h-3.5 text-zinc-400" strokeWidth={2} />
                 </button>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-white">{monthLabel}</span>
-                  {isLoading && <Loader2 className="w-3 h-3 text-zinc-600 animate-spin" />}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => { setViewYear(now.getFullYear()); setViewMonth(now.getMonth()) }}
+                    className="text-[11px] text-zinc-600 hover:text-zinc-400 transition-colors"
+                  >
+                    Today
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-white">{monthLabel}</span>
+                    {isLoading && <Loader2 className="w-3 h-3 text-zinc-600 animate-spin" />}
+                  </div>
                 </div>
                 <button
                   onClick={nextMonth}
@@ -1236,7 +1320,7 @@ export default function OSCalendarPage() {
                             ))}
                             {dayEvents.length > 2 && (
                               <button
-                                onClick={(e) => { e.stopPropagation(); setView("agenda") }}
+                                onClick={(e) => { e.stopPropagation(); setDayPopover({ iso: cell.iso!, events: dayEvents }) }}
                                 className="text-[10px] text-zinc-600 hover:text-zinc-400 px-1 transition-colors"
                               >
                                 +{dayEvents.length - 2} more
@@ -1328,6 +1412,51 @@ export default function OSCalendarPage() {
           onClose={() => { setShowForm(false); setEditingEvent(null); setDefaultDate(null) }}
           onSaved={handleSaved}
         />
+      )}
+
+      {/* Day overflow popover */}
+      {dayPopover && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setDayPopover(null)} />
+          <div className="relative z-10 w-72 bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
+              <span className="text-xs font-semibold text-white">
+                {new Date(dayPopover.iso + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+              </span>
+              <button
+                onClick={() => setDayPopover(null)}
+                className="w-6 h-6 rounded bg-zinc-800 flex items-center justify-center hover:bg-zinc-700"
+              >
+                <X className="w-3 h-3 text-zinc-400" />
+              </button>
+            </div>
+            <div className="p-2 space-y-1 max-h-72 overflow-y-auto">
+              {dayPopover.events.map((evt) => (
+                <button
+                  key={evt.id}
+                  onClick={() => { setSelectedEvent(evt); setDayPopover(null) }}
+                  className="w-full text-left flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-zinc-900 transition-colors"
+                >
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: getEventColor(evt) }} />
+                  <span className="text-xs text-zinc-300 truncate">{evt.title}</span>
+                  {!evt.all_day && (
+                    <span className="ml-auto text-[10px] text-zinc-600 shrink-0">{fmtTime(evt.starts_at)}</span>
+                  )}
+                  {evt.all_day && (
+                    <span className="ml-auto text-[10px] text-zinc-600 shrink-0">All day</span>
+                  )}
+                </button>
+              ))}
+              <button
+                onClick={() => { openNewEventOnDate(dayPopover.iso); setDayPopover(null) }}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs text-zinc-600 hover:text-zinc-400 hover:bg-zinc-900 transition-colors border border-dashed border-zinc-800 mt-1"
+              >
+                <Plus className="w-3 h-3" />
+                Add event
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

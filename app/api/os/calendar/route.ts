@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
       id, title, description, event_type, status,
       starts_at, ends_at, all_day, location, meeting_url,
       color, project_id, task_id, monday_item_id,
+      recurrence_rule, recurrence_end,
       created_by_user_id, tenant_id,
       os_calendar_event_attendees ( user_id, rsvp, byred_users ( name, email, avatar_url ) )
     `)
@@ -114,11 +115,22 @@ export async function POST(req: NextRequest) {
   const {
     tenant_id, title, description, event_type, starts_at, ends_at,
     all_day, location, meeting_url, color, project_id, task_id,
+    recurrence_rule, recurrence_end,
     attendee_ids,
   } = body
 
   if (!tenant_id || !title || !starts_at || !ends_at) {
     return NextResponse.json({ error: "tenant_id, title, starts_at, ends_at are required" }, { status: 400 })
+  }
+
+  // ends_at must be after starts_at
+  if (new Date(ends_at) <= new Date(starts_at)) {
+    return NextResponse.json({ error: "ends_at must be after starts_at" }, { status: 422 })
+  }
+
+  const VALID_RECURRENCE = ["daily", "weekly", "biweekly", "monthly"]
+  if (recurrence_rule && !VALID_RECURRENCE.includes(recurrence_rule)) {
+    return NextResponse.json({ error: `Invalid recurrence_rule. Must be one of: ${VALID_RECURRENCE.join(", ")}` }, { status: 422 })
   }
 
   const { data: event, error } = await supabase
@@ -136,6 +148,8 @@ export async function POST(req: NextRequest) {
       color: color ?? null,
       project_id: project_id ?? null,
       task_id: task_id ?? null,
+      recurrence_rule: recurrence_rule ?? null,
+      recurrence_end: recurrence_end ?? null,
       created_by_user_id: profile?.id ?? null,
     })
     .select()
@@ -166,12 +180,47 @@ export async function PATCH(req: NextRequest) {
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 })
 
   const body = await req.json()
+
+  // Whitelist updatable fields — never let caller overwrite id/tenant_id/created_by
+  const ALLOWED = [
+    "title","description","event_type","status","starts_at","ends_at",
+    "all_day","location","meeting_url","color","project_id","task_id",
+    "recurrence_rule","recurrence_end",
+  ]
+  const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  for (const k of ALLOWED) {
+    if (k in body) update[k] = body[k]
+  }
+
+  // Validate recurrence if provided
+  const VALID_RECURRENCE = ["daily","weekly","biweekly","monthly"]
+  if (update.recurrence_rule && !VALID_RECURRENCE.includes(update.recurrence_rule as string)) {
+    return NextResponse.json({ error: "Invalid recurrence_rule" }, { status: 422 })
+  }
+
+  // Validate time ordering if both times provided
+  if (update.starts_at && update.ends_at && new Date(update.ends_at as string) <= new Date(update.starts_at as string)) {
+    return NextResponse.json({ error: "ends_at must be after starts_at" }, { status: 422 })
+  }
+
   const { error } = await supabase
     .from("os_calendar_events")
-    .update({ ...body, updated_at: new Date().toISOString() })
+    .update(update)
     .eq("id", id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Sync attendees if provided
+  if (Array.isArray(body.attendee_ids)) {
+    // Delete existing then re-insert
+    await supabase.from("os_calendar_event_attendees").delete().eq("event_id", id)
+    if (body.attendee_ids.length > 0) {
+      await supabase.from("os_calendar_event_attendees").insert(
+        body.attendee_ids.map((uid: string) => ({ event_id: id, user_id: uid, rsvp: "pending" }))
+      )
+    }
+  }
+
   return NextResponse.json({ ok: true })
 }
 
