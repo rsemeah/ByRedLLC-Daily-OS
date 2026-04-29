@@ -14,6 +14,7 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  MonitorPlay,
 } from "lucide-react"
 import { useUser, useActiveTenant } from "@/lib/context/user-context"
 import { useSidebar } from "@/lib/context/sidebar-context"
@@ -36,6 +37,7 @@ const WORK_NAV = [
   { label: "Today", href: "/today", icon: CalendarDays },
   { label: "Tasks", href: "/tasks", icon: CheckSquare },
   { label: "Leads", href: "/leads", icon: Users },
+  { label: "By Red OS", href: "/os/dashboard", icon: MonitorPlay },
 ]
 
 const SYSTEM_NAV = [

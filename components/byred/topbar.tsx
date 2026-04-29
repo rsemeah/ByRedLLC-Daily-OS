@@ -25,6 +25,14 @@ const ROUTE_LABELS: Record<string, string> = {
   "/activities": "Activities",
   "/tenants": "Tenants",
   "/settings": "Settings",
+  "/os": "By Red OS",
+  "/os/dashboard": "OS Dashboard",
+  "/os/projects": "Projects",
+  "/os/boards": "Boards",
+  "/os/tasks": "OS Tasks",
+  "/os/calendar": "Calendar",
+  "/os/team": "Team",
+  "/os/import/monday": "Monday Import",
 }
 
 function getBreadcrumbs(pathname: string): { label: string; href: string }[] {
