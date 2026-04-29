@@ -54,27 +54,19 @@ export function LoginForm() {
     }
 
     try {
-      const loginRes = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: validation.data.email,
-          password: validation.data.password,
-        }),
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: validation.data.email,
+        password: validation.data.password,
       })
 
-      if (!loginRes.ok) {
-        const errBody = (await loginRes.json().catch(() => ({}))) as {
-          error?: string
-        }
-        const message = errBody.error ?? "Sign-in failed."
+      if (signInError) {
+        const message = signInError.message ?? "Invalid email or password."
         setError(message)
         toast.error(message)
         setLoading(false)
         return
       }
 
-      await supabase.auth.refreshSession().catch(() => {})
       router.push("/dashboard")
       router.refresh()
     } catch (authException) {
