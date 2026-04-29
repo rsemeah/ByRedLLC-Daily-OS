@@ -1,12 +1,12 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import type { CurrentUser } from "@/lib/context/user-context"
+import type { CurrentUser, DirectoryEntry } from "@/lib/context/user-context"
 
 /**
- * Get the current authenticated user with their byred_users profile and tenant access.
+ * Get the current authenticated user with their byred_users profile, tenant access, and org directory.
  * Returns null if not authenticated.
  */
-export async function getCurrentUser(): Promise<CurrentUser | null> {
+export async function getCurrentUser(): Promise<{ user: CurrentUser; directory: DirectoryEntry[] } | null> {
   const supabase = await createClient()
 
   const {
@@ -47,28 +47,50 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     .filter((ut) => ut.byred_tenants)
     .map((ut) => ({
       ...(ut.byred_tenants as NonNullable<typeof ut.byred_tenants>),
-      role: ut.role,
+      role: ut.role as string,
     }))
 
-  return {
+  // Fetch org directory: all active users except self
+  const { data: directoryData } = await supabase
+    .from("byred_users")
+    .select("id, name, email, role, monday_user_id, avatar_url")
+    .eq("active", true)
+    .neq("id", profile?.id ?? "")
+    .order("name")
+
+  const directory: DirectoryEntry[] = (directoryData ?? []).map((u) => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    role: u.role,
+    monday_user_id: (u as Record<string, unknown>).monday_user_id as string | null,
+    avatar_url: u.avatar_url,
+  }))
+
+  const user: CurrentUser = {
     authUser,
     profile,
     tenants,
     isAdmin: profile?.role === "admin",
+    activeTenantId: tenants[0]?.id ?? null,
+    setActiveTenantId: () => {},  // overridden by UserProvider client state
+    directory,
   }
+
+  return { user, directory }
 }
 
 /**
  * Require authentication. Redirects to login if not authenticated.
  */
-export async function requireAuth(): Promise<CurrentUser> {
-  const user = await getCurrentUser()
+export async function requireAuth(): Promise<{ user: CurrentUser; directory: DirectoryEntry[] }> {
+  const result = await getCurrentUser()
 
-  if (!user) {
+  if (!result) {
     redirect("/login")
   }
 
-  return user
+  return result
 }
 
 /**

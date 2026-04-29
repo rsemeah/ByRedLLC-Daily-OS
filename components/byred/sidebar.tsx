@@ -15,8 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react"
-import { TENANT_COLORS, TENANT_NAMES } from "@/lib/tenant-colors"
-import { useUser } from "@/lib/context/user-context"
+import { useUser, useActiveTenant } from "@/lib/context/user-context"
 import { useSidebar } from "@/lib/context/sidebar-context"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
@@ -43,13 +42,6 @@ const SYSTEM_NAV = [
   { label: "Activities", href: "/activities", icon: Activity },
   { label: "Tenants", href: "/tenants", icon: Building2 },
   { label: "Settings", href: "/settings", icon: Settings },
-]
-
-const TENANTS = [
-  { id: "t1", href: "/tasks?tenant_id=t1" },
-  { id: "t2", href: "/tasks?tenant_id=t2" },
-  { id: "t3", href: "/tasks?tenant_id=t3" },
-  { id: "t4", href: "/tasks?tenant_id=t4" },
 ]
 
 function NavItem({
@@ -99,37 +91,56 @@ function NavItem({
   return content
 }
 
+// Deterministic color from tenant color field or index
+const TENANT_DOT_COLORS = [
+  "bg-byred-red",
+  "bg-emerald-500",
+  "bg-sky-500",
+  "bg-amber-500",
+  "bg-violet-500",
+  "bg-rose-500",
+  "bg-teal-500",
+  "bg-orange-500",
+]
+
 function TenantItem({
   id,
-  href,
-  active,
+  name,
+  color,
+  colorIndex,
+  isActive,
   collapsed,
   onClick,
+  onSelect,
 }: {
   id: string
-  href: string
-  active: boolean
+  name: string
+  color: string
+  colorIndex: number
+  isActive: boolean
   collapsed: boolean
   onClick?: () => void
+  onSelect: (id: string) => void
 }) {
-  const colors = TENANT_COLORS[id]
-  const name = TENANT_NAMES[id]
+  const dotColor = color || TENANT_DOT_COLORS[colorIndex % TENANT_DOT_COLORS.length]
+  const dotClass = dotColor.startsWith("bg-")
+    ? dotColor
+    : TENANT_DOT_COLORS[colorIndex % TENANT_DOT_COLORS.length]
 
   const content = (
-    <Link
-      href={href}
-      onClick={onClick}
+    <button
+      onClick={() => { onSelect(id); onClick?.() }}
       className={cn(
-        "flex items-center gap-2.5 rounded-md text-sm transition-colors",
+        "w-full flex items-center gap-2.5 rounded-md text-sm transition-colors",
         collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2",
-        active
+        isActive
           ? "text-zinc-900 bg-zinc-100 font-medium"
           : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100"
       )}
     >
-      <span className={cn("w-2 h-2 rounded-full shrink-0", colors.dot)} />
+      <span className={cn("w-2 h-2 rounded-full shrink-0", dotClass)} />
       {!collapsed && <span className="truncate text-xs">{name}</span>}
-    </Link>
+    </button>
   )
 
   if (collapsed) {
@@ -155,6 +166,7 @@ function SidebarContent({
 }) {
   const pathname = usePathname()
   const currentUser = useUser()
+  const activeTenant = useActiveTenant()
   const { toggleCollapsed } = useSidebar()
   const isMobile = useIsMobile()
 
@@ -235,28 +247,30 @@ function SidebarContent({
           </div>
 
           {/* Tenants */}
-          <div>
-            {!collapsed && (
-              <p className="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase px-3 mb-2">
-                Tenants
-              </p>
-            )}
-            <div className="space-y-0.5">
-              {TENANTS.map(({ id, href }) => {
-                const active = pathname.includes(`tenant_id=${id}`)
-                return (
+          {(currentUser?.tenants?.length ?? 0) > 0 && (
+            <div>
+              {!collapsed && (
+                <p className="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase px-3 mb-2">
+                  Tenants
+                </p>
+              )}
+              <div className="space-y-0.5">
+                {(currentUser?.tenants ?? []).map((tenant, idx) => (
                   <TenantItem
-                    key={id}
-                    id={id}
-                    href={href}
-                    active={active}
+                    key={tenant.id}
+                    id={tenant.id}
+                    name={tenant.name}
+                    color={tenant.color}
+                    colorIndex={idx}
+                    isActive={currentUser?.activeTenantId === tenant.id}
                     collapsed={collapsed}
                     onClick={onNavClick}
+                    onSelect={currentUser?.setActiveTenantId ?? (() => {})}
                   />
-                )
-              })}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* System */}
           <div>

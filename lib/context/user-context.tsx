@@ -1,18 +1,35 @@
 "use client"
 
-import { createContext, useContext, type ReactNode } from "react"
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  type ReactNode,
+} from "react"
 import type { ByredUser, ByredTenant, ByredUserTenant } from "@/types/database"
 import type { User } from "@supabase/supabase-js"
 
+// A directory entry: another active user in the org
+export type DirectoryEntry = {
+  id: string
+  name: string
+  email: string
+  role: string
+  monday_user_id?: string | null
+  avatar_url?: string | null
+}
+
 export type CurrentUser = {
-  // Supabase auth user
   authUser: User
-  // byred_users profile (may be null if not yet created)
   profile: ByredUser | null
-  // Tenants the user has access to
   tenants: Array<ByredTenant & { role: ByredUserTenant["role"] }>
-  // Is the user an admin?
   isAdmin: boolean
+  // Active tenant for filtering — defaults to first tenant
+  activeTenantId: string | null
+  setActiveTenantId: (id: string) => void
+  // All active org users for assignment dropdowns etc.
+  directory: DirectoryEntry[]
 }
 
 const UserContext = createContext<CurrentUser | null>(null)
@@ -20,11 +37,29 @@ const UserContext = createContext<CurrentUser | null>(null)
 export function UserProvider({
   children,
   user,
+  directory: initialDirectory,
 }: {
   children: ReactNode
   user: CurrentUser | null
+  directory: DirectoryEntry[]
 }) {
-  return <UserContext.Provider value={user}>{children}</UserContext.Provider>
+  const defaultTenantId = user?.tenants?.[0]?.id ?? null
+  const [activeTenantId, setActiveTenantIdState] = useState<string | null>(defaultTenantId)
+
+  const setActiveTenantId = useCallback((id: string) => {
+    setActiveTenantIdState(id)
+  }, [])
+
+  const value: CurrentUser | null = user
+    ? {
+        ...user,
+        activeTenantId,
+        setActiveTenantId,
+        directory: initialDirectory,
+      }
+    : null
+
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>
 }
 
 export function useUser() {
@@ -41,4 +76,11 @@ export function useRequiredUser() {
     throw new Error("User is required but not found in context")
   }
   return user
+}
+
+// Convenience: just the active tenant object
+export function useActiveTenant() {
+  const user = useUser()
+  if (!user || !user.activeTenantId) return null
+  return user.tenants.find((t) => t.id === user.activeTenantId) ?? null
 }
