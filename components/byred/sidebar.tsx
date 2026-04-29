@@ -380,10 +380,13 @@ export function AppSidebar() {
   }
 
   return (
-    <aside className={cn(
-      "shrink-0 flex flex-col h-screen bg-zinc-950 border-r border-zinc-800/60 fixed left-0 top-0 z-40 transition-all duration-300",
-      isCollapsed ? "w-14" : "w-56"
-    )}>
+    <aside
+      style={{ zIndex: 50, pointerEvents: "auto", isolation: "isolate" }}
+      className={cn(
+        "shrink-0 flex flex-col h-screen bg-zinc-950 border-r border-zinc-800/60 fixed left-0 top-0 transition-all duration-300",
+        isCollapsed ? "w-14" : "w-56"
+      )}
+    >
       <SidebarContent collapsed={isCollapsed} />
     </aside>
   )
