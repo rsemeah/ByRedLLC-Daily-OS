@@ -28,7 +28,7 @@ export function Field({
   rightLabel,
 }: FieldProps) {
   return (
-    <div className={topGap ? "mt-4" : ""}>
+    <div className={topGap ? "mt-4" : ""} suppressHydrationWarning>
       <div className="flex items-center justify-between mb-1.5" suppressHydrationWarning>
         <label
           htmlFor={id}
@@ -55,7 +55,8 @@ export function Field({
 }
 
 export function AuthShell({ children }: { children: React.ReactNode }) {
-  const year = new Date().getFullYear()
+  const [year, setYear] = React.useState<number | null>(null)
+  React.useEffect(() => { setYear(new Date().getFullYear()) }, [])
   return (
     <main className="relative min-h-screen w-full overflow-hidden bg-black">
       {/* Vault background image */}
@@ -107,7 +108,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
         {children}
 
         <p className="mt-8 text-[11px] text-white/20 text-center">
-          By Red, LLC&nbsp;&nbsp;·&nbsp;&nbsp;{year}&nbsp;&nbsp;·&nbsp;&nbsp;Build stable
+          By Red, LLC&nbsp;&nbsp;·&nbsp;&nbsp;{year ?? "—"}&nbsp;&nbsp;·&nbsp;&nbsp;Build stable
         </p>
       </div>
     </main>

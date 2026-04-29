@@ -147,11 +147,13 @@ export default async function AppLayout({
       }}
     >
       <CommandPalette />
+      {/* Sidebar is position:fixed — lives outside the flex flow so no
+          sibling paint layer can intercept its pointer events */}
+      <AppSidebar />
       <div
         className="flex min-h-screen"
-        style={{ background: "#f7f7f7" }}
+        style={{ background: "#f2f1ef" }}
       >
-        <AppSidebar />
         <div
           className="flex-1 flex flex-col min-w-0"
           style={{ marginLeft: 210 }}

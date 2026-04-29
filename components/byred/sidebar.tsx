@@ -28,8 +28,8 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
         fontSize: 9,
         fontWeight: 700,
         letterSpacing: 2,
-        color: "#bbbbbb",
-        padding: "16px 18px 5px",
+        color: "#444444",
+        padding: "20px 18px 6px",
       }}
     >
       {children}
@@ -50,27 +50,27 @@ function NavItem({
     <Link
       href={href}
       className={cn(
-        "flex items-center transition-colors",
+        "flex items-center transition-all",
         active ? "font-semibold" : "font-normal"
       )}
       style={{
         height: 34,
-        padding: active ? "0 18px 0 16px" : "0 18px",
+        padding: active ? "0 18px 0 15px" : "0 18px",
         fontSize: 12,
-        color: active ? "#000000" : "#aaaaaa",
-        background: active ? "#fff8f8" : "transparent",
+        color: active ? "#ffffff" : "#666666",
+        background: active ? "rgba(208,44,42,0.18)" : "transparent",
         borderLeft: active ? "2px solid #D02C2A" : "2px solid transparent",
       }}
       onMouseEnter={(e) => {
         if (!active) {
-          e.currentTarget.style.background = "#fafafa"
-          e.currentTarget.style.color = "#333333"
+          e.currentTarget.style.background = "rgba(255,255,255,0.06)"
+          e.currentTarget.style.color = "#cccccc"
         }
       }}
       onMouseLeave={(e) => {
         if (!active) {
           e.currentTarget.style.background = "transparent"
-          e.currentTarget.style.color = "#aaaaaa"
+          e.currentTarget.style.color = "#666666"
         }
       }}
     >
@@ -110,12 +110,15 @@ export function AppSidebar() {
 
   return (
     <aside
-      className="flex flex-col fixed left-0 top-0 h-screen z-40"
+      className="flex flex-col fixed left-0 top-0 h-screen"
       style={{
         width: 210,
         minWidth: 210,
-        background: "#ffffff",
-        borderRight: "1px solid #e8e8e8",
+        background: "#111111",
+        borderRight: "1px solid #222222",
+        zIndex: 50,
+        pointerEvents: "auto",
+        isolation: "isolate",
       }}
     >
       {/* Logo */}
@@ -124,22 +127,34 @@ export function AppSidebar() {
         style={{
           height: 60,
           padding: "0 18px",
-          borderBottom: "1px solid #e8e8e8",
+          borderBottom: "1px solid #222222",
         }}
       >
-        <Link href="/dashboard" className="inline-flex">
+        <Link href="/dashboard" className="inline-flex items-center gap-2.5">
           <span
             style={{
               background: "#D02C2A",
               color: "#ffffff",
-              fontWeight: 800,
-              fontSize: 13,
-              letterSpacing: 2,
-              padding: "6px 11px",
+              fontWeight: 900,
+              fontSize: 11,
+              letterSpacing: 3,
+              padding: "5px 9px",
               borderRadius: 2,
+              lineHeight: 1,
             }}
           >
-            BY RED
+            BR
+          </span>
+          <span
+            style={{
+              color: "#ffffff",
+              fontWeight: 700,
+              fontSize: 12,
+              letterSpacing: 0.5,
+              lineHeight: 1,
+            }}
+          >
+            Daily OS
           </span>
         </Link>
       </div>
@@ -158,7 +173,7 @@ export function AppSidebar() {
 
         <SectionLabel>Tenants</SectionLabel>
         {currentUser.tenants.map((tenant) => {
-          const colors = getTenantColors(tenant.id)
+          const colors = getTenantColors(tenant.id, tenant.color)
           const active = currentUser.activeTenantId === tenant.id
           return (
             <button
@@ -166,40 +181,41 @@ export function AppSidebar() {
               type="button"
               onClick={() => void handleTenantSwitch(tenant.id)}
               className={cn(
-                "flex items-center w-full text-left transition-colors",
+                "flex items-center w-full text-left transition-all",
                 active ? "font-semibold" : "font-normal"
               )}
               style={{
                 height: 32,
-                padding: active ? "0 18px 0 16px" : "0 18px",
+                padding: active ? "0 18px 0 15px" : "0 18px",
                 gap: 8,
                 fontSize: 11,
-                color: active ? "#000000" : "#aaaaaa",
-                background: active ? "#fff8f8" : "transparent",
+                color: active ? "#ffffff" : "#666666",
+                background: active ? "rgba(208,44,42,0.18)" : "transparent",
                 borderLeft: active
                   ? "2px solid #D02C2A"
                   : "2px solid transparent",
               }}
               onMouseEnter={(e) => {
                 if (!active) {
-                  e.currentTarget.style.background = "#fafafa"
-                  e.currentTarget.style.color = "#333333"
+                  e.currentTarget.style.background = "rgba(255,255,255,0.06)"
+                  e.currentTarget.style.color = "#cccccc"
                 }
               }}
               onMouseLeave={(e) => {
                 if (!active) {
                   e.currentTarget.style.background = "transparent"
-                  e.currentTarget.style.color = "#aaaaaa"
+                  e.currentTarget.style.color = "#666666"
                 }
               }}
             >
               <span
                 style={{
-                  width: 7,
-                  height: 7,
+                  width: 6,
+                  height: 6,
                   borderRadius: "50%",
                   background: colors.dot,
                   flexShrink: 0,
+                  opacity: active ? 1 : 0.6,
                 }}
               />
               <span
@@ -223,12 +239,11 @@ export function AppSidebar() {
         ))}
       </nav>
 
-      {/* Footer (pinned) */}
+      {/* Footer */}
       <div
         style={{
-          marginTop: "auto",
           padding: "14px 18px",
-          borderTop: "1px solid #e8e8e8",
+          borderTop: "1px solid #222222",
           display: "flex",
           alignItems: "center",
           gap: 10,
@@ -254,17 +269,13 @@ export function AppSidebar() {
         <div style={{ minWidth: 0 }}>
           <p
             className="truncate"
-            style={{ fontSize: 11, fontWeight: 600, color: "#111111" }}
+            style={{ fontSize: 11, fontWeight: 600, color: "#ffffff" }}
           >
             {displayName}
           </p>
           <p
             className="truncate uppercase"
-            style={{
-              fontSize: 9,
-              color: "#aaaaaa",
-              letterSpacing: 0.5,
-            }}
+            style={{ fontSize: 9, color: "#555555", letterSpacing: 0.5 }}
           >
             {displayRole}
           </p>

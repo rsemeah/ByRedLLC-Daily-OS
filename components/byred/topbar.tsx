@@ -94,17 +94,18 @@ export function AppTopbar({
         height: 60,
         padding: "0 24px",
         background: "#ffffff",
-        borderBottom: "1px solid #e8e8e8",
+        borderBottom: "1px solid #ebebeb",
+        boxShadow: "0 1px 0 0 rgba(0,0,0,0.04)",
       }}
     >
       {/* Left: title + subtitle */}
       <div>
         <h1
           style={{
-            fontSize: 15,
+            fontSize: 14,
             fontWeight: 700,
-            color: "#000000",
-            letterSpacing: "-0.3px",
+            color: "#0a0a0a",
+            letterSpacing: "-0.2px",
             lineHeight: 1,
           }}
         >
@@ -114,8 +115,8 @@ export function AppTopbar({
           <p
             style={{
               fontSize: 10,
-              color: "#bbbbbb",
-              marginTop: 2,
+              color: "#999999",
+              marginTop: 3,
               lineHeight: 1,
             }}
           >
@@ -136,18 +137,20 @@ export function AppTopbar({
               style={{
                 width: 30,
                 height: 30,
-                background: "#f7f7f7",
-                border: "1px solid #e8e8e8",
-                borderRadius: 2,
-                color: "#bbbbbb",
+                background: "transparent",
+                border: "1px solid #e4e4e7",
+                borderRadius: 4,
+                color: "#a1a1aa",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.color = "#555555"
-                e.currentTarget.style.borderColor = "#cccccc"
+                e.currentTarget.style.color = "#0a0a0a"
+                e.currentTarget.style.borderColor = "#a1a1aa"
+                e.currentTarget.style.background = "#f4f4f5"
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.color = "#bbbbbb"
-                e.currentTarget.style.borderColor = "#e8e8e8"
+                e.currentTarget.style.color = "#a1a1aa"
+                e.currentTarget.style.borderColor = "#e4e4e7"
+                e.currentTarget.style.background = "transparent"
               }}
             >
               <Bell size={14} strokeWidth={1.75} />
@@ -296,10 +299,10 @@ export function AppTopbar({
           style={{
             width: 30,
             height: 30,
-            background: "#f7f7f7",
-            border: "1px solid #e8e8e8",
-            borderRadius: 2,
-            color: "#bbbbbb",
+            background: "transparent",
+            border: "1px solid #e4e4e7",
+            borderRadius: 4,
+            color: "#a1a1aa",
           }}
         >
           <Settings size={14} strokeWidth={1.75} />
@@ -335,14 +338,24 @@ export function AppTopbar({
           type="button"
           onClick={() => setBriefOpen((o) => !o)}
           aria-label="Toggle Daily Brief"
-          className="inline-flex items-center justify-center"
+          className="inline-flex items-center justify-center transition-colors"
           style={{
             width: 30,
             height: 30,
-            background: "#f7f7f7",
-            border: "1px solid #e8e8e8",
-            borderRadius: 2,
-            color: "#bbbbbb",
+            background: "transparent",
+            border: "1px solid #e4e4e7",
+            borderRadius: 4,
+            color: "#a1a1aa",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = "#0a0a0a"
+            e.currentTarget.style.borderColor = "#a1a1aa"
+            e.currentTarget.style.background = "#f4f4f5"
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = "#a1a1aa"
+            e.currentTarget.style.borderColor = "#e4e4e7"
+            e.currentTarget.style.background = "transparent"
           }}
         >
           <FileText size={14} strokeWidth={1.75} />

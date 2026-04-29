@@ -1,4 +1,8 @@
 const isProd = process.env.NODE_ENV === "production"
+// v0.app previews run with a non-standard NODE_ENV which triggers isProd=true
+// even in a preview/dev context. VERCEL_ENV distinguishes real production
+// from preview/development deployments on Vercel infrastructure.
+const isRealProd = isProd && process.env.VERCEL_ENV === "production"
 
 // Hosts the app actually talks to from the browser. Everything else is
 // refused by CSP, so a compromised chunk can't exfiltrate to an attacker.
@@ -13,7 +17,8 @@ const CONNECT_SOURCES = [
 // In dev Turbopack needs `unsafe-eval` for HMR and inline script/style.
 // In prod we still allow `unsafe-inline` for now (shadcn + Tailwind emit
 // inline <style>). Tighten to a nonce when we wire nonce middleware.
-const SCRIPT_SRC = isProd
+// unsafe-eval is required in dev/preview for React HMR and v0.app preview rendering
+const SCRIPT_SRC = isRealProd
   ? ["'self'", "'unsafe-inline'"]
   : ["'self'", "'unsafe-inline'", "'unsafe-eval'"]
 
@@ -35,7 +40,7 @@ const CSP_DIRECTIVES = [
 
 const CSP =
   CSP_DIRECTIVES.map(([k, v]) => `${k} ${v.join(" ")}`).join("; ") +
-  (isProd ? "; upgrade-insecure-requests" : "")
+  (isRealProd ? "; upgrade-insecure-requests" : "")
 
 const PERMISSIONS_POLICY = [
   "accelerometer=()",
@@ -71,9 +76,8 @@ const SECURITY_HEADERS = [
   { key: "Origin-Agent-Cluster", value: "?1" },
 ]
 
-// HSTS only in production HTTPS. Sending it from a dev tunnel could pin
-// users to a cloudflared hostname that isn't ours long-term.
-if (isProd) {
+// HSTS only in real production. Don't pin dev tunnels or v0 preview deployments.
+if (isRealProd) {
   SECURITY_HEADERS.push({
     key: "Strict-Transport-Security",
     value: "max-age=63072000; includeSubDomains; preload",

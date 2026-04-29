@@ -1,6 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
+import HeroYear from "./_hero-year"
 
 export default function HeroPage() {
   return (
@@ -24,12 +25,12 @@ export default function HeroPage() {
         <div className="flex flex-col items-center gap-7">
           <h1 className="max-w-2xl text-center text-2xl font-bold tracking-tight text-white sm:text-3xl md:text-4xl">
             Internal Operations.{" "}
-            <span className="text-[#c8102e]">Execution Only.</span>
+            <span className="text-[var(--brand-red)]">Execution Only.</span>
           </h1>
 
           <Link
             href="/login"
-            className="group inline-flex items-center gap-2.5 rounded-lg bg-[#c8102e] px-8 py-3.5 text-sm font-bold uppercase tracking-[0.25em] text-white shadow-lg shadow-red-900/30 transition hover:bg-[#a30d25] hover:shadow-red-900/50"
+            className="group inline-flex items-center gap-2.5 rounded-lg bg-[var(--brand-red)] px-8 py-3.5 text-sm font-bold uppercase tracking-[0.25em] text-white shadow-lg shadow-red-900/30 transition hover:bg-[var(--brand-red-hover)] hover:shadow-red-900/50"
           >
             Enter
             <ArrowRight
@@ -41,7 +42,7 @@ export default function HeroPage() {
         </div>
 
         <p className="absolute bottom-6 text-[9px] uppercase tracking-[0.3em] text-white/30">
-          By Red, LLC &middot; {new Date().getFullYear()}
+          By Red, LLC &middot; <HeroYear />
         </p>
       </div>
     </main>

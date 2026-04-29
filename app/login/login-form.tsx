@@ -4,7 +4,6 @@ import Link from "next/link"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { AlertOctagon, ArrowRight } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
 import { z } from "zod"
 import { toast } from "sonner"
 import { Field } from "@/components/byred/auth-shell"
@@ -36,23 +35,6 @@ export function LoginForm() {
       return
     }
 
-    let supabase
-    try {
-      supabase = createClient()
-    } catch (initException) {
-      const detail =
-        initException instanceof Error
-          ? initException.message
-          : String(initException)
-      console.error("Supabase client init failed on /login", detail)
-      const friendly =
-        "Sign-in is temporarily unavailable — the app is misconfigured. Ask the admin to check NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY on this environment."
-      setError(friendly)
-      toast.error(friendly)
-      setLoading(false)
-      return
-    }
-
     try {
       const loginRes = await fetch("/api/auth/login", {
         method: "POST",
@@ -74,7 +56,9 @@ export function LoginForm() {
         return
       }
 
-      await supabase.auth.refreshSession().catch(() => {})
+      // Session cookie is set server-side by the API route.
+      // router.refresh() re-fetches server components so the session
+      // is visible immediately without a stale client-side cache.
       router.push("/dashboard")
       router.refresh()
     } catch (authException) {

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { AlertOctagon, ArrowRight, Mail } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
@@ -25,6 +25,9 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [checkEmail, setCheckEmail] = useState(false)
+  const [year, setYear] = useState<number | null>(null)
+
+  useEffect(() => { setYear(new Date().getFullYear()) }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -45,21 +48,8 @@ export default function RegisterPage() {
       return
     }
 
-    let supabase
     try {
-      supabase = createClient()
-    } catch (initException) {
-      const detail = initException instanceof Error ? initException.message : String(initException)
-      console.error("Supabase client init failed on /register", detail)
-      const friendly =
-        "Sign-up is temporarily unavailable — the app is misconfigured. Ask the admin to check NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY on this environment."
-      setError(friendly)
-      toast.error(friendly)
-      setLoading(false)
-      return
-    }
-
-    try {
+      const supabase = createClient()
       const emailRedirectTo = `${window.location.origin}/auth/callback?next=/onboarding`
       const { data, error: authError } = await supabase.auth.signUp({
         email: validation.data.email,
@@ -98,8 +88,6 @@ export default function RegisterPage() {
     }
   }
 
-  const year = new Date().getFullYear()
-
   return (
     <AuthShell>
       {checkEmail ? (
@@ -111,8 +99,7 @@ export default function RegisterPage() {
             Check your email
           </p>
           <p className="mt-2 text-xs leading-relaxed text-white/60">
-            We sent a confirmation link. After you confirm, you can sign in. Each account gets its
-            own workspace; data stays separate per organization.
+            We sent a confirmation link. After you confirm, you can sign in.
           </p>
           <Link
             href="/login"
@@ -137,64 +124,22 @@ export default function RegisterPage() {
 
           {error && (
             <div className="mb-4 flex items-start gap-2 rounded-md border border-red-800/50 bg-red-950/40 px-3 py-2.5">
-              <AlertOctagon
-                size={13}
-                strokeWidth={1.9}
-                className="mt-0.5 shrink-0 text-red-400"
-              />
+              <AlertOctagon size={13} strokeWidth={1.9} className="mt-0.5 shrink-0 text-red-400" />
               <p className="text-[11px] leading-snug text-red-400">{error}</p>
             </div>
           )}
 
           <form onSubmit={handleSubmit}>
-            <Field
-              id="name"
-              label="Your name"
-              type="text"
-              autoComplete="name"
-              value={name}
-              onChange={setName}
+            <Field id="name" label="Your name" type="text" autoComplete="name" value={name} onChange={setName} />
+            <Field id="org" label="Organization" type="text" autoComplete="organization"
+              placeholder="e.g. Acme LLC" value={orgName} onChange={setOrgName} required={false} topGap
+              rightLabel={<span className="text-[9px] tracking-[0.14em] uppercase text-white/25">Optional</span>}
             />
-            <Field
-              id="org"
-              label="Organization"
-              type="text"
-              autoComplete="organization"
-              placeholder="e.g. Acme LLC"
-              value={orgName}
-              onChange={setOrgName}
-              required={false}
-              topGap
-              rightLabel={
-                <span className="text-[9px] tracking-[0.14em] uppercase text-white/25">
-                  Optional
-                </span>
-              }
+            <Field id="email" label="Email" type="email" autoComplete="email" placeholder="you@byred.co" value={email} onChange={setEmail} topGap />
+            <Field id="password" label="Password" type="password" autoComplete="new-password"
+              placeholder="At least 8 characters" value={password} onChange={setPassword} topGap
             />
-            <Field
-              id="email"
-              label="Email"
-              type="email"
-              autoComplete="email"
-              placeholder="you@byred.co"
-              value={email}
-              onChange={setEmail}
-              topGap
-            />
-            <Field
-              id="password"
-              label="Password"
-              type="password"
-              autoComplete="new-password"
-              placeholder="At least 8 characters"
-              value={password}
-              onChange={setPassword}
-              topGap
-            />
-
-            <button
-              type="submit"
-              disabled={loading}
+            <button type="submit" disabled={loading}
               className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-[#c8102e] py-2.5 text-sm font-bold tracking-[0.3em] uppercase text-white transition hover:bg-[#a30d25] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Creating…" : "Create account"}
@@ -205,15 +150,12 @@ export default function RegisterPage() {
           <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3">
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-white/40">Have one?</span>
-              <Link
-                href="/login"
-                className="text-[10px] font-bold tracking-[0.16em] uppercase text-white underline underline-offset-2 decoration-white/40 hover:decoration-white/80 transition"
-              >
+              <Link href="/login" className="text-[10px] font-bold tracking-[0.16em] uppercase text-white underline underline-offset-2 decoration-white/40 hover:decoration-white/80 transition">
                 Sign in
               </Link>
             </div>
             <span className="text-[9px] tracking-[0.12em] uppercase text-white/25">
-              {year}
+              {year ?? "—"}
             </span>
           </div>
         </div>
@@ -221,4 +163,3 @@ export default function RegisterPage() {
     </AuthShell>
   )
 }
-
