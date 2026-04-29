@@ -224,15 +224,15 @@ function SidebarContent({
         {/* Logo */}
         <div className={cn(
           "border-b border-zinc-800/60 flex items-center shrink-0 bg-zinc-900",
-          collapsed ? "p-2 justify-center" : "px-3 py-1 gap-3"
+          collapsed ? "h-14 justify-center px-2" : "h-20 px-2"
         )}>
-          <Link href="/os/dashboard" onClick={onNavClick} className="flex items-center min-w-0">
+          <Link href="/os/dashboard" onClick={onNavClick} className="flex items-center min-w-0 w-full">
             {collapsed ? (
               <Image
                 src="/logo-byred.png"
                 alt="By Red OS"
-                width={40}
-                height={40}
+                width={38}
+                height={38}
                 className="object-contain"
                 priority
               />
@@ -240,9 +240,9 @@ function SidebarContent({
               <Image
                 src="/logo-byred.png"
                 alt="By Red, LLC. OS"
-                width={148}
-                height={148}
-                className="object-contain -my-6 -ml-1"
+                width={160}
+                height={72}
+                className="w-full h-16 object-contain object-left"
                 priority
               />
             )}
