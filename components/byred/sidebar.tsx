@@ -209,32 +209,34 @@ function SidebarContent({
 
   return (
     <TooltipProvider>
-      <div className="flex flex-col h-full bg-zinc-950">
+      <div className="flex flex-col h-full bg-[var(--surface)]">
 
         {/* Logo */}
         <div className={cn(
           "border-b border-zinc-800/60 flex items-center shrink-0",
           collapsed ? "p-3 justify-center" : "px-4 py-3 gap-3"
         )}>
-          <Link href="/os/dashboard" onClick={onNavClick} className="flex items-center gap-2.5 min-w-0">
+          <Link href="/os/dashboard" onClick={onNavClick} className="flex items-center min-w-0">
             {collapsed ? (
-              <div className="w-6 h-6 rounded bg-[#D7261E] flex items-center justify-center">
-                <span className="text-white text-[9px] font-bold">BR</span>
-              </div>
+              /* Collapsed: small floating logo mark, no bg */
+              <Image
+                src="/logo-byred.png"
+                alt="By Red LLC"
+                width={32}
+                height={32}
+                className="object-contain drop-shadow-md"
+                priority
+              />
             ) : (
-              <>
-                <Image
-                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%20Apr%2028%2C%202026%2C%2009_32_39%20AM-x3FJDIpEVCK0sy9RmbGiMlhyKPNdec.png"
-                  alt="By Red, LLC."
-                  width={90}
-                  height={36}
-                  className="object-contain brightness-0 invert"
-                  priority
-                />
-                <span className="text-[9px] font-semibold tracking-[0.3em] text-zinc-600 uppercase">
-                  Daily OS
-                </span>
-              </>
+              /* Expanded: larger floating logo, no container background */
+              <Image
+                src="/logo-byred.png"
+                alt="By Red, LLC. — Red Lantern Studios"
+                width={120}
+                height={120}
+                className="object-contain drop-shadow-lg -my-4"
+                priority
+              />
             )}
           </Link>
         </div>
@@ -383,7 +385,7 @@ export function AppSidebar() {
     <aside
       style={{ zIndex: 50, pointerEvents: "auto", isolation: "isolate" }}
       className={cn(
-        "shrink-0 flex flex-col h-screen bg-zinc-950 border-r border-zinc-800/60 fixed left-0 top-0 transition-all duration-300",
+        "shrink-0 flex flex-col h-screen bg-[var(--surface)] border-r border-[var(--border-default)] fixed left-0 top-0 transition-all duration-300",
         isCollapsed ? "w-14" : "w-56"
       )}
     >

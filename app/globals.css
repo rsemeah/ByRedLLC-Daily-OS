@@ -89,6 +89,38 @@
   --sidebar-ring: var(--brand-red);
 }
 
+/* Dark mode overrides — applied when .dark class is on <html> */
+.dark {
+  --canvas: #09090B;
+  --surface: #111113;
+  --elevated: #18181B;
+  --overlay: rgba(0, 0, 0, 0.7);
+
+  --border-subtle: rgba(255,255,255,0.06);
+  --border-default: rgba(255,255,255,0.10);
+  --border-focus: #D7261E;
+
+  --text-primary: #FAFAFA;
+  --text-secondary: #A1A1AA;
+  --text-tertiary: #52525B;
+  --text-disabled: #3F3F46;
+  --text-inverse: #09090B;
+
+  --brand-red-subtle: rgba(215, 38, 30, 0.15);
+  --brand-red-muted: rgba(215, 38, 30, 0.10);
+
+  --success-subtle: rgba(22, 163, 74, 0.12);
+  --warning-subtle: rgba(202, 138, 4, 0.12);
+  --danger-subtle: rgba(220, 38, 38, 0.12);
+  --info-subtle: rgba(37, 99, 235, 0.12);
+  --neutral-subtle: rgba(255,255,255,0.05);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.7);
+}
+
 @theme inline {
   /* Fonts */
   --font-sans: var(--font-inter);
@@ -228,10 +260,15 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-color: var(--canvas);
+    color: var(--text-primary);
+    transition: background-color 200ms ease, color 200ms ease;
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply font-sans antialiased;
+    background-color: var(--canvas);
+    color: var(--text-primary);
     margin: 0;
   }
 

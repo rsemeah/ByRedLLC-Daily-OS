@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { Bell, ChevronRight, FileText, AlertTriangle, Menu } from "lucide-react"
+import { Bell, ChevronRight, FileText, AlertTriangle, Menu, Sun, Moon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Popover,
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/popover"
 import { useUser } from "@/lib/context/user-context"
 import { useSidebar } from "@/lib/context/sidebar-context"
+import { useTheme } from "@/lib/context/theme-context"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
@@ -67,6 +68,7 @@ export function AppTopbar() {
   const pathname = usePathname()
   const currentUser = useUser()
   const { isCollapsed, toggleMobile } = useSidebar()
+  const { theme, toggle: toggleTheme } = useTheme()
   const isMobile = useIsMobile()
   const [briefOpen, setBriefOpen] = useState(false)
   const [brief, setBrief] = useState<DailyBriefSummary>(DEFAULT_BRIEF)
@@ -115,7 +117,7 @@ export function AppTopbar() {
   return (
     <header
       className={cn(
-        "fixed top-0 right-0 h-14 z-30 bg-zinc-950 border-b border-zinc-800/60 flex items-center justify-between px-4 md:px-6 transition-all duration-300",
+        "fixed top-0 right-0 h-14 z-30 bg-[var(--surface)] border-b border-[var(--border-default)] flex items-center justify-between px-4 md:px-6 transition-all duration-300",
         isMobile ? "left-0" : isCollapsed ? "left-14" : "left-56"
       )}
     >
@@ -148,13 +150,13 @@ export function AppTopbar() {
                 />
               )}
               {i === breadcrumbs.length - 1 ? (
-                <span className="text-zinc-200 font-medium truncate max-w-[150px] md:max-w-none">
+                <span className="text-[var(--text-primary)] font-medium truncate max-w-[150px] md:max-w-none">
                   {crumb.label}
                 </span>
               ) : (
                 <Link
                   href={crumb.href}
-                  className="text-zinc-600 hover:text-zinc-400 transition-colors hidden md:inline"
+                  className="text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors hidden md:inline"
                 >
                   {crumb.label}
                 </Link>
@@ -179,14 +181,14 @@ export function AppTopbar() {
             </Button>
           </PopoverTrigger>
           <PopoverContent
-            className="w-80 bg-zinc-950 border-zinc-800 p-0 shadow-xl"
+            className="w-80 bg-[var(--elevated)] border-[var(--border-default)] p-0 shadow-xl"
             align="end"
           >
-            <div className="p-4 border-b border-zinc-800">
-              <p className="text-xs text-zinc-600 mb-1">
+            <div className="p-4 border-b border-[var(--border-default)]">
+              <p className="text-xs text-[var(--text-tertiary)] mb-1">
                 Daily Brief · {formattedDate}
               </p>
-              <p className="text-sm font-medium text-zinc-200 leading-snug">
+              <p className="text-sm font-medium text-[var(--text-primary)] leading-snug">
                 {brief.headline}
               </p>
             </div>
@@ -242,6 +244,21 @@ export function AppTopbar() {
           </PopoverContent>
         </Popover>
 
+        {/* Theme toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleTheme}
+          className="text-zinc-500 hover:text-zinc-200 hover:bg-white/5 w-8 h-8"
+          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {theme === "dark" ? (
+            <Sun className="w-4 h-4" strokeWidth={1.75} />
+          ) : (
+            <Moon className="w-4 h-4" strokeWidth={1.75} />
+          )}
+        </Button>
+
         {/* Notifications */}
         <Button
           variant="ghost"
@@ -252,7 +269,7 @@ export function AppTopbar() {
           <Bell className="w-4 h-4" strokeWidth={1.75} />
         </Button>
 
-        {/* Avatar — links to OS settings (fix #8) */}
+        {/* Avatar — links to OS settings */}
         <Link
           href="/os/settings"
           className="w-7 h-7 rounded-full bg-[#D7261E]/20 border border-[#D7261E]/30 flex items-center justify-center cursor-pointer hover:border-[#D7261E]/50 transition-colors"

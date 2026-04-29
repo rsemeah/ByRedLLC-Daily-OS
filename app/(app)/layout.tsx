@@ -24,7 +24,7 @@ export default async function AppLayout({
         <AppSidebar />
         <AppLayoutClient>
           <AppTopbar />
-          <main className="flex-1 pt-14 px-6 py-6 min-h-screen bg-zinc-950">
+          <main className="flex-1 pt-14 px-6 py-6 min-h-screen bg-[var(--canvas)] text-[var(--text-primary)]">
             {children}
           </main>
         </AppLayoutClient>

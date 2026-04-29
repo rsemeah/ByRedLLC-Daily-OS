@@ -4,6 +4,7 @@ import { Barlow_Condensed, Inter, JetBrains_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/sonner"
 import { NavigationProgress } from "@/components/byred/navigation-progress"
+import { ThemeProvider } from "@/lib/context/theme-context"
 import "./globals.css"
 
 const barlowCondensed = Barlow_Condensed({
@@ -52,15 +53,19 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${barlowCondensed.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+      // "dark" applied by default — ThemeProvider will read localStorage on mount
+      // and remove it if the user picked light. The class ensures no FOUC on dark users.
+      className={`dark ${barlowCondensed.variable} ${inter.variable} ${jetbrainsMono.variable}`}
     >
       <body className="font-sans antialiased">
-        <Suspense>
-          <NavigationProgress />
-        </Suspense>
-        {children}
-        <Toaster position="top-right" richColors closeButton />
-        {process.env.NODE_ENV === "production" && <Analytics />}
+        <ThemeProvider>
+          <Suspense>
+            <NavigationProgress />
+          </Suspense>
+          {children}
+          <Toaster position="top-right" richColors closeButton />
+          {process.env.NODE_ENV === "production" && <Analytics />}
+        </ThemeProvider>
       </body>
     </html>
   )
