@@ -20,16 +20,19 @@ export type DirectoryEntry = {
   avatar_url?: string | null
 }
 
-export type CurrentUser = {
+// Serializable — safe to pass from Server Component to UserProvider prop
+export type SerializedUser = {
   authUser: User
   profile: ByredUser | null
-  tenants: Array<ByredTenant & { role: ByredUserTenant["role"] }>
+  tenants: Array<ByredTenant & { role: string }>
   isAdmin: boolean
-  // Active tenant for filtering — defaults to first tenant
   activeTenantId: string | null
-  setActiveTenantId: (id: string) => void
-  // All active org users for assignment dropdowns etc.
   directory: DirectoryEntry[]
+}
+
+// Full client-side type — includes the setter function, lives only in context
+export type CurrentUser = SerializedUser & {
+  setActiveTenantId: (id: string) => void
 }
 
 const UserContext = createContext<CurrentUser | null>(null)
@@ -37,11 +40,9 @@ const UserContext = createContext<CurrentUser | null>(null)
 export function UserProvider({
   children,
   user,
-  directory: initialDirectory,
 }: {
   children: ReactNode
-  user: CurrentUser | null
-  directory: DirectoryEntry[]
+  user: SerializedUser | null
 }) {
   const defaultTenantId = user?.tenants?.[0]?.id ?? null
   const [activeTenantId, setActiveTenantIdState] = useState<string | null>(defaultTenantId)
@@ -55,7 +56,6 @@ export function UserProvider({
         ...user,
         activeTenantId,
         setActiveTenantId,
-        directory: initialDirectory,
       }
     : null
 

@@ -1,12 +1,12 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import type { CurrentUser, DirectoryEntry } from "@/lib/context/user-context"
+import type { SerializedUser, DirectoryEntry } from "@/lib/context/user-context"
 
 /**
  * Get the current authenticated user with their byred_users profile, tenant access, and org directory.
  * Returns null if not authenticated.
  */
-export async function getCurrentUser(): Promise<{ user: CurrentUser; directory: DirectoryEntry[] } | null> {
+export async function getCurrentUser(): Promise<SerializedUser | null> {
   const supabase = await createClient()
 
   const {
@@ -67,23 +67,22 @@ export async function getCurrentUser(): Promise<{ user: CurrentUser; directory: 
     avatar_url: u.avatar_url,
   }))
 
-  const user: CurrentUser = {
+  const user: SerializedUser = {
     authUser,
     profile,
     tenants,
     isAdmin: profile?.role === "admin",
     activeTenantId: tenants[0]?.id ?? null,
-    setActiveTenantId: () => {},  // overridden by UserProvider client state
     directory,
   }
 
-  return { user, directory }
+  return user
 }
 
 /**
  * Require authentication. Redirects to login if not authenticated.
  */
-export async function requireAuth(): Promise<{ user: CurrentUser; directory: DirectoryEntry[] }> {
+export async function requireAuth(): Promise<SerializedUser> {
   const result = await getCurrentUser()
 
   if (!result) {

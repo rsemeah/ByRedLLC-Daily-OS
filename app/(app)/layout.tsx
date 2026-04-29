@@ -11,17 +11,15 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode
 }) {
-  const result = await getCurrentUser()
+  const user = await getCurrentUser()
 
   // If no authenticated user, redirect to login
-  if (!result) {
+  if (!user) {
     redirect("/login")
   }
 
-  const { user, directory } = result
-
   return (
-    <UserProvider user={user} directory={directory}>
+    <UserProvider user={user}>
       <SidebarProvider>
         <div className="flex min-h-screen bg-background">
           <AppSidebar />
