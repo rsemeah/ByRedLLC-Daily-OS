@@ -154,3 +154,105 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({ items })
 }
+
+export async function POST(request: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+
+  if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!isInternalMember(authUser.email)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+  const body = (await request.json()) as {
+    tenant_id: string
+    title: string
+    start_at: string
+    end_at?: string | null
+    all_day?: boolean
+    event_type?: string
+    calendar_color?: string | null
+    description?: string | null
+    timezone?: string | null
+    recurrence_rule?: string | null
+  }
+
+  if (!body.tenant_id || !body.title || !body.start_at) {
+    return NextResponse.json({ error: 'tenant_id, title, and start_at are required' }, { status: 400 })
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any
+  const { data, error } = await db
+    .from('os_calendar_events')
+    .insert({
+      tenant_id: body.tenant_id,
+      title: body.title,
+      start_at: body.start_at,
+      end_at: body.end_at ?? null,
+      all_day: body.all_day ?? false,
+      event_type: body.event_type ?? 'internal',
+      calendar_color: body.calendar_color ?? null,
+      description: body.description ?? null,
+      timezone: body.timezone ?? null,
+      recurrence_rule: body.recurrence_rule ?? null,
+      created_by_user_id: authUser.id,
+      owner_user_id: authUser.id,
+    })
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ event: data }, { status: 201 })
+}
+
+export async function PATCH(request: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+
+  if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!isInternalMember(authUser.email)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+  const { searchParams } = request.nextUrl
+  const id = searchParams.get('id')
+  if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
+
+  const body = (await request.json()) as Record<string, unknown>
+  const allowed = ['title', 'start_at', 'end_at', 'all_day', 'event_type', 'calendar_color', 'description', 'timezone', 'recurrence_rule', 'status']
+  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  for (const key of allowed) {
+    if (key in body) patch[key] = body[key]
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any
+  const { data, error } = await db
+    .from('os_calendar_events')
+    .update(patch)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ event: data })
+}
+
+export async function DELETE(request: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+
+  if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!isInternalMember(authUser.email)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+  const { searchParams } = request.nextUrl
+  const id = searchParams.get('id')
+  if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any
+  const { error } = await db
+    .from('os_calendar_events')
+    .update({ archived_at: new Date().toISOString() })
+    .eq('id', id)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ ok: true })
+}

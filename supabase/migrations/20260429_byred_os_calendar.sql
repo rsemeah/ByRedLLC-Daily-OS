@@ -78,3 +78,49 @@ CREATE INDEX IF NOT EXISTS idx_calendar_events_start_at ON os_calendar_events(st
 -- private, team, client_visible
 
 -- Audit logging to byred_activities must be handled in application logic.
+
+-- ============================================================
+-- RLS: os_calendar_events (tenant_id present — same pattern as byred_tasks)
+-- ============================================================
+ALTER TABLE public.os_calendar_events ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS os_calendar_events_select_member ON public.os_calendar_events;
+CREATE POLICY os_calendar_events_select_member ON public.os_calendar_events
+  FOR SELECT TO authenticated
+  USING (public.byred_is_member_of_tenant(os_calendar_events.tenant_id::uuid));
+
+DROP POLICY IF EXISTS os_calendar_events_insert_member ON public.os_calendar_events;
+CREATE POLICY os_calendar_events_insert_member ON public.os_calendar_events
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    public.byred_is_member_of_tenant(os_calendar_events.tenant_id::uuid)
+    AND (
+      public.byred_jwt_active_tenant_id() IS NULL
+      OR os_calendar_events.tenant_id::uuid = public.byred_jwt_active_tenant_id()
+    )
+  );
+
+DROP POLICY IF EXISTS os_calendar_events_update_member ON public.os_calendar_events;
+CREATE POLICY os_calendar_events_update_member ON public.os_calendar_events
+  FOR UPDATE TO authenticated
+  USING (
+    public.byred_is_member_of_tenant(os_calendar_events.tenant_id::uuid)
+    AND (
+      public.byred_is_admin_for_tenant(os_calendar_events.tenant_id::uuid)
+      OR os_calendar_events.created_by_user_id::uuid = public.byred_current_user_id()::uuid
+      OR os_calendar_events.owner_user_id::uuid = public.byred_current_user_id()::uuid
+    )
+  )
+  WITH CHECK (
+    public.byred_is_member_of_tenant(os_calendar_events.tenant_id::uuid)
+    AND (
+      public.byred_is_admin_for_tenant(os_calendar_events.tenant_id::uuid)
+      OR os_calendar_events.created_by_user_id::uuid = public.byred_current_user_id()::uuid
+      OR os_calendar_events.owner_user_id::uuid = public.byred_current_user_id()::uuid
+    )
+  );
+
+DROP POLICY IF EXISTS os_calendar_events_delete_admin ON public.os_calendar_events;
+CREATE POLICY os_calendar_events_delete_admin ON public.os_calendar_events
+  FOR DELETE TO authenticated
+  USING (public.byred_is_admin_for_tenant(os_calendar_events.tenant_id::uuid));

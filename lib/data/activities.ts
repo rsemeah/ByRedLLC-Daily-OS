@@ -11,7 +11,7 @@ export type ActivityRow = {
   type: string
   summary: string
   metadata: unknown
-  created_at: string
+  created_at: string | null
 }
 
 function mapActivityFromDb(row: ActivityRow): Activity {

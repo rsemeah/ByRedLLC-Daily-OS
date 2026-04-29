@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
+import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/database"
 
 type CookieWrite = {
@@ -8,9 +9,7 @@ type CookieWrite = {
   options?: Record<string, unknown>
 }
 
-type ServerSupabaseClient = ReturnType<typeof createServerClient<Database>>
-
-export async function createClient(): Promise<ServerSupabaseClient> {
+export async function createClient(): Promise<SupabaseClient<Database>> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -23,7 +22,10 @@ export async function createClient(): Promise<ServerSupabaseClient> {
 
   const cookieStore = await cookies()
 
-  return createServerClient<Database>(url, anonKey, {
+  // @supabase/ssr@0.6.x and @supabase/supabase-js@2.104+ have mismatched
+  // SupabaseClient generic arities. The runtime client is correct; cast to
+  // supabase-js's SupabaseClient<Database> so the query builder resolves tables.
+  return createServerClient(url, anonKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll()
@@ -38,5 +40,5 @@ export async function createClient(): Promise<ServerSupabaseClient> {
         }
       },
     },
-  })
+  }) as unknown as SupabaseClient<Database>
 }
