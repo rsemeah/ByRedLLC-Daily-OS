@@ -1,3 +1,4 @@
+import { OsSidebar } from '@/components/byred/os-sidebar'
 import { TenantProvider } from '@/lib/context/user-context'
 import { createClient } from '@/lib/supabase/server'
 import { isInternalMember } from '@/lib/auth/allowlist'
@@ -98,8 +99,17 @@ export default async function OsLayout({ children }: { children: React.ReactNode
         directory,
       }}
     >
-      <div className="min-h-screen" style={{ background: '#0F0F10', color: '#FAFAFA' }}>
-        {children}
+      <div
+        className="flex min-h-screen"
+        style={{ background: '#0F0F10', color: '#FAFAFA' }}
+      >
+        <OsSidebar />
+        <main
+          className="flex-1 overflow-y-auto"
+          style={{ marginLeft: 200, minHeight: '100vh' }}
+        >
+          {children}
+        </main>
       </div>
     </TenantProvider>
   )

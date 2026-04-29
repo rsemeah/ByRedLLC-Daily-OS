@@ -1,3 +1,4 @@
+// MIGRATE: redirect to /os/tasks once confirmed feature-equivalent
 import { notFound } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { getTasks, getTasksByTenant } from "@/lib/data/tasks"
