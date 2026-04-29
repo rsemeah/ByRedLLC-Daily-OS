@@ -38,21 +38,25 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protected routes: redirect to login if not authenticated
-  // The (app) group contains all protected routes
-  const isAppRoute = request.nextUrl.pathname.match(/^\/(dashboard|today|tasks|leads|activities|tenants|settings)/) ||
-    request.nextUrl.pathname === "/"
+  const { pathname } = request.nextUrl
 
-  if (!user && isAppRoute) {
+  // Protected routes — everything under /os/* and the root /
+  const isProtected =
+    pathname === "/" ||
+    pathname.startsWith("/os") ||
+    // Legacy Keymon routes (now redirect to /os/* but still need auth guard)
+    /^\/(dashboard|today|tasks|leads|activities|tenants|settings)/.test(pathname)
+
+  if (!user && isProtected) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     return NextResponse.redirect(url)
   }
 
-  // If user is logged in and tries to access login page, redirect to home
-  if (user && request.nextUrl.pathname === "/login") {
+  // Authenticated user hitting login → send to OS home
+  if (user && pathname === "/login") {
     const url = request.nextUrl.clone()
-    url.pathname = "/dashboard"
+    url.pathname = "/os/dashboard"
     return NextResponse.redirect(url)
   }
 

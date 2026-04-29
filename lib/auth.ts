@@ -53,7 +53,7 @@ export async function getCurrentUser(): Promise<SerializedUser | null> {
   // Fetch org directory: all active users except self
   const { data: directoryData } = await supabase
     .from("byred_users")
-    .select("id, name, email, role, monday_user_id, avatar_url")
+    .select("id, name, email, role, avatar_url")
     .eq("active", true)
     .neq("id", profile?.id ?? "")
     .order("name")
@@ -63,7 +63,7 @@ export async function getCurrentUser(): Promise<SerializedUser | null> {
     name: u.name,
     email: u.email,
     role: u.role,
-    monday_user_id: (u as Record<string, unknown>).monday_user_id as string | null,
+    monday_user_id: null,
     avatar_url: u.avatar_url,
   }))
 
