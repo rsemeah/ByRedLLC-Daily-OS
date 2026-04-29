@@ -218,23 +218,23 @@ function SidebarContent({
         )}>
           <Link href="/os/dashboard" onClick={onNavClick} className="flex items-center min-w-0">
             {collapsed ? (
-              /* Collapsed: small floating logo mark, no bg */
               <Image
                 src="/logo-byred.png"
-                alt="By Red LLC"
-                width={32}
-                height={32}
-                className="object-contain drop-shadow-md"
+                alt="By Red OS"
+                width={36}
+                height={36}
+                className="object-contain"
+                style={{ mixBlendMode: "multiply" }}
                 priority
               />
             ) : (
-              /* Expanded: larger floating logo, no container background */
               <Image
                 src="/logo-byred.png"
-                alt="By Red, LLC. — Red Lantern Studios"
-                width={120}
-                height={120}
-                className="object-contain drop-shadow-lg -my-4"
+                alt="By Red, LLC. OS"
+                width={140}
+                height={140}
+                className="object-contain -my-5"
+                style={{ mixBlendMode: "multiply" }}
                 priority
               />
             )}
