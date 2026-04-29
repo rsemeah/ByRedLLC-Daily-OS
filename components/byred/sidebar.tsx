@@ -213,28 +213,26 @@ function SidebarContent({
 
         {/* Logo */}
         <div className={cn(
-          "border-b border-zinc-800/60 flex items-center shrink-0",
-          collapsed ? "p-3 justify-center" : "px-4 py-3 gap-3"
+          "border-b border-zinc-800/60 flex items-center shrink-0 bg-zinc-900",
+          collapsed ? "p-2 justify-center" : "px-3 py-1 gap-3"
         )}>
           <Link href="/os/dashboard" onClick={onNavClick} className="flex items-center min-w-0">
             {collapsed ? (
               <Image
                 src="/logo-byred.png"
                 alt="By Red OS"
-                width={36}
-                height={36}
+                width={40}
+                height={40}
                 className="object-contain"
-                style={{ mixBlendMode: "multiply" }}
                 priority
               />
             ) : (
               <Image
                 src="/logo-byred.png"
                 alt="By Red, LLC. OS"
-                width={140}
-                height={140}
-                className="object-contain -my-5"
-                style={{ mixBlendMode: "multiply" }}
+                width={148}
+                height={148}
+                className="object-contain -my-6 -ml-1"
                 priority
               />
             )}
