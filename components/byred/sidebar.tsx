@@ -25,6 +25,8 @@ import {
   ChevronRight,
   Menu,
   AlertTriangle,
+  Activity,
+  Folder,
 } from "lucide-react"
 import { useUser, useActiveTenant } from "@/lib/context/user-context"
 import { useSidebar } from "@/lib/context/sidebar-context"
@@ -46,14 +48,19 @@ import {
 // ---------------------------------------------------------------------------
 const NAV_GROUPS = [
   {
+    label: null, // top-level — no section label
+    items: [
+      { label: "Home",    href: "/os/dashboard", icon: LayoutDashboard },
+      { label: "Today",   href: "/os/today",     icon: CalendarDays },
+    ],
+  },
+  {
     label: "Work",
     items: [
-      { label: "Command Center", href: "/os/dashboard",  icon: LayoutDashboard },
-      { label: "Today",          href: "/os/today",      icon: CalendarDays },
-      { label: "Projects",       href: "/os/projects",   icon: FolderKanban },
-      { label: "Boards",         href: "/os/boards",     icon: Trello },
-      { label: "Tasks",          href: "/os/tasks",      icon: ListTodo },
-      { label: "Calendar",       href: "/os/calendar",   icon: Calendar },
+      { label: "Projects",  href: "/os/projects",  icon: FolderKanban },
+      { label: "Boards",    href: "/os/boards",    icon: Trello },
+      { label: "Tasks",     href: "/os/tasks",     icon: ListTodo },
+      { label: "Calendar",  href: "/os/calendar",  icon: Calendar },
     ],
   },
   {
@@ -66,19 +73,19 @@ const NAV_GROUPS = [
   {
     label: "Ops",
     items: [
-      { label: "Import",   href: "/os/import/monday", icon: Upload },
-      { label: "Docs",     href: "/os/docs",          icon: FileText,   placeholder: true },
-      { label: "CRM",      href: "/os/crm",           icon: Database,   placeholder: true },
-      { label: "Files",    href: "/os/files",          icon: Database,   placeholder: true },
-      { label: "Reports",  href: "/os/reports",        icon: BarChart2,  placeholder: true },
+      { label: "CRM",     href: "/os/crm",           icon: Database,  placeholder: true },
+      { label: "Docs",    href: "/os/docs",           icon: FileText,  placeholder: true },
+      { label: "Files",   href: "/os/files",          icon: Folder,    placeholder: true },
+      { label: "Reports", href: "/os/reports",        icon: BarChart2, placeholder: true },
+      { label: "Import",  href: "/os/import/monday",  icon: Upload },
     ],
   },
   {
     label: "Intelligence",
     items: [
-      { label: "AI",          href: "/os/ai",          icon: Bot,   placeholder: true },
-      { label: "Automations", href: "/os/automations", icon: Zap,   placeholder: true },
-      { label: "Signals",     href: "/os/signals",     icon: Radio, placeholder: true },
+      { label: "AI",          href: "/os/ai",          icon: Bot,      placeholder: true },
+      { label: "Automations", href: "/os/automations", icon: Zap,      placeholder: true },
+      { label: "Signals",     href: "/os/signals",     icon: Radio,    placeholder: true },
     ],
   },
   {
@@ -181,6 +188,8 @@ function SidebarContent({
     if (href === "/os/dashboard") {
       return pathname === "/os/dashboard" || pathname === "/" || pathname === "/os"
     }
+    // Exact match for /os/today to avoid prefix collision with /os/tasks etc.
+    if (href === "/os/today") return pathname === "/os/today"
     return pathname.startsWith(href)
   }
 
@@ -258,9 +267,9 @@ function SidebarContent({
           "flex-1 overflow-y-auto py-3 space-y-4",
           collapsed ? "px-2" : "px-2"
         )}>
-          {NAV_GROUPS.map((group) => (
-            <div key={group.label}>
-              {!collapsed && (
+          {NAV_GROUPS.map((group, gi) => (
+            <div key={group.label ?? gi}>
+              {!collapsed && group.label && (
                 <p className="text-[9px] font-semibold tracking-widest text-zinc-700 uppercase px-3 mb-1">
                   {group.label}
                 </p>
