@@ -128,9 +128,12 @@ function NavItem({
   onClick?: () => void
 }) {
   const inner = (
-    <Link
+      <Link
       href={href}
-      onClick={placeholder ? (e) => e.preventDefault() : onClick}
+      onClick={(e) => {
+        if (placeholder) { e.preventDefault(); return }
+        onClick?.()
+      }}
       className={cn(
         "flex items-center gap-2.5 rounded-md text-xs transition-colors relative group",
         collapsed ? "justify-center p-2.5" : "px-3 py-1.5",
