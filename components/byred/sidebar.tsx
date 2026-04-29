@@ -57,7 +57,7 @@ const NAV_GROUPS = [
       { label: "Home",     href: "/os/dashboard", icon: LayoutDashboard },
       { label: "Today",    href: "/os/today",     icon: Flame },
       { label: "Tasks",    href: "/os/tasks",     icon: ListTodo },
-      { label: "Calendar", href: "/os/calendar",  icon: Calendar, placeholder: true },
+      { label: "Calendar", href: "/os/calendar",  icon: Calendar },
     ],
   },
   {
@@ -76,26 +76,26 @@ const NAV_GROUPS = [
   {
     label: "Automations",
     items: [
-      { label: "Workflows", href: "/os/workflows", icon: GitBranch, placeholder: true },
-      { label: "Triggers",  href: "/os/triggers",  icon: Zap,       placeholder: true },
+      { label: "Workflows", href: "/os/workflows", icon: GitBranch },
+      { label: "Triggers",  href: "/os/triggers",  icon: Zap },
     ],
   },
   {
     label: "Intel",
     items: [
-      { label: "CRM",        href: "/os/crm",       icon: Database, placeholder: true },
-      { label: "Lantern AI", href: "/os/ai",        icon: Cpu,      placeholder: true },
-      { label: "Signals",    href: "/os/signals",   icon: Radio,    placeholder: true },
+      { label: "CRM",        href: "/os/crm",     icon: Database },
+      { label: "Lantern AI", href: "/os/ai",      icon: Cpu },
+      { label: "Signals",    href: "/os/signals", icon: Radio },
     ],
   },
   {
     label: "Workspace",
     items: [
-      { label: "Docs",    href: "/os/docs",          icon: FileText,  placeholder: true },
-      { label: "Files",   href: "/os/files",         icon: Folder,    placeholder: true },
-      { label: "Reports", href: "/os/reports",       icon: BarChart2, placeholder: true },
+      { label: "Docs",    href: "/os/docs",          icon: FileText },
+      { label: "Files",   href: "/os/files",         icon: Folder },
+      { label: "Reports", href: "/os/reports",       icon: BarChart2 },
       { label: "Import",  href: "/os/import/monday", icon: Upload },
-      { label: "Comms",   href: "/os/comms",         icon: MessageSquare, placeholder: true },
+      { label: "Comms",   href: "/os/comms",         icon: MessageSquare },
     ],
   },
   {
