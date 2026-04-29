@@ -1,4 +1,5 @@
 import { OsSidebar } from '@/components/byred/os-sidebar'
+import { OSTopBar } from '@/components/os/OSTopBar'
 import { TenantProvider } from '@/lib/context/user-context'
 import { createClient } from '@/lib/supabase/server'
 import { isInternalMember } from '@/lib/auth/allowlist'
@@ -104,9 +105,10 @@ export default async function OsLayout({ children }: { children: React.ReactNode
         style={{ background: '#0F0F10', color: '#FAFAFA' }}
       >
         <OsSidebar />
+        <OSTopBar />
         <main
           className="flex-1 overflow-y-auto"
-          style={{ marginLeft: 200, minHeight: '100vh' }}
+          style={{ marginLeft: 200, minHeight: '100vh', paddingTop: 52 }}
         >
           {children}
         </main>

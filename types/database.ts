@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       applications: {
@@ -348,81 +323,192 @@ export type Database = {
         }
         Relationships: []
       }
+      byred_task_comments: {
+        Row: {
+          comment: string
+          created_at: string
+          id: string
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          id?: string
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          id?: string
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "byred_task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "byred_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "byred_task_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "byred_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       byred_tasks: {
         Row: {
+          acceptance_criteria: string | null
           ai_mode: string
+          all_day: boolean | null
           archived_at: string | null
           blocked_by_task_id: string | null
           blocker_flag: boolean | null
           blocker_reason: string | null
+          board_id: string | null
+          calendar_color: string | null
+          calendar_end_at: string | null
+          calendar_label: string | null
+          calendar_start_at: string | null
           completed_at: string | null
           created_at: string | null
           created_by_user_id: string | null
+          definition_of_done: string | null
           description: string | null
           due_date: string | null
           estimated_minutes: number | null
           id: string
+          import_batch_id: string | null
+          is_low_hanging_fruit: boolean | null
+          is_ready_for_ai: boolean | null
+          is_ready_for_human: boolean | null
           monday_item_id: string | null
           monday_synced_at: string | null
           monday_updated_at: string | null
+          needs_decision: boolean | null
+          order_index: number | null
           owner_user_id: string | null
+          phase_id: string | null
           priority: string
+          project_id: string | null
+          recurrence_rule: string | null
           revenue_impact_score: number | null
+          source_board_name: string | null
+          source_group_name: string | null
+          source_id: string | null
+          source_row_hash: string | null
+          source_system: string | null
+          start_date: string | null
           status: string
           tenant_id: string
           title: string
           updated_at: string | null
           urgency_score: number | null
+          waiting_on_external: boolean | null
         }
         Insert: {
+          acceptance_criteria?: string | null
           ai_mode?: string
+          all_day?: boolean | null
           archived_at?: string | null
           blocked_by_task_id?: string | null
           blocker_flag?: boolean | null
           blocker_reason?: string | null
+          board_id?: string | null
+          calendar_color?: string | null
+          calendar_end_at?: string | null
+          calendar_label?: string | null
+          calendar_start_at?: string | null
           completed_at?: string | null
           created_at?: string | null
           created_by_user_id?: string | null
+          definition_of_done?: string | null
           description?: string | null
           due_date?: string | null
           estimated_minutes?: number | null
           id?: string
+          import_batch_id?: string | null
+          is_low_hanging_fruit?: boolean | null
+          is_ready_for_ai?: boolean | null
+          is_ready_for_human?: boolean | null
           monday_item_id?: string | null
           monday_synced_at?: string | null
           monday_updated_at?: string | null
+          needs_decision?: boolean | null
+          order_index?: number | null
           owner_user_id?: string | null
+          phase_id?: string | null
           priority?: string
+          project_id?: string | null
+          recurrence_rule?: string | null
           revenue_impact_score?: number | null
+          source_board_name?: string | null
+          source_group_name?: string | null
+          source_id?: string | null
+          source_row_hash?: string | null
+          source_system?: string | null
+          start_date?: string | null
           status?: string
           tenant_id: string
           title: string
           updated_at?: string | null
           urgency_score?: number | null
+          waiting_on_external?: boolean | null
         }
         Update: {
+          acceptance_criteria?: string | null
           ai_mode?: string
+          all_day?: boolean | null
           archived_at?: string | null
           blocked_by_task_id?: string | null
           blocker_flag?: boolean | null
           blocker_reason?: string | null
+          board_id?: string | null
+          calendar_color?: string | null
+          calendar_end_at?: string | null
+          calendar_label?: string | null
+          calendar_start_at?: string | null
           completed_at?: string | null
           created_at?: string | null
           created_by_user_id?: string | null
+          definition_of_done?: string | null
           description?: string | null
           due_date?: string | null
           estimated_minutes?: number | null
           id?: string
+          import_batch_id?: string | null
+          is_low_hanging_fruit?: boolean | null
+          is_ready_for_ai?: boolean | null
+          is_ready_for_human?: boolean | null
           monday_item_id?: string | null
           monday_synced_at?: string | null
           monday_updated_at?: string | null
+          needs_decision?: boolean | null
+          order_index?: number | null
           owner_user_id?: string | null
+          phase_id?: string | null
           priority?: string
+          project_id?: string | null
+          recurrence_rule?: string | null
           revenue_impact_score?: number | null
+          source_board_name?: string | null
+          source_group_name?: string | null
+          source_id?: string | null
+          source_row_hash?: string | null
+          source_system?: string | null
+          start_date?: string | null
           status?: string
           tenant_id?: string
           title?: string
           updated_at?: string | null
           urgency_score?: number | null
+          waiting_on_external?: boolean | null
         }
         Relationships: [
           {
@@ -451,6 +537,34 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "byred_tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_board_id"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "os_boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_import_batch_id"
+            columns: ["import_batch_id"]
+            isOneToOne: false
+            referencedRelation: "os_import_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_phase_id"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "os_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_project_id"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "os_projects"
             referencedColumns: ["id"]
           },
         ]
@@ -1868,6 +1982,935 @@ export type Database = {
         }
         Relationships: []
       }
+      os_ai_context_links: {
+        Row: {
+          context_id: string | null
+          context_type: string | null
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          context_id?: string | null
+          context_type?: string | null
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          context_id?: string | null
+          context_type?: string | null
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
+      os_ai_threads: {
+        Row: {
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      os_boards: {
+        Row: {
+          board_type: string
+          created_at: string
+          created_by_user_id: string | null
+          description: string | null
+          id: string
+          kpi_config: Json | null
+          name: string
+          project_id: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          board_type?: string
+          created_at?: string
+          created_by_user_id?: string | null
+          description?: string | null
+          id?: string
+          kpi_config?: Json | null
+          name: string
+          project_id?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          board_type?: string
+          created_at?: string
+          created_by_user_id?: string | null
+          description?: string | null
+          id?: string
+          kpi_config?: Json | null
+          name?: string
+          project_id?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_boards_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "byred_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_boards_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "os_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_boards_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "byred_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_calendar_event_attendees: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          rsvp: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          rsvp?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          rsvp?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_calendar_event_attendees_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "os_calendar_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_calendar_event_attendees_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "byred_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_calendar_events: {
+        Row: {
+          all_day: boolean
+          archived_at: string | null
+          board_id: string | null
+          calendar_color: string | null
+          color: string | null
+          created_at: string
+          created_by_user_id: string | null
+          description: string | null
+          end_at: string | null
+          ends_at: string
+          event_type: string
+          id: string
+          location: string | null
+          meeting_url: string | null
+          monday_item_id: string | null
+          owner_user_id: string | null
+          project_id: string | null
+          recurrence_rule: string | null
+          start_at: string | null
+          starts_at: string
+          status: string
+          task_id: string | null
+          tenant_id: string
+          timezone: string | null
+          title: string
+          updated_at: string
+          visibility: string | null
+        }
+        Insert: {
+          all_day?: boolean
+          archived_at?: string | null
+          board_id?: string | null
+          calendar_color?: string | null
+          color?: string | null
+          created_at?: string
+          created_by_user_id?: string | null
+          description?: string | null
+          end_at?: string | null
+          ends_at: string
+          event_type?: string
+          id?: string
+          location?: string | null
+          meeting_url?: string | null
+          monday_item_id?: string | null
+          owner_user_id?: string | null
+          project_id?: string | null
+          recurrence_rule?: string | null
+          start_at?: string | null
+          starts_at: string
+          status?: string
+          task_id?: string | null
+          tenant_id: string
+          timezone?: string | null
+          title: string
+          updated_at?: string
+          visibility?: string | null
+        }
+        Update: {
+          all_day?: boolean
+          archived_at?: string | null
+          board_id?: string | null
+          calendar_color?: string | null
+          color?: string | null
+          created_at?: string
+          created_by_user_id?: string | null
+          description?: string | null
+          end_at?: string | null
+          ends_at?: string
+          event_type?: string
+          id?: string
+          location?: string | null
+          meeting_url?: string | null
+          monday_item_id?: string | null
+          owner_user_id?: string | null
+          project_id?: string | null
+          recurrence_rule?: string | null
+          start_at?: string | null
+          starts_at?: string
+          status?: string
+          task_id?: string | null
+          tenant_id?: string
+          timezone?: string | null
+          title?: string
+          updated_at?: string
+          visibility?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_calendar_events_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "byred_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_calendar_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "os_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_calendar_events_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "os_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_calendar_events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "byred_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_comments: {
+        Row: {
+          body: string
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "byred_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_companies: {
+        Row: {
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      os_contacts: {
+        Row: {
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      os_docs: {
+        Row: {
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      os_entity_links: {
+        Row: {
+          created_at: string | null
+          from_entity_id: string
+          from_entity_type: string
+          id: string
+          link_type: string
+          metadata: Json | null
+          to_entity_id: string
+          to_entity_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          from_entity_id: string
+          from_entity_type: string
+          id?: string
+          link_type: string
+          metadata?: Json | null
+          to_entity_id: string
+          to_entity_type: string
+        }
+        Update: {
+          created_at?: string | null
+          from_entity_id?: string
+          from_entity_type?: string
+          id?: string
+          link_type?: string
+          metadata?: Json | null
+          to_entity_id?: string
+          to_entity_type?: string
+        }
+        Relationships: []
+      }
+      os_files: {
+        Row: {
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          external_url: string | null
+          file_name: string
+          file_type: string | null
+          id: string
+          mime_type: string | null
+          storage_path: string | null
+          storage_provider: string | null
+          tenant_id: string
+          updated_at: string | null
+          uploaded_by_user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          external_url?: string | null
+          file_name: string
+          file_type?: string | null
+          id?: string
+          mime_type?: string | null
+          storage_path?: string | null
+          storage_provider?: string | null
+          tenant_id: string
+          updated_at?: string | null
+          uploaded_by_user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          external_url?: string | null
+          file_name?: string
+          file_type?: string | null
+          id?: string
+          mime_type?: string | null
+          storage_path?: string | null
+          storage_provider?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+          uploaded_by_user_id?: string | null
+        }
+        Relationships: []
+      }
+      os_import_batches: {
+        Row: {
+          created_at: string | null
+          created_by_user_id: string
+          id: string
+          metadata: Json | null
+          source_system: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by_user_id: string
+          id?: string
+          metadata?: Json | null
+          source_system: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by_user_id?: string
+          id?: string
+          metadata?: Json | null
+          source_system?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      os_import_rows: {
+        Row: {
+          batch_id: string
+          created_at: string | null
+          data: Json
+          error_message: string | null
+          id: string
+          source_row_hash: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string | null
+          data: Json
+          error_message?: string | null
+          id?: string
+          source_row_hash: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string | null
+          data?: Json
+          error_message?: string | null
+          id?: string
+          source_row_hash?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_import_rows_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "os_import_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_integrations: {
+        Row: {
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      os_notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      os_phases: {
+        Row: {
+          board_id: string
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+          order_index: number
+        }
+        Insert: {
+          board_id: string
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          order_index?: number
+        }
+        Update: {
+          board_id?: string
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          order_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_phases_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "os_boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_projects: {
+        Row: {
+          created_at: string
+          created_by_user_id: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          name: string
+          order_index: number | null
+          owner_user_id: string | null
+          priority: string
+          start_date: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_user_id?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          name: string
+          order_index?: number | null
+          owner_user_id?: string | null
+          priority?: string
+          start_date?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by_user_id?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          name?: string
+          order_index?: number | null
+          owner_user_id?: string | null
+          priority?: string
+          start_date?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_projects_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "byred_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_projects_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "byred_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_projects_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "byred_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_search_index: {
+        Row: {
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          metadata: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      os_task_dependencies: {
+        Row: {
+          created_at: string
+          depends_on_task_id: string
+          id: string
+          task_id: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          depends_on_task_id: string
+          id?: string
+          task_id: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          depends_on_task_id?: string
+          id?: string
+          task_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_task_dependencies_depends_on_task_id_fkey"
+            columns: ["depends_on_task_id"]
+            isOneToOne: false
+            referencedRelation: "byred_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_task_dependencies_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "byred_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_tasks: {
+        Row: {
+          blocker_flag: boolean
+          blocker_reason: string | null
+          board_id: string | null
+          created_at: string
+          created_by_user_id: string | null
+          definition_of_done: string | null
+          description: string | null
+          due_date: string | null
+          estimated_minutes: number | null
+          id: string
+          monday_item_id: string | null
+          order_index: number
+          owner_user_id: string | null
+          phase_id: string | null
+          priority: string
+          project_id: string | null
+          start_date: string | null
+          status: string
+          tenant_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          blocker_flag?: boolean
+          blocker_reason?: string | null
+          board_id?: string | null
+          created_at?: string
+          created_by_user_id?: string | null
+          definition_of_done?: string | null
+          description?: string | null
+          due_date?: string | null
+          estimated_minutes?: number | null
+          id?: string
+          monday_item_id?: string | null
+          order_index?: number
+          owner_user_id?: string | null
+          phase_id?: string | null
+          priority?: string
+          project_id?: string | null
+          start_date?: string | null
+          status?: string
+          tenant_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          blocker_flag?: boolean
+          blocker_reason?: string | null
+          board_id?: string | null
+          created_at?: string
+          created_by_user_id?: string | null
+          definition_of_done?: string | null
+          description?: string | null
+          due_date?: string | null
+          estimated_minutes?: number | null
+          id?: string
+          monday_item_id?: string | null
+          order_index?: number
+          owner_user_id?: string | null
+          phase_id?: string | null
+          priority?: string
+          project_id?: string | null
+          start_date?: string | null
+          status?: string
+          tenant_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_tasks_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "os_boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_tasks_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "byred_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_tasks_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "byred_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_tasks_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "os_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "os_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_tasks_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "byred_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      os_triggers: {
+        Row: {
+          alert_channels: string[] | null
+          alert_user_ids: string[] | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          tenant_id: string
+          updated_at: string | null
+          watch_condition: Json
+          watch_entity: string
+        }
+        Insert: {
+          alert_channels?: string[] | null
+          alert_user_ids?: string[] | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          tenant_id: string
+          updated_at?: string | null
+          watch_condition: Json
+          watch_entity: string
+        }
+        Update: {
+          alert_channels?: string[] | null
+          alert_user_ids?: string[] | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          tenant_id?: string
+          updated_at?: string | null
+          watch_condition?: Json
+          watch_entity?: string
+        }
+        Relationships: []
+      }
+      os_workflows: {
+        Row: {
+          action: Json
+          condition: Json | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          tenant_id: string
+          trigger_event: string
+          updated_at: string | null
+        }
+        Insert: {
+          action: Json
+          condition?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          tenant_id: string
+          trigger_event: string
+          updated_at?: string | null
+        }
+        Update: {
+          action?: Json
+          condition?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          tenant_id?: string
+          trigger_event?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       pending_profile_changes: {
         Row: {
           applied_at: string | null
@@ -2713,6 +3756,63 @@ export type Database = {
         }
         Relationships: []
       }
+      videojobs: {
+        Row: {
+          created_at: string | null
+          current_step: string | null
+          error: string | null
+          id: string
+          input_path: string | null
+          logs: Json | null
+          output_filename: string | null
+          output_path: string | null
+          plan_raw: Json | null
+          plan_validated: Json | null
+          progress: number | null
+          prompt: string | null
+          status: string
+          steps: Json | null
+          updated_at: string | null
+          video_name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_step?: string | null
+          error?: string | null
+          id: string
+          input_path?: string | null
+          logs?: Json | null
+          output_filename?: string | null
+          output_path?: string | null
+          plan_raw?: Json | null
+          plan_validated?: Json | null
+          progress?: number | null
+          prompt?: string | null
+          status?: string
+          steps?: Json | null
+          updated_at?: string | null
+          video_name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_step?: string | null
+          error?: string | null
+          id?: string
+          input_path?: string | null
+          logs?: Json | null
+          output_filename?: string | null
+          output_path?: string | null
+          plan_raw?: Json | null
+          plan_validated?: Json | null
+          progress?: number | null
+          prompt?: string | null
+          status?: string
+          steps?: Json | null
+          updated_at?: string | null
+          video_name?: string | null
+        }
+        Relationships: []
+      }
       waitlist: {
         Row: {
           converted_at: string | null
@@ -2915,9 +4015,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },

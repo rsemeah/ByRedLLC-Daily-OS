@@ -139,9 +139,8 @@ export default async function OsTasksPage({
               : ' · All tenants'}
           </p>
         </div>
-        {/* MIGRATE: point to /os/tasks/new once that page exists */}
         <Link
-          href="/tasks/new"
+          href="/os/tasks/new"
           style={{
             fontSize: 11,
             fontWeight: 700,
@@ -297,9 +296,8 @@ export default async function OsTasksPage({
               >
                 {formatMinutes(task.estimated_minutes)}
               </span>
-              {/* MIGRATE: change to /os/tasks/${task.id} once detail page exists */}
               <Link
-                href={`/tasks/${task.id}`}
+                href={`/os/tasks/${task.id}`}
                 style={{
                   fontSize: 10,
                   fontWeight: 700,
