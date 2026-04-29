@@ -1,3 +1,4 @@
+// MIGRATE: redirect to /os/today once confirmed feature-equivalent
 import { format } from "date-fns"
 import {
   Flame,
