@@ -1,7 +1,7 @@
-import { format } from "date-fns"
 import { Flame, DollarSign, Zap, Calendar, Brain, AlertTriangle, ArrowRight } from "lucide-react"
 import { getTasks } from "@/lib/data/tasks"
 import { getTodayBrief } from "@/lib/data/daily-briefs"
+import { requireAuth } from "@/lib/auth"
 import Link from "next/link"
 import type { Task } from "@/types/db"
 import { cn } from "@/lib/utils"
@@ -34,7 +34,7 @@ const BUCKETS: {
     label: "Quick Wins",
     icon: Zap,
     accent: "text-sky-400",
-    filter: (t) => (t.estimated_minutes ?? 0) <= 30 && (t.estimated_minutes ?? 0) > 0,
+    filter: (t) => (t.estimated_minutes ?? 0) > 0 && (t.estimated_minutes ?? 0) <= 30,
   },
   {
     key: "coming_up",
@@ -97,8 +97,17 @@ function TaskCard({ task }: { task: Task }) {
 }
 
 export default async function OSTodayPage() {
-  const [tasks, brief] = await Promise.all([getTasks(), getTodayBrief()])
-  const todayStr = format(new Date(), "EEEE, MMMM d")
+  const user = await requireAuth()
+  const today = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  })
+
+  const [tasks, brief] = await Promise.all([
+    getTasks(),
+    getTodayBrief(),
+  ])
 
   return (
     <div className="space-y-8 max-w-6xl">
@@ -106,7 +115,7 @@ export default async function OSTodayPage() {
       <div>
         <h1 className="text-2xl font-bold text-white tracking-tight font-condensed">
           Today{" "}
-          <span className="text-zinc-600 font-normal">· {todayStr}</span>
+          <span className="text-zinc-600 font-normal">· {today}</span>
         </h1>
         <p className="text-xs text-zinc-500 mt-1">{brief.summary.headline}</p>
       </div>
@@ -186,9 +195,7 @@ export default async function OSTodayPage() {
               </div>
               <div className="p-3 flex-1 space-y-2 max-h-[500px] overflow-y-auto">
                 {bucketTasks.length === 0 ? (
-                  <p className="text-[11px] text-zinc-700 text-center py-6">
-                    None.
-                  </p>
+                  <p className="text-[11px] text-zinc-700 text-center py-6">None.</p>
                 ) : (
                   bucketTasks.map((task) => (
                     <TaskCard key={task.id} task={task} />

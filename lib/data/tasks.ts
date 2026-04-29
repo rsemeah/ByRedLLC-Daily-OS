@@ -93,6 +93,34 @@ export async function getTasksForToday(): Promise<Task[]> {
   return data.map(mapTaskFromDb)
 }
 
+export async function getBlockedTasks(): Promise<Task[]> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("byred_tasks")
+    .select("*")
+    .eq("blocker_flag", true)
+    .neq("status", "done")
+    .neq("status", "cancelled")
+    .order("created_at", { ascending: false })
+
+  if (error || !data) return []
+  return data.map(mapTaskFromDb)
+}
+
+export async function getRecentTasks(limit = 10): Promise<Task[]> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("byred_tasks")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit)
+
+  if (error || !data) return []
+  return data.map(mapTaskFromDb)
+}
+
 export async function getTaskStats() {
   const supabase = await createClient()
   const today = new Date().toISOString().split("T")[0]

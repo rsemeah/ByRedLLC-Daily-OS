@@ -27,6 +27,10 @@ import {
   AlertTriangle,
   Activity,
   Folder,
+  GitBranch,
+  Cpu,
+  Flame,
+  BarChart,
 } from "lucide-react"
 import { useUser, useActiveTenant } from "@/lib/context/user-context"
 import { useSidebar } from "@/lib/context/sidebar-context"
@@ -48,48 +52,54 @@ import {
 // ---------------------------------------------------------------------------
 const NAV_GROUPS = [
   {
-    label: null, // top-level — no section label
+    label: null,
     items: [
-      { label: "Home",    href: "/os/dashboard", icon: LayoutDashboard },
-      { label: "Today",   href: "/os/today",     icon: CalendarDays },
+      { label: "Home",     href: "/os/dashboard", icon: LayoutDashboard },
+      { label: "Today",    href: "/os/today",     icon: Flame },
+      { label: "Tasks",    href: "/os/tasks",     icon: ListTodo },
+      { label: "Calendar", href: "/os/calendar",  icon: Calendar, placeholder: true },
     ],
   },
   {
-    label: "Work",
+    label: "Projects",
     items: [
-      { label: "Projects",  href: "/os/projects",  icon: FolderKanban },
-      { label: "Boards",    href: "/os/boards",    icon: Trello },
-      { label: "Tasks",     href: "/os/tasks",     icon: ListTodo },
-      { label: "Calendar",  href: "/os/calendar",  icon: Calendar },
+      { label: "Projects", href: "/os/projects", icon: FolderKanban },
+      { label: "Boards",   href: "/os/boards",   icon: Trello },
     ],
   },
   {
     label: "Team",
     items: [
-      { label: "Team",  href: "/os/team",  icon: Users },
-      { label: "Comms", href: "/os/comms", icon: MessageSquare, placeholder: true },
+      { label: "Team", href: "/os/team", icon: Users },
     ],
   },
   {
-    label: "Ops",
+    label: "Automations",
     items: [
-      { label: "CRM",     href: "/os/crm",           icon: Database,  placeholder: true },
-      { label: "Docs",    href: "/os/docs",           icon: FileText,  placeholder: true },
-      { label: "Files",   href: "/os/files",          icon: Folder,    placeholder: true },
-      { label: "Reports", href: "/os/reports",        icon: BarChart2, placeholder: true },
-      { label: "Import",  href: "/os/import/monday",  icon: Upload },
+      { label: "Workflows", href: "/os/workflows", icon: GitBranch, placeholder: true },
+      { label: "Triggers",  href: "/os/triggers",  icon: Zap,       placeholder: true },
     ],
   },
   {
-    label: "Intelligence",
+    label: "Intel",
     items: [
-      { label: "AI",          href: "/os/ai",          icon: Bot,      placeholder: true },
-      { label: "Automations", href: "/os/automations", icon: Zap,      placeholder: true },
-      { label: "Signals",     href: "/os/signals",     icon: Radio,    placeholder: true },
+      { label: "CRM",        href: "/os/crm",       icon: Database, placeholder: true },
+      { label: "Lantern AI", href: "/os/ai",        icon: Cpu,      placeholder: true },
+      { label: "Signals",    href: "/os/signals",   icon: Radio,    placeholder: true },
     ],
   },
   {
-    label: "Config",
+    label: "Workspace",
+    items: [
+      { label: "Docs",    href: "/os/docs",          icon: FileText,  placeholder: true },
+      { label: "Files",   href: "/os/files",         icon: Folder,    placeholder: true },
+      { label: "Reports", href: "/os/reports",       icon: BarChart2, placeholder: true },
+      { label: "Import",  href: "/os/import/monday", icon: Upload },
+      { label: "Comms",   href: "/os/comms",         icon: MessageSquare, placeholder: true },
+    ],
+  },
+  {
+    label: null,
     items: [
       { label: "Settings", href: "/os/settings", icon: Settings },
     ],
