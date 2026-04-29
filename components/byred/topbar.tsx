@@ -19,20 +19,25 @@ import type { DailyBriefSummary } from "@/types/database"
 
 const ROUTE_LABELS: Record<string, string> = {
   "/": "Command Center",
-  "/today": "Today",
-  "/tasks": "Tasks",
-  "/leads": "Leads",
-  "/activities": "Activities",
-  "/tenants": "Tenants",
-  "/settings": "Settings",
-  "/os": "By Red OS",
-  "/os/dashboard": "OS Dashboard",
+  "/os": "Command Center",
+  "/os/dashboard": "Command Center",
+  "/os/today": "Today",
   "/os/projects": "Projects",
   "/os/boards": "Boards",
-  "/os/tasks": "OS Tasks",
+  "/os/tasks": "Tasks",
   "/os/calendar": "Calendar",
   "/os/team": "Team",
+  "/os/comms": "Comms",
+  "/os/import": "Import",
   "/os/import/monday": "Monday Import",
+  "/os/docs": "Docs",
+  "/os/crm": "CRM",
+  "/os/files": "Files",
+  "/os/reports": "Reports",
+  "/os/ai": "AI",
+  "/os/automations": "Automations",
+  "/os/signals": "Signals",
+  "/os/settings": "Settings",
 }
 
 function getBreadcrumbs(pathname: string): { label: string; href: string }[] {
@@ -111,7 +116,7 @@ export function AppTopbar() {
     <header
       className={cn(
         "fixed top-0 right-0 h-14 z-30 bg-white border-b border-zinc-200 flex items-center justify-between px-4 md:px-6 transition-all duration-300",
-        isMobile ? "left-0" : isCollapsed ? "left-16" : "left-60"
+        isMobile ? "left-0" : isCollapsed ? "left-14" : "left-56"
       )}
     >
       {/* Left side */}

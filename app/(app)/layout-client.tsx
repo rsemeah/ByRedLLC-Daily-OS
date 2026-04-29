@@ -13,7 +13,7 @@ export function AppLayoutClient({ children }: { children: ReactNode }) {
     <div
       className={cn(
         "flex-1 flex flex-col transition-all duration-300",
-        isMobile ? "ml-0" : isCollapsed ? "ml-16" : "ml-60"
+        isMobile ? "ml-0" : isCollapsed ? "ml-14" : "ml-56"
       )}
     >
       {children}

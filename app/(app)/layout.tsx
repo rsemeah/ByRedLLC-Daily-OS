@@ -13,7 +13,6 @@ export default async function AppLayout({
 }) {
   const user = await getCurrentUser()
 
-  // If no authenticated user, redirect to login
   if (!user) {
     redirect("/login")
   }
@@ -21,11 +20,11 @@ export default async function AppLayout({
   return (
     <UserProvider user={user}>
       <SidebarProvider>
-        <div className="flex min-h-screen bg-background">
+        <div className="flex min-h-screen bg-zinc-950">
           <AppSidebar />
           <AppLayoutClient>
             <AppTopbar />
-            <main className="flex-1 pt-14 px-4 md:px-8 py-6 overflow-y-auto">
+            <main className="flex-1 pt-14 px-6 py-6 overflow-y-auto bg-zinc-950">
               {children}
             </main>
           </AppLayoutClient>

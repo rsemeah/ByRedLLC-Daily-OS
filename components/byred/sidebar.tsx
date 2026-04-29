@@ -7,14 +7,24 @@ import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
   CalendarDays,
-  CheckSquare,
+  FolderKanban,
+  Trello,
+  ListTodo,
+  Calendar,
   Users,
-  Activity,
-  Building2,
+  Upload,
+  FileText,
+  BarChart2,
   Settings,
+  MessageSquare,
+  Zap,
+  Bot,
+  Database,
+  Radio,
   ChevronLeft,
   ChevronRight,
-  MonitorPlay,
+  Menu,
+  AlertTriangle,
 } from "lucide-react"
 import { useUser, useActiveTenant } from "@/lib/context/user-context"
 import { useSidebar } from "@/lib/context/sidebar-context"
@@ -24,7 +34,6 @@ import {
   SheetContent,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
 import {
   Tooltip,
   TooltipContent,
@@ -32,26 +41,75 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-const WORK_NAV = [
-  { label: "Command Center", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Today", href: "/today", icon: CalendarDays },
-  { label: "Tasks", href: "/tasks", icon: CheckSquare },
-  { label: "Leads", href: "/leads", icon: Users },
-  { label: "By Red OS", href: "/os/dashboard", icon: MonitorPlay },
+// ---------------------------------------------------------------------------
+// Nav definition
+// ---------------------------------------------------------------------------
+const NAV_GROUPS = [
+  {
+    label: "Work",
+    items: [
+      { label: "Command Center", href: "/os/dashboard",  icon: LayoutDashboard },
+      { label: "Today",          href: "/os/today",      icon: CalendarDays },
+      { label: "Projects",       href: "/os/projects",   icon: FolderKanban },
+      { label: "Boards",         href: "/os/boards",     icon: Trello },
+      { label: "Tasks",          href: "/os/tasks",      icon: ListTodo },
+      { label: "Calendar",       href: "/os/calendar",   icon: Calendar },
+    ],
+  },
+  {
+    label: "Team",
+    items: [
+      { label: "Team",  href: "/os/team",  icon: Users },
+      { label: "Comms", href: "/os/comms", icon: MessageSquare, placeholder: true },
+    ],
+  },
+  {
+    label: "Ops",
+    items: [
+      { label: "Import",   href: "/os/import/monday", icon: Upload },
+      { label: "Docs",     href: "/os/docs",          icon: FileText,   placeholder: true },
+      { label: "CRM",      href: "/os/crm",           icon: Database,   placeholder: true },
+      { label: "Files",    href: "/os/files",          icon: Database,   placeholder: true },
+      { label: "Reports",  href: "/os/reports",        icon: BarChart2,  placeholder: true },
+    ],
+  },
+  {
+    label: "Intelligence",
+    items: [
+      { label: "AI",          href: "/os/ai",          icon: Bot,   placeholder: true },
+      { label: "Automations", href: "/os/automations", icon: Zap,   placeholder: true },
+      { label: "Signals",     href: "/os/signals",     icon: Radio, placeholder: true },
+    ],
+  },
+  {
+    label: "Config",
+    items: [
+      { label: "Settings", href: "/os/settings", icon: Settings },
+    ],
+  },
 ]
 
-const SYSTEM_NAV = [
-  { label: "Activities", href: "/activities", icon: Activity },
-  { label: "Tenants", href: "/tenants", icon: Building2 },
-  { label: "Settings", href: "/settings", icon: Settings },
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+const TENANT_COLORS = [
+  "#D7261E","#10B981","#0EA5E9","#F59E0B","#8B5CF6","#F43F5E","#14B8A6","#F97316",
 ]
 
+function getInitials(name: string) {
+  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+}
+
+// ---------------------------------------------------------------------------
+// Single nav item
+// ---------------------------------------------------------------------------
 function NavItem({
   href,
   icon: Icon,
   label,
   active,
   collapsed,
+  placeholder,
   onClick,
 }: {
   href: string
@@ -59,106 +117,53 @@ function NavItem({
   label: string
   active: boolean
   collapsed: boolean
+  placeholder?: boolean
   onClick?: () => void
 }) {
-  const content = (
+  const inner = (
     <Link
       href={href}
-      onClick={onClick}
+      onClick={placeholder ? (e) => e.preventDefault() : onClick}
       className={cn(
-        "flex items-center gap-2.5 rounded-md text-sm transition-colors relative",
-        collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2",
+        "flex items-center gap-2.5 rounded-md text-xs transition-colors relative group",
+        collapsed ? "justify-center p-2.5" : "px-3 py-1.5",
         active
-          ? "text-zinc-900 bg-zinc-100 font-medium"
-          : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100",
-        active && !collapsed && "border-l-2 border-byred-red -ml-px pl-[11px]"
+          ? "bg-white/10 text-white font-medium"
+          : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5",
+        placeholder && !active && "opacity-40 pointer-events-none"
       )}
     >
-      <Icon className="w-4 h-4 shrink-0" strokeWidth={1.75} />
-      {!collapsed && <span>{label}</span>}
+      <Icon className="w-3.5 h-3.5 shrink-0" strokeWidth={1.75} />
+      {!collapsed && (
+        <>
+          <span className="truncate">{label}</span>
+          {placeholder && (
+            <span className="ml-auto text-[9px] text-zinc-700 font-medium tracking-widest uppercase">
+              Soon
+            </span>
+          )}
+        </>
+      )}
     </Link>
   )
 
   if (collapsed) {
     return (
       <Tooltip delayDuration={0}>
-        <TooltipTrigger asChild>{content}</TooltipTrigger>
-        <TooltipContent side="right" className="text-xs">
-          {label}
+        <TooltipTrigger asChild>{inner}</TooltipTrigger>
+        <TooltipContent side="right" className="text-xs bg-zinc-900 border-zinc-700 text-zinc-200">
+          {label}{placeholder ? " (Soon)" : ""}
         </TooltipContent>
       </Tooltip>
     )
   }
 
-  return content
+  return inner
 }
 
-// Deterministic color from tenant color field or index
-const TENANT_DOT_COLORS = [
-  "bg-byred-red",
-  "bg-emerald-500",
-  "bg-sky-500",
-  "bg-amber-500",
-  "bg-violet-500",
-  "bg-rose-500",
-  "bg-teal-500",
-  "bg-orange-500",
-]
-
-function TenantItem({
-  id,
-  name,
-  color,
-  colorIndex,
-  isActive,
-  collapsed,
-  onClick,
-  onSelect,
-}: {
-  id: string
-  name: string
-  color: string
-  colorIndex: number
-  isActive: boolean
-  collapsed: boolean
-  onClick?: () => void
-  onSelect: (id: string) => void
-}) {
-  const dotColor = color || TENANT_DOT_COLORS[colorIndex % TENANT_DOT_COLORS.length]
-  const dotClass = dotColor.startsWith("bg-")
-    ? dotColor
-    : TENANT_DOT_COLORS[colorIndex % TENANT_DOT_COLORS.length]
-
-  const content = (
-    <button
-      onClick={() => { onSelect(id); onClick?.() }}
-      className={cn(
-        "w-full flex items-center gap-2.5 rounded-md text-sm transition-colors",
-        collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2",
-        isActive
-          ? "text-zinc-900 bg-zinc-100 font-medium"
-          : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100"
-      )}
-    >
-      <span className={cn("w-2 h-2 rounded-full shrink-0", dotClass)} />
-      {!collapsed && <span className="truncate text-xs">{name}</span>}
-    </button>
-  )
-
-  if (collapsed) {
-    return (
-      <Tooltip delayDuration={0}>
-        <TooltipTrigger asChild>{content}</TooltipTrigger>
-        <TooltipContent side="right" className="text-xs">
-          {name}
-        </TooltipContent>
-      </Tooltip>
-    )
-  }
-
-  return content
-}
-
+// ---------------------------------------------------------------------------
+// Sidebar content
+// ---------------------------------------------------------------------------
 function SidebarContent({
   collapsed,
   onNavClick,
@@ -173,47 +178,48 @@ function SidebarContent({
   const isMobile = useIsMobile()
 
   function isActive(href: string) {
-    if (href === "/dashboard") return pathname === "/dashboard" || pathname === "/"
+    if (href === "/os/dashboard") {
+      return pathname === "/os/dashboard" || pathname === "/" || pathname === "/os"
+    }
     return pathname.startsWith(href)
   }
 
-  // Get user display info from profile or auth user
-  const displayName =
-    currentUser?.profile?.name ?? currentUser?.authUser?.email ?? "User"
+  const displayName = currentUser?.profile?.name ?? currentUser?.authUser?.email ?? "User"
   const displayRole = currentUser?.profile?.role ?? "member"
-  const initials = displayName
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2)
+  const initials = getInitials(displayName)
+
+  // Active tenant color dot
+  const tenantIdx = (currentUser?.tenants ?? []).findIndex(
+    (t) => t.id === currentUser?.activeTenantId
+  )
+  const tenantColor = TENANT_COLORS[Math.max(tenantIdx, 0) % TENANT_COLORS.length]
+  const tenantName = activeTenant?.name ?? "No tenant"
 
   return (
     <TooltipProvider>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full bg-zinc-950">
+
         {/* Logo */}
-        <div
-          className={cn(
-            "border-b border-zinc-200 flex items-center",
-            collapsed ? "p-3 justify-center" : "px-4 py-3"
-          )}
-        >
-          <Link href="/dashboard" className="flex flex-col items-center" onClick={onNavClick}>
+        <div className={cn(
+          "border-b border-zinc-800/60 flex items-center shrink-0",
+          collapsed ? "p-3 justify-center" : "px-4 py-3 gap-3"
+        )}>
+          <Link href="/os/dashboard" onClick={onNavClick} className="flex items-center gap-2.5 min-w-0">
             {collapsed ? (
-              <span className="font-condensed font-bold text-byred-red text-sm tracking-widest">
-                BR
-              </span>
+              <div className="w-6 h-6 rounded bg-[#D7261E] flex items-center justify-center">
+                <span className="text-white text-[9px] font-bold">BR</span>
+              </div>
             ) : (
               <>
                 <Image
                   src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%20Apr%2028%2C%202026%2C%2009_32_39%20AM-x3FJDIpEVCK0sy9RmbGiMlhyKPNdec.png"
                   alt="By Red, LLC."
-                  width={120}
-                  height={50}
-                  className="object-contain"
+                  width={90}
+                  height={36}
+                  className="object-contain brightness-0 invert"
                   priority
                 />
-                <span className="text-[10px] font-semibold tracking-[0.25em] text-zinc-400 uppercase -mt-1">
+                <span className="text-[9px] font-semibold tracking-[0.3em] text-zinc-600 uppercase">
                   Daily OS
                 </span>
               </>
@@ -221,170 +227,166 @@ function SidebarContent({
           </Link>
         </div>
 
-        {/* Nav */}
-        <nav
-          className={cn(
-            "flex-1 overflow-y-auto py-4 space-y-6",
-            collapsed ? "px-2" : "px-3"
-          )}
-        >
-          {/* Work */}
-          <div>
-            {!collapsed && (
-              <p className="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase px-3 mb-2">
-                Work
-              </p>
-            )}
-            <div className="space-y-0.5">
-              {WORK_NAV.map((item) => (
-                <NavItem
-                  key={item.href}
-                  {...item}
-                  active={isActive(item.href)}
-                  collapsed={collapsed}
-                  onClick={onNavClick}
-                />
-              ))}
+        {/* Active tenant pill */}
+        {!collapsed && (currentUser?.tenants?.length ?? 0) > 0 && (
+          <div className="px-4 py-2 border-b border-zinc-800/60">
+            <div className="flex items-center gap-1.5">
+              <span
+                className="w-1.5 h-1.5 rounded-full shrink-0"
+                style={{ backgroundColor: tenantColor }}
+              />
+              <span className="text-[10px] text-zinc-500 truncate">{tenantName}</span>
+              {(currentUser?.tenants?.length ?? 0) > 1 && (
+                <button
+                  className="ml-auto text-[9px] text-zinc-700 hover:text-zinc-400 transition-colors"
+                  onClick={() => {
+                    const tenants = currentUser?.tenants ?? []
+                    const idx = tenants.findIndex((t) => t.id === currentUser?.activeTenantId)
+                    const next = tenants[(idx + 1) % tenants.length]
+                    currentUser?.setActiveTenantId(next.id)
+                  }}
+                >
+                  Switch
+                </button>
+              )}
             </div>
           </div>
+        )}
 
-          {/* Tenants */}
-          {(currentUser?.tenants?.length ?? 0) > 0 && (
-            <div>
+        {/* Nav */}
+        <nav className={cn(
+          "flex-1 overflow-y-auto py-3 space-y-4",
+          collapsed ? "px-2" : "px-2"
+        )}>
+          {NAV_GROUPS.map((group) => (
+            <div key={group.label}>
               {!collapsed && (
-                <p className="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase px-3 mb-2">
-                  Tenants
+                <p className="text-[9px] font-semibold tracking-widest text-zinc-700 uppercase px-3 mb-1">
+                  {group.label}
                 </p>
               )}
               <div className="space-y-0.5">
-                {(currentUser?.tenants ?? []).map((tenant, idx) => (
-                  <TenantItem
-                    key={tenant.id}
-                    id={tenant.id}
-                    name={tenant.name}
-                    color={tenant.color}
-                    colorIndex={idx}
-                    isActive={currentUser?.activeTenantId === tenant.id}
+                {group.items.map((item) => (
+                  <NavItem
+                    key={item.href}
+                    href={item.href}
+                    label={item.label}
+                    icon={item.icon}
+                    active={isActive(item.href)}
                     collapsed={collapsed}
+                    placeholder={item.placeholder}
                     onClick={onNavClick}
-                    onSelect={currentUser?.setActiveTenantId ?? (() => {})}
                   />
                 ))}
               </div>
             </div>
-          )}
-
-          {/* System */}
-          <div>
-            {!collapsed && (
-              <p className="text-[10px] font-semibold tracking-widest text-zinc-400 uppercase px-3 mb-2">
-                System
-              </p>
-            )}
-            <div className="space-y-0.5">
-              {SYSTEM_NAV.map((item) => (
-                <NavItem
-                  key={item.href}
-                  {...item}
-                  active={isActive(item.href)}
-                  collapsed={collapsed}
-                  onClick={onNavClick}
-                />
-              ))}
-            </div>
-          </div>
+          ))}
         </nav>
 
-        {/* Collapse toggle (desktop only) */}
+        {/* Blocker alert */}
+        {!collapsed && (
+          <div className="px-3 py-2">
+            <Link
+              href="/os/tasks?filter=blocked"
+              onClick={onNavClick}
+              className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-red-950/40 border border-red-900/30 hover:border-red-800/50 transition-colors"
+            >
+              <AlertTriangle className="w-3 h-3 text-[#D7261E] shrink-0" strokeWidth={1.75} />
+              <span className="text-[10px] text-red-400">View blockers</span>
+            </Link>
+          </div>
+        )}
+
+        {/* Collapse toggle (desktop) */}
         {!isMobile && (
-          <div className="px-3 py-2 border-t border-zinc-200">
-            <Button
-              variant="ghost"
-              size="sm"
+          <div className="px-3 py-2 border-t border-zinc-800/60">
+            <button
               onClick={toggleCollapsed}
               className={cn(
-                "w-full text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100",
-                collapsed ? "px-2" : "justify-start"
+                "w-full flex items-center text-zinc-600 hover:text-zinc-400 hover:bg-white/5 rounded-md transition-colors text-xs py-1.5",
+                collapsed ? "justify-center px-2" : "gap-2 px-2"
               )}
             >
               {collapsed ? (
-                <ChevronRight className="w-4 h-4" strokeWidth={1.75} />
+                <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.75} />
               ) : (
                 <>
-                  <ChevronLeft className="w-4 h-4 mr-2" strokeWidth={1.75} />
-                  <span className="text-xs">Collapse</span>
+                  <ChevronLeft className="w-3.5 h-3.5" strokeWidth={1.75} />
+                  <span>Collapse</span>
                 </>
               )}
-            </Button>
+            </button>
           </div>
         )}
 
         {/* User block */}
-        <div
-          className={cn(
-            "border-t border-zinc-200",
-            collapsed ? "p-2" : "p-3"
-          )}
-        >
-          <div
+        <div className={cn(
+          "border-t border-zinc-800/60",
+          collapsed ? "p-2" : "p-3"
+        )}>
+          <Link
+            href="/os/settings"
+            onClick={onNavClick}
             className={cn(
-              "flex items-center px-2 py-2",
-              collapsed ? "justify-center" : "gap-2.5"
+              "flex items-center rounded-md hover:bg-white/5 transition-colors",
+              collapsed ? "justify-center p-2" : "gap-2.5 px-2 py-2"
             )}
           >
-            <div className="w-7 h-7 rounded-full bg-byred-red/10 border border-byred-red/20 flex items-center justify-center shrink-0">
-              <span className="text-xs font-semibold text-byred-red font-condensed">
-                {initials}
-              </span>
+            <div className="w-6 h-6 rounded-full bg-[#D7261E]/20 border border-[#D7261E]/30 flex items-center justify-center shrink-0">
+              <span className="text-[10px] font-bold text-[#D7261E]">{initials}</span>
             </div>
             {!collapsed && (
               <div className="min-w-0">
-                <p className="text-xs font-medium text-zinc-800 truncate">
-                  {displayName}
-                </p>
-                <p className="text-[10px] text-zinc-400 truncate capitalize">
-                  {displayRole}
-                </p>
+                <p className="text-xs font-medium text-zinc-300 truncate">{displayName}</p>
+                <p className="text-[10px] text-zinc-600 truncate capitalize">{displayRole}</p>
               </div>
             )}
-          </div>
+          </Link>
         </div>
+
       </div>
     </TooltipProvider>
   )
 }
 
+// ---------------------------------------------------------------------------
+// Exports
+// ---------------------------------------------------------------------------
 export function AppSidebar() {
   const { isCollapsed, isMobileOpen, setIsMobileOpen } = useSidebar()
   const isMobile = useIsMobile()
 
-  // Mobile: use Sheet
   if (isMobile) {
     return (
       <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-        <SheetContent
-          side="left"
-          className="w-64 p-0 bg-white border-r border-zinc-200"
-        >
+        <SheetContent side="left" className="w-60 p-0 bg-zinc-950 border-r border-zinc-800">
           <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-          <SidebarContent
-            collapsed={false}
-            onNavClick={() => setIsMobileOpen(false)}
-          />
+          <SidebarContent collapsed={false} onNavClick={() => setIsMobileOpen(false)} />
         </SheetContent>
       </Sheet>
     )
   }
 
-  // Desktop: fixed sidebar
   return (
-    <aside
-      className={cn(
-        "shrink-0 flex flex-col h-screen bg-white border-r border-zinc-200 fixed left-0 top-0 z-40 transition-all duration-300",
-        isCollapsed ? "w-16" : "w-60"
-      )}
-    >
+    <aside className={cn(
+      "shrink-0 flex flex-col h-screen bg-zinc-950 border-r border-zinc-800/60 fixed left-0 top-0 z-40 transition-all duration-300",
+      isCollapsed ? "w-14" : "w-56"
+    )}>
       <SidebarContent collapsed={isCollapsed} />
     </aside>
+  )
+}
+
+// Mobile menu trigger (used by topbar)
+export function MobileMenuButton() {
+  const { toggleMobile } = useSidebar()
+  return (
+    <button
+      onClick={toggleMobile}
+      className="w-8 h-8 flex items-center justify-center text-zinc-400 hover:text-zinc-200 hover:bg-white/5 rounded-md transition-colors"
+      aria-label="Open menu"
+    >
+      <Menu className="w-5 h-5" strokeWidth={1.75} />
+    </button>
   )
 }
