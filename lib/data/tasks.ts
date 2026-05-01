@@ -72,25 +72,30 @@ export async function getTasksForToday(): Promise<Task[]> {
   const supabase = await createClient()
   const today = new Date().toISOString().split("T")[0]
 
-  // Get tasks that are either:
-  // 1. Due today or overdue
-  // 2. In progress
-  // 3. Not yet started but urgent/high priority
+  // Fetch all active (non-done, non-cancelled) tasks then filter client-side.
+  // PostgREST .or() cannot mix range filters (lte) with eq on the same column
+  // in a single expression without using separate .or() groups.
   const { data, error } = await supabase
     .from("byred_tasks")
     .select("*")
-    .or(`due_date.lte.${today},status.eq.in_progress,status.eq.not_started`)
-    .neq("status", "done")
-    .neq("status", "cancelled")
+    .not("status", "in", '("done","cancelled")')
     .order("priority", { ascending: true })
-    .order("due_date", { ascending: true })
+    .order("due_date", { ascending: true, nullsFirst: false })
 
   if (error) {
     console.error("Error fetching today tasks:", error)
     return []
   }
 
-  return data.map(mapTaskFromDb)
+  // Keep tasks that are: due today/overdue, in_progress, or not_started
+  const relevant = data.filter(
+    (t) =>
+      t.status === "in_progress" ||
+      t.status === "not_started" ||
+      (t.due_date != null && t.due_date <= today)
+  )
+
+  return relevant.map(mapTaskFromDb)
 }
 
 export async function getBlockedTasks(): Promise<Task[]> {
