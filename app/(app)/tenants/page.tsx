@@ -4,7 +4,7 @@ import { ExternalLink } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { getTenantsWithStats } from "@/lib/data/tenants"
-import { TENANT_COLORS } from "@/lib/tenant-colors"
+import { getTenantColors } from "@/lib/tenant-colors"
 import { cn } from "@/lib/utils"
 
 export default async function TenantsPage() {
@@ -23,7 +23,7 @@ export default async function TenantsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {tenants.map((tenant) => {
-          const colors = TENANT_COLORS[tenant.id] ?? {
+          const colors = getTenantColors(tenant.id) ?? {
             dot: "#aaaaaa",
             chipBg: "#f4f4f5",
             chipText: "#71717a",
