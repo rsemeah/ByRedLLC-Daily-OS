@@ -98,9 +98,8 @@ function TaskCard({ task }: { task: Task }) {
         <span style={{ fontSize: 10, color: '#71717A', fontFamily: 'monospace' }}>
           {formatMinutes(task.estimated_minutes)}
         </span>
-        {/* MIGRATE: change to /os/tasks/${task.id} once that detail page exists */}
         <Link
-          href={`/tasks/${task.id}`}
+          href={`/os/tasks/${task.id}`}
           style={{
             fontSize: 10,
             fontWeight: 700,
