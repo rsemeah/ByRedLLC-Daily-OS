@@ -1,26 +1,34 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { generateText } from 'ai'
+// app/api/os/lantern-ai/route.ts
+import { NextRequest } from 'next/server'
+import { streamText, convertToModelMessages } from 'ai'
+import type { UIMessage } from 'ai'
 import { groq } from '@ai-sdk/groq'
 import { requireTenantScope } from '@/lib/data/tenant-scope'
 import { createClient } from '@/lib/supabase/server'
 
-const SYSTEM_PROMPT = `You are LanternAI, the operations intelligence for By Red LLC. You have context
-about the business's projects, tasks, and team. Provide concise, actionable insights.
-Answer questions about task priorities, blockers, project health, and operational strategy.
+const SYSTEM_PROMPT = `You are LanternAI, the operations intelligence for By Red LLC. You have context \
+about the business's projects, tasks, and team. Provide concise, actionable insights. \
+Answer questions about task priorities, blockers, project health, and operational strategy. \
 Keep replies under 200 words unless detail is explicitly requested.`
 
-type Message = { role: 'user' | 'assistant'; content: string }
+const MAX_MESSAGES = 20
 
 export async function POST(req: NextRequest) {
   try {
     const { tenantIds } = await requireTenantScope()
-    const body = (await req.json()) as { messages: Message[] }
+    // ai v6: DefaultChatTransport sends { messages: UIMessage[] }
+    const body = (await req.json()) as { messages: UIMessage[] }
 
     if (!body.messages?.length) {
-      return NextResponse.json({ error: 'messages required' }, { status: 400 })
+      return new Response(JSON.stringify({ error: 'messages required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      })
     }
 
-    // Fetch lightweight context: open task counts + blocked tasks
+    const uiMessages = body.messages.slice(-MAX_MESSAGES)
+
+    // Fetch lightweight operational context
     const supabase = await createClient()
     const [{ count: openCount }, { data: blocked }] = await Promise.all([
       supabase
@@ -40,22 +48,29 @@ export async function POST(req: NextRequest) {
     const contextBlock = [
       `Open tasks: ${openCount ?? 0}`,
       blocked?.length
-        ? `Blocked tasks: ${blocked.map((t) => `"${t.title}" (${t.priority})`).join(', ')}`
+        ? `Blocked: ${blocked.map((t) => `"${t.title}" (${t.priority})`).join(', ')}`
         : 'No blocked tasks',
     ].join('\n')
 
-    const { text } = await generateText({
+    const result = streamText({
       model: groq('llama-3.3-70b-versatile'),
       system: `${SYSTEM_PROMPT}\n\nCurrent operational snapshot:\n${contextBlock}`,
-      messages: body.messages,
+      messages: await convertToModelMessages(uiMessages),
+      maxOutputTokens: 600,
     })
 
-    return NextResponse.json({ reply: text })
+    return result.toUIMessageStreamResponse()
   } catch (err) {
     if (err instanceof Error && err.message.includes('Unauthorized')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      })
     }
     console.error('[lantern-ai]', err)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    return new Response(JSON.stringify({ error: 'Internal error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
 }
