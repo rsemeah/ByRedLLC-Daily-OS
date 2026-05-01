@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useUser } from '@/lib/context/user-context'
 
 type FormState = {
   tenant_id: string
@@ -39,6 +40,7 @@ const LABEL_STYLE: React.CSSProperties = {
 
 export default function OsTaskNewPage() {
   const router = useRouter()
+  const { tenants, activeTenantId } = useUser()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>({
@@ -49,6 +51,13 @@ export default function OsTaskNewPage() {
     status: 'not_started',
     due_date: '',
   })
+
+  // Seed tenant_id from active tenant once context is available
+  useEffect(() => {
+    if (activeTenantId && !form.tenant_id) {
+      setForm((f) => ({ ...f, tenant_id: activeTenantId }))
+    }
+  }, [activeTenantId, form.tenant_id])
 
   function set(key: keyof FormState, value: string) {
     setForm((f) => ({ ...f, [key]: value }))
@@ -118,6 +127,26 @@ export default function OsTaskNewPage() {
       </h1>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        {/* Tenant */}
+        {tenants.length > 1 && (
+          <div>
+            <label style={LABEL_STYLE}>Tenant</label>
+            <select
+              title="Tenant"
+              value={form.tenant_id}
+              onChange={(e) => set('tenant_id', e.target.value)}
+              style={{ ...INPUT_STYLE, cursor: 'pointer' }}
+            >
+              <option value="" style={{ background: '#18181B' }}>All tenants</option>
+              {tenants.map((t) => (
+                <option key={t.id} value={t.id} style={{ background: '#18181B' }}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {/* Title */}
         <div>
           <label style={LABEL_STYLE}>Title *</label>

@@ -101,17 +101,17 @@ export function OSTopBar() {
           Blockers
         </Link>
 
-        <IconBtn title="Brief">
+        <IconLink href="/os/today" title="Daily Brief">
           <FileText size={13} strokeWidth={1.75} />
-        </IconBtn>
+        </IconLink>
 
-        <IconBtn title="Today">
+        <IconLink href="/os/today" title="Today">
           <Sun size={13} strokeWidth={1.75} />
-        </IconBtn>
+        </IconLink>
 
-        <IconBtn title="Notifications">
+        <IconLink href="/os/notifications" title="Notifications">
           <Bell size={13} strokeWidth={1.75} />
-        </IconBtn>
+        </IconLink>
 
         {/* Avatar */}
         <div
@@ -138,10 +138,10 @@ export function OSTopBar() {
   )
 }
 
-function IconBtn({ children, title }: { children: React.ReactNode; title: string }) {
+function IconLink({ href, children, title }: { href: string; children: React.ReactNode; title: string }) {
   return (
-    <button
-      type="button"
+    <Link
+      href={href}
       title={title}
       style={{
         width: 28,
@@ -153,7 +153,6 @@ function IconBtn({ children, title }: { children: React.ReactNode; title: string
         border: "1px solid rgba(255,255,255,0.08)",
         borderRadius: 4,
         color: "#71717A",
-        cursor: "pointer",
       }}
       onMouseEnter={(e) => {
         const el = e.currentTarget as HTMLElement
@@ -167,6 +166,6 @@ function IconBtn({ children, title }: { children: React.ReactNode; title: string
       }}
     >
       {children}
-    </button>
+    </Link>
   )
 }

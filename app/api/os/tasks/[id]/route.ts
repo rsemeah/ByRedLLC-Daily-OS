@@ -24,7 +24,14 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 
     if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    const allowed = ['title', 'description', 'status', 'priority', 'due_date', 'order_index', 'assigned_user_id', 'project_id', 'board_id']
+    const allowed = [
+      'title', 'description', 'status', 'priority', 'due_date', 'order_index',
+      'owner_user_id', 'project_id', 'board_id', 'phase_id',
+      'blocker_flag', 'blocker_reason',
+      'is_low_hanging_fruit', 'is_ready_for_ai', 'is_ready_for_human',
+      'needs_decision', 'waiting_on_external',
+      'definition_of_done', 'acceptance_criteria', 'completed_at',
+    ]
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() }
     for (const key of allowed) {
       if (key in body) patch[key] = body[key]

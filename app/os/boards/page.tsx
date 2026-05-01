@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useUser } from '@/lib/context/user-context'
 import { EditableField } from '@/components/os/EditableField'
 import { Plus, Trash2 } from 'lucide-react'
@@ -269,6 +270,22 @@ export default function OsBoardsPage() {
                         placeholder="Add description..."
                         style={{ fontSize: 11, color: '#71717A' }}
                       />
+
+                      {/* Open Board link */}
+                      <Link
+                        href={`/os/boards/${board.id}`}
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color: '#D7261E',
+                          textDecoration: 'none',
+                          letterSpacing: 0.3,
+                          textTransform: 'uppercase',
+                          alignSelf: 'flex-start',
+                        }}
+                      >
+                        Open Board →
+                      </Link>
 
                       {/* KPI picker */}
                       <div>

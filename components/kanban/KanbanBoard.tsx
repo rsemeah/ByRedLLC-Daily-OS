@@ -10,6 +10,7 @@ import {
 import { useBoard } from '@/hooks/useBoard'
 import { useBoardStore } from '@/hooks/useBoardStore'
 import KanbanColumn from './KanbanColumn'
+import type { BoardWithData } from '@/types/kanban'
 
 async function patchTask(taskId: string, patch: Record<string, unknown>) {
   await fetch(`/api/os/tasks/${taskId}`, {
@@ -17,6 +18,27 @@ async function patchTask(taskId: string, patch: Record<string, unknown>) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(patch),
   })
+}
+
+function resolveTargetPhase(overId: string, data: BoardWithData): string | null {
+  // over.id is a phase ID (dropped directly on column)
+  if (data.phases.find((p) => p.id === overId)) return overId
+  // over.id is a task ID — find the phase containing it
+  for (const phase of data.phases) {
+    if ((data.tasksByPhase[phase.id] ?? []).find((t) => t.id === overId)) {
+      return phase.id
+    }
+  }
+  return null
+}
+
+function findTaskPhase(taskId: string, data: BoardWithData): string | null {
+  for (const phase of data.phases) {
+    if ((data.tasksByPhase[phase.id] ?? []).find((t) => t.id === taskId)) {
+      return phase.id
+    }
+  }
+  return null
 }
 
 export default function KanbanBoard({ boardId }: { boardId: string }) {
@@ -30,12 +52,17 @@ export default function KanbanBoard({ boardId }: { boardId: string }) {
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     if (!over || !data) return
+
     const taskId = active.id as string
-    const toPhaseId = over.id as string
-    if (toPhaseId === over.id) {
-      moveTask(taskId, toPhaseId, 0)
-      await patchTask(taskId, { phase_id: toPhaseId })
-    }
+    const toPhaseId = resolveTargetPhase(over.id as string, data)
+    if (!toPhaseId) return
+
+    const fromPhaseId = findTaskPhase(taskId, data)
+    if (fromPhaseId === toPhaseId) return
+
+    const targetTasks = data.tasksByPhase[toPhaseId] ?? []
+    moveTask(taskId, toPhaseId, targetTasks.length)
+    await patchTask(taskId, { phase_id: toPhaseId })
   }
 
   if (isLoading) {
@@ -51,7 +78,15 @@ export default function KanbanBoard({ boardId }: { boardId: string }) {
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <div style={{ display: 'flex', gap: 12, overflowX: 'auto', padding: '0 28px 40px', alignItems: 'flex-start' }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: 12,
+          overflowX: 'auto',
+          padding: '0 28px 40px',
+          alignItems: 'flex-start',
+        }}
+      >
         {data.phases.map((phase) => (
           <KanbanColumn
             key={phase.id}
@@ -61,7 +96,7 @@ export default function KanbanBoard({ boardId }: { boardId: string }) {
         ))}
         {data.phases.length === 0 && (
           <div style={{ color: '#3F3F46', fontSize: 13, paddingTop: 40 }}>
-            No phases yet. Add phases from the board settings.
+            No phases yet — add phases from the board settings.
           </div>
         )}
       </div>
