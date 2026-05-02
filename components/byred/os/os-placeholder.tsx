@@ -1,6 +1,3 @@
-"use client"
-
-import { cn } from "@/lib/utils"
 import type { LucideIcon } from "lucide-react"
 
 export function OSPlaceholderPage({
